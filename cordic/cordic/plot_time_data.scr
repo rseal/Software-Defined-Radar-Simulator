@@ -1,0 +1,3 @@
+set title "CORDIC Output"
+plot "time.dat" with lines
+
