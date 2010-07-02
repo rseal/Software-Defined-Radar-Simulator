@@ -18,7 +18,6 @@
 #define STIMULUS_HPP
 
 #include "test_bench.hpp"
-#include<sdr_simulator/GaussianNoiseGenerator.hpp>
 
 #include <systemc.h>
 #include <tr1/math.h>
@@ -28,12 +27,6 @@
 
 class Stimulus: public sc_module
 {
-   typedef boost::shared_ptr<std::ofstream> OutputFileStreamPtr;
-   typedef boost::shared_ptr< GaussianNoiseGenerator< testbench::INPUT_WIDTH > > NoiseGeneratorPtr;
-
-   OutputFileStreamPtr outputFileStream;
-   NoiseGeneratorPtr noiseGenerator;
-
    const unsigned int RESET_TIME_;
 
    // define an exportable clock signal
@@ -46,28 +39,6 @@ class Stimulus: public sc_module
       reset = 0;
    }
 
-   //void Data() {
-   //   static const float TWO_PI = 2.0f*boost::math::constants::pi<float>();
-   //   static const float sampleRate = 200e6;
-   //   static float frequency = 0;
-   //   static const float theta = TWO_PI * frequency/sampleRate; 
-   //   static int t = 0;
-
-   //   if( reset.read() )
-   //   {
-   //      output = 0;
-   //      t = 0;
-   //   }
-   //   else
-   //   {
-   //      output = std::tr1::cos(TWO_PI*frequency/sampleRate*t)*16000;
-   //      cout << "stimulus = " << output.read() << endl;
-   //      ++t;
-   //      frequency += 100;
-   //      *outputFileStream << output << "\n";
-   //   }
-   //}
-
    public:
       SC_HAS_PROCESS( Stimulus );
 
@@ -79,24 +50,12 @@ class Stimulus: public sc_module
          SC_THREAD( Reset );
          sensitive << clock_.posedge_event();
 
-         //SC_METHOD( Data );
-         //sensitive << clock_.posedge_event();
-
          clock(clock_);
 
-         outputFileStream = OutputFileStreamPtr( new ofstream( "stimulus.dat" ) );
-
-         noiseGenerator = NoiseGeneratorPtr( 
-               new GaussianNoiseGenerator< testbench::INPUT_WIDTH >( "noiseGen", 1024*100, 0.0, 1.0, 0.25 )
-               );
-         noiseGenerator->reset( reset );
-         noiseGenerator->clock( clock );
-         noiseGenerator->output( output );
       }
 
       sc_out< testbench::bit_type > reset;
       clk_out clock;
-      sc_out< testbench::data_input_type > output;
 };
 
 #endif

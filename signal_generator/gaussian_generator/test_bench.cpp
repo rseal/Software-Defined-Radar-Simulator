@@ -15,9 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with SDRS.  If not, see <http://www.gnu.org/licenses/>.
 //#include <sdr_simulator/CicIntegrator.hpp>
+
 #include <boost/lexical_cast.hpp>
 #include <vector>
-#include "Cic.hpp"
+#include <sdr_simulator/GaussianNoiseGenerator.hpp>
+
 #include "test_bench.hpp"
 #include "Stimulus.hpp"
 #include "Recorder.hpp"
@@ -27,40 +29,40 @@ using boost::lexical_cast;
 
 int main()
 {
+   // constants
    const double TIME_RESOLUTION = 1.0;
-   const double TOTAL_SIMULATION_TIME = 500000.0;
+   const double TOTAL_SIMULATION_TIME = 50000.0;
    const double CLOCK_PERIOD = 2.0;
+   const int SAMPLE_SIZE=1024;
+   const float MEAN = 0.0;
+   const float VARIANCE = 1.0;
+   const float AMPLITUDE = 0.125;
 
+   // signal definition
    sc_signal< testbench::bit_type > reset_signal;
-   sc_signal< testbench::data_input_type > input_signal;
-   sc_signal< testbench::data_output_type > output_signal;
-   sc_signal< bool > clk_signal;
-   sc_signal< testbench::data_input_type > decimate_signal;
-
-   decimate_signal = testbench::DECIMATION;
+   sc_signal< testbench::data_sample_type > output_signal;
+   sc_signal< bool > clock_signal;
 
    // set time parameters
    sc_set_time_resolution( TIME_RESOLUTION , SC_NS );
    sc_time simulation_time(TOTAL_SIMULATION_TIME,SC_NS);
    sc_time clock_time(CLOCK_PERIOD,SC_NS);
 
+   // signal stimulus
    Stimulus stimulus( "stimulus" );
    stimulus.reset( reset_signal );
-   stimulus.output( output_signal );
 
+   // test signal generator
+   GaussianNoiseGenerator< testbench::BIT_WIDTH > 
+      tsg( "TestSignalGenerator", SAMPLE_SIZE , MEAN, VARIANCE, AMPLITUDE );
+   tsg.reset( reset_signal );
+   tsg.clock( stimulus.clock );
+   tsg.output( output_signal );
+
+   // output recorder
    Recorder record( "record" );
-   record.input( input_signal );
+   record.input( output_signal );
    record.clock( stimulus.clock );
-
-   Cic< testbench::INPUT_WIDTH, testbench::OUTPUT_WIDTH > 
-      cic( "cic" );
-
-
-   cic.clock( stimulus.clock );
-   cic.reset( reset_signal );
-   cic.input( output_signal );
-   cic.output( input_signal );
-   cic.decimation( decimate_signal );
 
    // begin simulation
    sc_start( simulation_time );
