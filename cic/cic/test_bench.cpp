@@ -19,8 +19,8 @@
 #include <vector>
 #include "Cic.hpp"
 #include "test_bench.hpp"
-#include "Stimulus.hpp"
-#include "Recorder.hpp"
+#include <sdr_simulator/util/FileRecorder.hpp>
+#include <sdr_simulator/util/GaussianNoiseStimulus.hpp>
 
 using namespace std;
 using boost::lexical_cast;
@@ -30,6 +30,10 @@ int main()
    const double TIME_RESOLUTION = 1.0;
    const double TOTAL_SIMULATION_TIME = 500000.0;
    const double CLOCK_PERIOD = 2.0;
+   const char* FILE_NAME = "output.dat";
+   const double MEAN = 0.0;
+   const double VARIANCE = 1.0;
+   const double AMPLITUDE = 0.25;
 
    sc_signal< testbench::bit_type > reset_signal;
    sc_signal< testbench::data_input_type > input_signal;
@@ -44,18 +48,20 @@ int main()
    sc_time simulation_time(TOTAL_SIMULATION_TIME,SC_NS);
    sc_time clock_time(CLOCK_PERIOD,SC_NS);
 
-   Stimulus stimulus( "stimulus" );
+   // gaussian noise source
+   GaussianNoiseStimulus<testbench::data_input_type, testbench::INPUT_WIDTH> 
+      stimulus( "stimulus", MEAN, VARIANCE, AMPLITUDE );
    stimulus.reset( reset_signal );
    stimulus.output( output_signal );
 
-   Recorder record( "record" );
+   // record output to file
+   FileRecorder<testbench::data_input_type> record( "record", FILE_NAME );
    record.input( input_signal );
    record.clock( stimulus.clock );
 
+   // DUT
    Cic< testbench::INPUT_WIDTH, testbench::OUTPUT_WIDTH > 
       cic( "cic" );
-
-
    cic.clock( stimulus.clock );
    cic.reset( reset_signal );
    cic.input( output_signal );

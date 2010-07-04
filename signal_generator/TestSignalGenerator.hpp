@@ -29,30 +29,35 @@ template< unsigned int BIT_WIDTH>
 class TestSignalGenerator: public SignalGenerator<BIT_WIDTH>
 {
    const int SCALE;
-   typedef SignalGenerator<BIT_WIDTH> SigGen;
+   const double AMPLITUDE;
+
+   // random number number generating algorithm 
+   boost::rand48 rng;
 
    virtual void GenerateSamples() {
-
-      // random number number generating algorithm 
-      boost::rand48 rng;
-      // gaussian distribution
-      boost::normal_distribution<> nDistribution(0,1);
-      // create the random number generator
-      boost::variate_generator< boost::rand48&, boost::normal_distribution<> > random_number(rng,nDistribution);
-
       for( int i=0; i< this->SAMPLE_SIZE; ++i) {
-         this->samples_[i] = random_number()*SCALE;
+         this->samples_[i] = sc_int< BIT_WIDTH>(getRandomNumber()*SCALE*AMPLITUDE);
       }
-
    }
-   
+
+   double getRandomNumber()
+   {
+      // gaussian distribution
+      boost::normal_distribution<double> nDistribution(0.0,1.0);
+      // create the random number generator
+      boost::variate_generator< boost::rand48&, boost::normal_distribution<double> > random_number(rng,nDistribution);
+
+      return random_number();
+   }
+
+
    public:
 
    SC_HAS_PROCESS( TestSignalGenerator );
 
-   TestSignalGenerator( const sc_module_name& nm, const int sampleSize ):
-      SignalGenerator<BIT_WIDTH>( nm, sampleSize ), 
-      SCALE( std::tr1::pow(2.0,BIT_WIDTH)-1 )
+   TestSignalGenerator( const sc_module_name& nm, const int sampleSize, const double amplitude):
+      SignalGenerator<BIT_WIDTH>( nm, sampleSize ), SCALE( std::tr1::pow(2.0,BIT_WIDTH)-1 ),
+      AMPLITUDE( amplitude )
    {
       this->Init();
    }

@@ -18,36 +18,27 @@
 #define RECORDER_HPP
 
 #include <systemc.h>
-#include <iostream>
-#include <fstream>
-#include <boost/shared_ptr.hpp>
-#include "test_bench.hpp"
 
+// abstract class - override Log method in your own class 
+template < typename T >
 class Recorder: public sc_module
 {
-   typedef boost::shared_ptr<std::ofstream> OutputFileStreamPtr;
-   OutputFileStreamPtr outputFileStream;
-
-   void Log() {
-      *outputFileStream << input.read() << "\n";
-      //std::cout << input.read() << " at " << sc_time_stamp() << std::endl;
-   }
-
+   // pure virtual method 
+   virtual void Log()=0;
 
    public:
 
       SC_HAS_PROCESS( Recorder );
 
+      // CTOR
       Recorder( const sc_module_name& nm ): sc_module(nm){
-
-         outputFileStream = OutputFileStreamPtr( new ofstream("output.dat") );
 
          SC_METHOD( Log );
          sensitive << input;
-
       }
 
-      sc_in< testbench::data_input_type > input;
+      // define Port IO
+      sc_in< T > input;
       sc_in_clk clock;
 };
 

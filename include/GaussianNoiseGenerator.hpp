@@ -17,55 +17,56 @@
 #ifndef GAUSSIAN_NOISE_GENERATOR_HPP
 #define GAUSSIAN_NOISE_GENERATOR_HPP
 
-#include<boost/random/linear_congruential.hpp>
+#include<boost/random/mersenne_twister.hpp>
 #include<boost/random/normal_distribution.hpp>
 #include<boost/random/variate_generator.hpp>
 
 #include<sdr_simulator/SignalGenerator.hpp>
-#include<iostream>
 #include<tr1/math.h>
 
+// Gaussian noise generator with adjustable mean, variance, and amplitude
 template< unsigned int BIT_WIDTH>
 class GaussianNoiseGenerator: public SignalGenerator<BIT_WIDTH>
 {
+   // define constants
    const int SCALE;
    const float MEAN;
    const float VARIANCE;
    const float AMPLITUDE;
 
-   typedef SignalGenerator<BIT_WIDTH> SigGen;
+   // random number number generating algorithm 
+   boost::mt11213b rng;
+   // gaussian distribution
+   boost::normal_distribution<> nDistribution;
 
-   virtual void GenerateSamples() {
+   // compute a new sample on each clock cycle
+   virtual void Compute()
+   {
+      if(!this->reset.read())
+         this->output = sc_int< BIT_WIDTH >( getRandomNumber()*SCALE*AMPLITUDE );
+   }
 
-      // random number number generating algorithm 
-      boost::rand48 rng;
-      // gaussian distribution
-      boost::normal_distribution<> nDistribution(MEAN,VARIANCE);
-      // create the random number generator
-      boost::variate_generator< boost::rand48&, boost::normal_distribution<> > random_number(rng,nDistribution);
-
-      for( int i=0; i< this->SAMPLE_SIZE; ++i) {
-         this->samples_[i] = random_number()*SCALE*AMPLITUDE;
-      }
-
+   // returns a pseudo-random number based on the mt11213b RNG.
+   double getRandomNumber()
+   {
+      boost::variate_generator< boost::mt11213b&, boost::normal_distribution<> > random_number(rng,nDistribution);
+      return random_number();
    }
    
    public:
 
    SC_HAS_PROCESS( GaussianNoiseGenerator );
 
-   GaussianNoiseGenerator( const sc_module_name& nm, const int sampleSize ,
-         const float mean = 0.0, const float variance = 1.0, 
+   // CTOR
+   GaussianNoiseGenerator( 
+         const sc_module_name& nm, 
+         const float mean = 0.0, 
+         const float variance = 1.0, 
          const float amplitude = 1.0
          ):
-      SignalGenerator<BIT_WIDTH>( nm, sampleSize ), 
-      SCALE( std::tr1::pow(2.0,BIT_WIDTH)-1 ),
-      MEAN(mean),
-      VARIANCE(variance),
-      AMPLITUDE( amplitude )
-   {
-      this->Init();
-   }
+      SignalGenerator<BIT_WIDTH>( nm , 0), 
+      SCALE( std::tr1::pow(2.0,BIT_WIDTH)-1 ), MEAN(mean), VARIANCE(variance),
+      AMPLITUDE( amplitude ), nDistribution(MEAN,VARIANCE) { }
 
 };
 

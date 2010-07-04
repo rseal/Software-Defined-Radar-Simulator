@@ -14,41 +14,38 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with SDRS.  If not, see <http://www.gnu.org/licenses/>.
-#ifndef RECORDER_HPP
-#define RECORDER_HPP
+#ifndef FILE_RECORDER_HPP
+#define FILE_RECORDER_HPP
 
 #include <systemc.h>
-#include <iostream>
 #include <fstream>
 #include <boost/shared_ptr.hpp>
-#include "test_bench.hpp"
+#include <sdr_simulator/util/Recorder.hpp>
 
-class Recorder: public sc_module
+template < typename T >
+class FileRecorder: public Recorder<T>
 {
+   // define output file stream for data file recording.
    typedef boost::shared_ptr<std::ofstream> OutputFileStreamPtr;
    OutputFileStreamPtr outputFileStream;
 
-   void Log() {
-      *outputFileStream << input.read() << "\n";
-      //std::cout << input.read() << " at " << sc_time_stamp() << std::endl;
+   // override method to write data to the outputstream
+   virtual void Log() {
+      *outputFileStream << this->input.read() << "\n";
    }
-
 
    public:
 
-      SC_HAS_PROCESS( Recorder );
+      SC_HAS_PROCESS( FileRecorder );
 
-      Recorder( const sc_module_name& nm ): sc_module(nm){
+      // CTOR
+      FileRecorder( const sc_module_name& nm, const std::string& fileName ): 
+         Recorder<T>( nm ) {
 
-         outputFileStream = OutputFileStreamPtr( new ofstream("output.dat") );
-
-         SC_METHOD( Log );
-         sensitive << input;
-
+         outputFileStream = OutputFileStreamPtr( 
+               new ofstream( fileName.c_str() ) 
+               );
       }
-
-      sc_in< testbench::data_sample_type > input;
-      sc_in_clk clock;
 };
 
 #endif

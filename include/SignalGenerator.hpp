@@ -25,20 +25,18 @@ class SignalGenerator : public sc_module
 {
    typedef sc_uint<1> bit_type;
    typedef sc_int< BIT_WIDTH > sample_type;
+   unsigned int index_;
 
-   void Compute()
+   // default implementation that relies on samples_ vector, which is filled 
+   // by implementing GenerateSamples.
+   virtual void Compute()
    {
-      static int index = 0;
-
-      if( index == samples_.size() || reset.read() == 1 ) index = 0;
-
-      std::cout << "index = " << index << std::endl;
-
-      output = samples_[index++];
+     if( index_ == samples_.size() || reset.read() == 1 ) index_ = 0;
+     output = samples_[index_++];
    }
 
-   // provide definition in derived class
-   virtual void GenerateSamples() =0;
+   // Optional method for providing a fixed number of random samples
+   virtual void GenerateSamples() {};
 
    protected:
 
@@ -47,24 +45,29 @@ class SignalGenerator : public sc_module
 
    public:
 
-      SC_HAS_PROCESS( SignalGenerator );
+   SC_HAS_PROCESS( SignalGenerator );
 
-      SignalGenerator( const sc_module_name& nm, const int sampleSize):
-         sc_module( nm ), SAMPLE_SIZE( sampleSize ), samples_(sampleSize) {
-            
-            SC_METHOD( Compute );
-            sensitive << clock.pos();
+   // CTOR: Set sampleSize to zero if overriding the Compute method.
+   SignalGenerator( const sc_module_name& nm, const int sampleSize):
+      sc_module( nm ), SAMPLE_SIZE( sampleSize ), samples_(sampleSize), index_(0)
+   {
+      // virtual method is sensitive to clock edge. A custom implementation 
+      // should be provided to override Compute, producing a single sample 
+      // output per clock cycle. See GaussianNoiseGenerator.hpp
+      SC_METHOD( Compute );
+      sensitive << clock.pos();
+   }
 
-         }
+   // define port IO
+   sc_in< bit_type > reset;
+   sc_in_clk clock;
+   sc_out< sample_type > output;
 
-      sc_in< bit_type > reset;
-      sc_in_clk clock;
-      sc_out< sample_type > output;
-
-      // must call this prior to use
-      void Init(){
-         GenerateSamples();
-      }
+   // must call this prior to use - if using a fixed vector generated data. 
+   // A good example of this would be a sine table.
+   void Init(){
+      GenerateSamples();
+   }
 };
 
 #endif

@@ -22,7 +22,7 @@
 
 #include "test_bench.hpp"
 #include "Stimulus.hpp"
-#include "Recorder.hpp"
+#include <sdr_simulator/util/FileRecorder.hpp>
 
 using namespace std;
 using boost::lexical_cast;
@@ -33,10 +33,10 @@ int main()
    const double TIME_RESOLUTION = 1.0;
    const double TOTAL_SIMULATION_TIME = 50000.0;
    const double CLOCK_PERIOD = 2.0;
-   const int SAMPLE_SIZE=1024;
    const float MEAN = 0.0;
    const float VARIANCE = 1.0;
    const float AMPLITUDE = 0.125;
+   const char* FILE_NAME = "output.dat";
 
    // signal definition
    sc_signal< testbench::bit_type > reset_signal;
@@ -54,13 +54,13 @@ int main()
 
    // test signal generator
    GaussianNoiseGenerator< testbench::BIT_WIDTH > 
-      tsg( "TestSignalGenerator", SAMPLE_SIZE , MEAN, VARIANCE, AMPLITUDE );
+      tsg( "TestSignalGenerator", MEAN, VARIANCE, AMPLITUDE );
    tsg.reset( reset_signal );
    tsg.clock( stimulus.clock );
    tsg.output( output_signal );
 
    // output recorder
-   Recorder record( "record" );
+   FileRecorder< testbench::data_sample_type> record( "record", FILE_NAME );
    record.input( output_signal );
    record.clock( stimulus.clock );
 
