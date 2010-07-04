@@ -22,7 +22,7 @@ namespace testbench{
    const unsigned int INPUT_WIDTH=16;
    const unsigned int OUTPUT_WIDTH=16;
 
-   typedef sc_uint<1> bit_type;
+   typedef bool bit_type;
    typedef sc_int< INPUT_WIDTH > data_input_type;
    typedef sc_int< OUTPUT_WIDTH > data_output_type;
 

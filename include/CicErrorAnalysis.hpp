@@ -36,7 +36,8 @@ class CicErrorAnalysis
          const unsigned int& diffDelay, 
          const unsigned int& numOutputBits, 
          const unsigned int& type
-         ) {
+         ) 
+   {
 
       // match paper notation
       const unsigned int RM = maxDecimation*diffDelay;
@@ -97,7 +98,8 @@ class CicErrorAnalysis
          const unsigned int& maxDecimation, 
          const unsigned int& diffDelay, 
          const unsigned int& numOutputBits 
-         ) {
+         ) 
+   {
 
       double gainMax = std::tr1::pow( maxDecimation*diffDelay, numStages);
       long bitGain = std::tr1::round( std::tr1::log2( gainMax ) );

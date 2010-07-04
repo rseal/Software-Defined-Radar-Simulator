@@ -20,29 +20,44 @@
 #include <systemc.h>
 #include <list>
 #include <deque>
+#include <stdexcept>
 
 template < unsigned int INPUT_WIDTH, unsigned int OUTPUT_WIDTH, 
          unsigned int COEFF_WIDTH, unsigned int SUM_WIDTH> 
-         class FirFilter: public sc_module {
+         class FirFilter: public sc_module 
+{
 
    // data type definitions
-   typedef sc_uint<1> bit_type;
+   typedef bool bit_type;
    typedef sc_int< INPUT_WIDTH > data_input_type;
    typedef sc_int< OUTPUT_WIDTH > data_output_type;
    typedef sc_int< COEFF_WIDTH > coeff_type;
-   typedef std::list< coeff_type > CoeffList;
+
    typedef std::deque< coeff_type > CoeffDeque;
-   typedef typename CoeffList::iterator CoeffIterator;
-   CoeffList coeff_;
    CoeffDeque queue_;
+   typedef std::list< coeff_type > CoeffList;
+   CoeffList coeff_;
+   typedef typename CoeffList::iterator CoeffIterator;
    CoeffIterator coeff_iter_;
+
+   bool initialized_;
+   sc_int< SUM_WIDTH> sum_;
+
+   void Reset(){
+
+      if(!initialized_){
+         throw std::runtime_error("FirFilter coefficients uninitialized! "
+            "Call Initialize() before beginning simulation");
+      }
+
+      cout << "calling reset" << endl;
+
+   }
 
    // default implementation
    virtual void Compute() {
 
-      static bool toggle = true;
-
-      sc_int< SUM_WIDTH > sum = 0.0;
+      sum_ = 0.0;
 
       // delete the oldest sample
       queue_.pop_front();
@@ -52,11 +67,11 @@ template < unsigned int INPUT_WIDTH, unsigned int OUTPUT_WIDTH,
       // compute convolution sum
       coeff_iter_ = coeff_.end();
       for( int i=0; i<queue_.size(); ++i) {
-         sum += queue_[i]* *(--coeff_iter_);
+         sum_ += queue_[i]* *(--coeff_iter_);
       }
 
       // compute output
-      output = sum.range(SUM_WIDTH-1,SUM_WIDTH-OUTPUT_WIDTH);
+      output.write( sum_.range(SUM_WIDTH-1,SUM_WIDTH-OUTPUT_WIDTH) );
    }
 
    public:
@@ -64,14 +79,23 @@ template < unsigned int INPUT_WIDTH, unsigned int OUTPUT_WIDTH,
    SC_HAS_PROCESS( FirFilter );
 
    // CTOR
-   FirFilter( const sc_module_name& nm, const CoeffList& coeff ):
-   sc_module( nm ), coeff_(coeff), queue_(coeff.size(),0) {
+   FirFilter( const sc_module_name& nm ):
+      sc_module( nm ), initialized_(false) {
 
-      SC_METHOD( Compute );
-      sensitive << clock.pos();
-      
-      // initialize coefficient list iterator
+         SC_METHOD( Compute );
+         sensitive << clock.pos();
+
+         SC_THREAD( Reset );
+         sensitive << reset.pos();
+
+      }
+
+   void Initialize( const CoeffList& coeff )
+   {
+      coeff_ = coeff;
+      queue_.resize(coeff_.size());
       coeff_iter_ = coeff_.begin();
+      initialized_ = true;
    }
 
    // port IO definitions

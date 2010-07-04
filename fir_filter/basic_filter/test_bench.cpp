@@ -100,7 +100,8 @@ int main()
 
    // DUT
    FirFilter< testbench::INPUT_WIDTH, testbench::OUTPUT_WIDTH, 
-      testbench::COEFF_WIDTH, testbench::SUM_WIDTH > filter( "fir", coeff);
+      testbench::COEFF_WIDTH, testbench::SUM_WIDTH > filter( "fir");
+   filter.Initialize( coeff );
    filter.clock( stimulus.clock );
    filter.input( output_signal );
    filter.output( input_signal );

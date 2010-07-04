@@ -17,7 +17,6 @@
 #ifndef PHASE_ACC_HPP
 #define PHASE_ACC_HPP
 
-#include <fstream>
 #include <boost/math/constants/constants.hpp>
 #include <boost/shared_ptr.hpp>
 
@@ -27,22 +26,10 @@ class PhaseAccumulator: public sc_module  {
    typedef sc_uint<BIT_WIDTH> data_type;
    typedef sc_uint<1> bit_type;
 
-   boost::shared_ptr<std::ofstream> outFile;
-   bool useLogging_;
-   bool useDisplay_;
-
    data_type stepSize_;
 
    void Accumulate() { 
-      out = ( reset.read() == 1 ) ? 0U : out.read() + stepSize_; 
-      if(useDisplay_) Display();
-   }
-
-   void Display() {
-      if(useLogging_)
-         *outFile << out.read() << endl;
-      else 
-         cout << "Accumulate::out = " << out.read() << endl;
+      out = reset.read() ? 0U : out.read() + stepSize_; 
    }
 
    public: 
@@ -50,15 +37,11 @@ class PhaseAccumulator: public sc_module  {
    SC_HAS_PROCESS(PhaseAccumulator);
 
    // Constructor 
-   PhaseAccumulator( const sc_module_name& name, unsigned int stepSize, 
-         bool useLogging=false, bool useDisplay=false):
-      sc_module(name), stepSize_(stepSize), useLogging_(useLogging) , 
-      useDisplay_(useDisplay) {
+   PhaseAccumulator( const sc_module_name& name, unsigned int stepSize ):
+      sc_module(name), stepSize_(stepSize) {
 
          SC_METHOD(Accumulate);
          sensitive << clock.pos();
-
-         if(useLogging) outFile.reset( new ofstream("dout.dat"));
       }
 
    // port definition

@@ -64,6 +64,7 @@ typedef sc_uint<1> bit_type;
   // create vcd trace file
   sc_trace_file* trace_file = sc_create_vcd_trace_file(VCD_FILE.c_str());
   sc_signal<bit_type> reset_signal;
+  sc_signal<sc_uint<BIT_WIDTH> > out_signal;
 
   // create a constant low
   sc_signal<bit_type> low_signal;
@@ -74,19 +75,16 @@ typedef sc_uint<1> bit_type;
   rst.reset(low_signal);
   rst.time_out(reset_signal);
 
-  PhaseAccumulator<BIT_WIDTH> accumulator("accumulator", step_size,true);
-  sc_signal<sc_uint<BIT_WIDTH> > out;
+  PhaseAccumulator<BIT_WIDTH> accumulator("accumulator", step_size );
   accumulator.clock(clock);
-  accumulator.out(out);
+  accumulator.out(out_signal);
   accumulator.reset(reset_signal);
   
   sc_trace(trace_file, clock, "clock");
   sc_trace(trace_file, rst.time_out, "time_out");
   sc_trace(trace_file, accumulator.out, "phase");
 
-
   sc_start(SC_ZERO_TIME);
-
 
   //run simulations for 22 nsec
   sc_start(sc_time(5000, SC_NS));

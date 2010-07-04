@@ -29,12 +29,12 @@ int main()
    const int OUTPUT_WIDTH = 16;
 
    CicErrorAnalysis cea;
-   vector<int> discardBits = cea.ComputeBitTruncation(
+   vector<int> bitWidths = cea.ComputeBitWidths(
          NUM_STAGES, MAX_DECIMATION, DIFF_DELAY, OUTPUT_WIDTH
          );
   
-   for( int i=0; i< discardBits.size(); ++i)
+   for( int i=0; i< bitWidths.size(); ++i)
    {
-      cout << " stage " << lexical_cast<string>(i) << " truncated bits = " << discardBits[i] << endl;
+      cout << " stage " << lexical_cast<string>(i) << " bit width = " << bitWidths[i] << endl;
    }
 }

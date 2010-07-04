@@ -2,13 +2,12 @@ all: test
 
 NAME=phase_accumulator
 INCLUDE=/usr/local/include/sdr_simulator
-HEADERS=$(shell ls -1 $(INCLUDE)/*.hpp)
 
 FLAGS= -march=native -msse3 -pipe
 
 .PHONY: test
 
-test: test_bench.cpp $(HEADERS)
+test: test_bench.cpp $(INCLUDE)/PhaseAccumulator.hpp 
 	g++ $(FLAGS) -o test test_bench.cpp -lsystemc
 
 clean: 

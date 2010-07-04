@@ -18,7 +18,7 @@
 
 #include <boost/lexical_cast.hpp>
 #include <vector>
-#include <sdr_simulator/GaussianNoiseGenerator.hpp>
+#include <sdr_simulator/util/GaussianNoiseGenerator.hpp>
 
 #include "test_bench.hpp"
 #include "Stimulus.hpp"

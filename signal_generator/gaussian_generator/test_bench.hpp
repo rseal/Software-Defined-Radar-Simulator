@@ -21,7 +21,7 @@ namespace testbench{
 
    const unsigned int BIT_WIDTH=16;
 
-   typedef sc_uint<1> bit_type;
+   typedef bool bit_type;
    typedef sc_int< BIT_WIDTH > data_sample_type;
 
 };

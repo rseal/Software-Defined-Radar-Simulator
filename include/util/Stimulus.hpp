@@ -27,7 +27,7 @@
 template< typename T >
 class Stimulus: public sc_module
 {
-   typedef sc_uint<1> bit_type;
+   typedef bool bit_type;
    const unsigned int RESET_TIME_;
 
    // define an exportable clock signal for clock generation

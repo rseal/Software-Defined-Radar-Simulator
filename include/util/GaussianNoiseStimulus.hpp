@@ -17,7 +17,7 @@
 #ifndef GAUSSIAN_NOISE_STIMULUS_HPP
 #define GAUSSIAN_NOISE_STIMULUS_HPP
 
-#include<sdr_simulator/GaussianNoiseGenerator.hpp>
+#include<sdr_simulator/util/GaussianNoiseGenerator.hpp>
 #include<sdr_simulator/util/Stimulus.hpp>
 
 #include <systemc.h>

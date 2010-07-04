@@ -28,7 +28,7 @@ class CicDifferentiator: public sc_module {
    typedef sc_int< INPUT_WIDTH > data_input_type;
    typedef sc_int< OUTPUT_WIDTH > data_output_type;
    typedef sc_int< INPUT_WIDTH > buffer_type;
-   typedef sc_uint<1> bit_type;
+   typedef bool bit_type;
 
    sc_signal< buffer_type >  memory;
 
