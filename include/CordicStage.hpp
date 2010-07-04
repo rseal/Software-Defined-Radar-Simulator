@@ -37,6 +37,7 @@ class CordicStage: public sc_module
 
    // internal typedefs
    typedef boost::shared_ptr< CordicShiftAdder< XY_WIDTH, XY_WIDTH > > ShiftAdderPtr;
+   typedef bool reset_type;
    typedef sc_uint<1>  bit_type;
 
    // define internal modules 
@@ -158,7 +159,7 @@ class CordicStage: public sc_module
 
    //define interface to module
    sc_in_clk clock;
-   sc_in<bit_type> reset;
+   sc_in< reset_type> reset;
    sc_in<data_type>  xin;
    sc_in<data_type>  yin;
    sc_in<z_type>  zin;

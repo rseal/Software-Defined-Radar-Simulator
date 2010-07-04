@@ -1,0 +1,13 @@
+project accumulator
+        : default-build release
+	: usage-requirements <include>/usr/local/include/sdr_simulator
+        ;
+
+exe accumulator_test 
+        : test_bench.cpp  
+        : <variant>release
+        : <cxxflags>"-std=gnu++0x -O2 -msse3 -march=athlon-xp -fomit-frame-pointer -pipe"
+          <linkflags>"-lsystemc"
+        ;
+
+install ../bin : accumulator_test ;  

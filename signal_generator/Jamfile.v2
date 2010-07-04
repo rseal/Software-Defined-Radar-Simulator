@@ -1,0 +1,6 @@
+project signal_generator 
+	: default-build release
+	;
+
+build-project test_generator ;
+build-project gaussian_generator ;

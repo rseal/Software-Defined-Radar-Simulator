@@ -33,7 +33,7 @@ int main()
          NUM_STAGES, MAX_DECIMATION, DIFF_DELAY, OUTPUT_WIDTH
          );
   
-   for( int i=0; i< bitWidths.size(); ++i)
+   for( unsigned int i=0; i< bitWidths.size(); ++i)
    {
       cout << " stage " << lexical_cast<string>(i) << " bit width = " << bitWidths[i] << endl;
    }

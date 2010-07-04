@@ -1,0 +1,5 @@
+project fir_filter 
+	: default-build release
+	;
+
+build-project basic_filter ;

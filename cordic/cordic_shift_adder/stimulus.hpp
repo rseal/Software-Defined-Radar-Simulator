@@ -22,7 +22,8 @@ template< uint DATA_WIDTH>
 class Stimulus : public sc_module
 {
    // define signal types
-   typedef sc_uint<1> BitType;
+   typedef sc_uint<1> bit_type;
+   typedef bool reset_type;
    typedef sc_int<DATA_WIDTH> DataType;
 
    // define constants
@@ -108,11 +109,11 @@ class Stimulus : public sc_module
          SIGN_TIME_(20),
          DATA_TIME_(1),
          SWITCH_TIME_(simulationTime/4),
-         SHIFT(1.0),
+         TITLE_("CORDIC_SHIFT_ADDER Stimulus Module"),
          VERSION_("1.0"),
          AUTHOR_("RSeal"),
-         TITLE_("CORDIC_SHIFT_ADDER Stimulus Module"),
-         errors_(0)
+         errors_(0),
+         SHIFT(1.0)
       {
          SC_THREAD( Reset );
          sensitive << clock.pos();
@@ -124,8 +125,8 @@ class Stimulus : public sc_module
          sensitive << clock.neg();
       }
 
-      sc_out<BitType> reset;
-      sc_out<BitType> sign;
+      sc_out< reset_type > reset;
+      sc_out< bit_type > sign;
       sc_in_clk clock;
       sc_out<DataType> x,y;
       sc_in <DataType> out;

@@ -67,4 +67,6 @@ int sc_main( int argc, char* argv[])
 
    // begin simulation
    sc_start( simulation_time );
+
+   return 0;
 }

@@ -1,0 +1,13 @@
+project test_generator
+        : default-build release
+	: usage-requirements <include>/usr/local/include/sdr_simulator
+        ;
+
+exe test_generator_test 
+        : test_bench.cpp  
+        : <variant>release
+        : <cxxflags>"-std=gnu++0x -O2 -msse3 -march=athlon-xp -fomit-frame-pointer -pipe"
+          <linkflags>"-lsystemc"
+        ;
+
+install ../../bin : test_generator_test ;  

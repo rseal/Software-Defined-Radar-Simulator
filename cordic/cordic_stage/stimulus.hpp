@@ -26,9 +26,6 @@ using test_bench::Z_WIDTH;
 
 class Stimulus : public sc_module
 {
-   typedef sc_uint<1> ResetType;
-   typedef sc_int<DATA_WIDTH> DataType;
-
    // define constants
    const int RESET_TIME_;
    const int DATA_TIME_;
@@ -42,9 +39,9 @@ class Stimulus : public sc_module
    // Reset bit signal
    void Reset()
    {
-      reset = 1;
+      reset.write( true );
       wait(RESET_TIME_, SC_NS);
-      reset = 0;
+      reset.write( false );
    }
 
    // Data input - executed once per clock edge
@@ -53,7 +50,6 @@ class Stimulus : public sc_module
       static int x_data = SWITCH_TIME_*2;
       static int y_data = SWITCH_TIME_*2;
       static int z_data = SWITCH_TIME_/2;
-      static int theta = 2048;
 
       x_out = x_data--;
       y_out = y_data--;
@@ -75,11 +71,11 @@ class Stimulus : public sc_module
          RESET_TIME_(10),
          DATA_TIME_(1),
          SWITCH_TIME_(simulationTime/4),
-         SHIFT(1.0),
+         TITLE_("CORDIC_SHIFT_ADDER Stimulus Module"),
          VERSION_("1.0"),
          AUTHOR_("RSeal"),
-         TITLE_("CORDIC_SHIFT_ADDER Stimulus Module"),
-         errors_(0)
+         errors_(0),
+         SHIFT(1.0)
       {
          SC_THREAD( Reset );
          sensitive << clock.pos();
@@ -89,7 +85,7 @@ class Stimulus : public sc_module
 
       }
 
-      sc_out<reset_type> reset;
+      sc_out< reset_type > reset;
       sc_in_clk clock;
       sc_out<data_type> x_out,y_out;
       sc_out<z_type> z_out;

@@ -26,8 +26,6 @@ int sc_main( int argc, char* argv[])
    const double TIME_RESOLUTION = 1.0;
    const double TOTAL_SIMULATION_TIME = 500.0;
    const double CLOCK_PERIOD = 2.0;
-   const unsigned int INPUT_WIDTH = 18;
-   const unsigned int OUTPUT_WIDTH = 18;
 
    // set time parameters
    sc_set_time_resolution( TIME_RESOLUTION , SC_NS );
@@ -69,4 +67,6 @@ int sc_main( int argc, char* argv[])
 
    // begin simulation
    sc_start( simulation_time );
+
+   return 0;
 }

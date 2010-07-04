@@ -34,6 +34,7 @@ class CordicShiftAdder : public sc_module
    typedef sc_int<INPUT_WIDTH> cordic_input_type; 
    typedef sc_int<OUTPUT_WIDTH> cordic_output_type; 
    typedef sc_uint<1> cordic_bit_type;
+   typedef bool reset_type;
 
    const int SHIFT_;
 
@@ -78,7 +79,7 @@ class CordicShiftAdder : public sc_module
    }
 
    sc_in_clk clock;
-   sc_in<cordic_bit_type> reset;
+   sc_in<reset_type> reset;
    sc_in<cordic_input_type> in_a;
    sc_in<cordic_input_type> in_b;
    sc_out<cordic_output_type> out;

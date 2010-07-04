@@ -28,7 +28,6 @@
 #include <sdr_simulator/CordicThetaMap.hpp>
 
 using std::ofstream;
-using boost::shared_ptr;
 
 template<uint XY_WIDTH, uint Z_WIDTH>
 class Cordic: public sc_module
@@ -37,7 +36,7 @@ class Cordic: public sc_module
    const unsigned int NUM_STAGES;
 
    // data type definitions 
-   typedef sc_uint<1> bit_type;
+   typedef bool bit_type;
 
    typedef sc_int<XY_WIDTH> data_type;
    typedef sc_int<Z_WIDTH> z_type;
@@ -54,9 +53,9 @@ class Cordic: public sc_module
    // define shared_ptrs to manage module and signal containers
    typedef CordicStage< XY_WIDTH+2, Z_WIDTH-1> CordicStageModule;
 
-   typedef shared_ptr< CordicStageModule > CordicStagePtr;
-   typedef shared_ptr<int_data_signal> DataSignalPtr; 
-   typedef shared_ptr<int_z_signal> ZSignalPtr; 
+   typedef boost::shared_ptr< CordicStageModule > CordicStagePtr;
+   typedef boost::shared_ptr<int_data_signal> DataSignalPtr; 
+   typedef boost::shared_ptr<int_z_signal> ZSignalPtr; 
 
    // define internal modules
    vector<CordicStagePtr> cordicStages_;
@@ -67,7 +66,7 @@ class Cordic: public sc_module
    vector<ZSignalPtr> zSignals_;
 
    typedef CordicThetaMap< XY_WIDTH, XY_WIDTH+2, Z_WIDTH, Z_WIDTH-1> theta_map;
-   typedef shared_ptr<theta_map> ThetaMapPtr;
+   typedef boost::shared_ptr<theta_map> ThetaMapPtr;
    ThetaMapPtr thetaMap_;
 
    int_data_signal x_theta;
@@ -78,7 +77,7 @@ class Cordic: public sc_module
    int_data_signal yout_buff;
    int_z_signal zout_buff;
 
-   typedef shared_ptr<ofstream> OutputFileStreamPtr;
+   typedef boost::shared_ptr<ofstream> OutputFileStreamPtr;
    OutputFileStreamPtr outputStream_;
 
    // create internal shift adder modules

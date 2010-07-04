@@ -23,7 +23,7 @@ namespace test_bench{
    const int Z_WIDTH=16;
    const int THETA_WIDTH=16;
 
-   typedef sc_uint<1> reset_type;
+   typedef bool reset_type;
    typedef sc_int<DATA_WIDTH> data_type;
    typedef sc_int<Z_WIDTH> z_type;
 };

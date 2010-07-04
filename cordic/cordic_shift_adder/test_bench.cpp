@@ -29,6 +29,7 @@ int sc_main( int argc, char* argv[])
    // typedef signal types
    typedef sc_int<INPUT_WIDTH> input_type;
    typedef sc_int<OUTPUT_WIDTH> output_type;
+   typedef bool reset_type;
    typedef sc_uint<1> bit_type;
 
    // set time parameters
@@ -42,8 +43,8 @@ int sc_main( int argc, char* argv[])
    // create connecting signals from stimulus-->dut
    sc_signal<input_type> x,y;
    sc_signal<output_type> out;
-   sc_signal<bit_type> reset;
-   sc_signal<bit_type> sign;
+   sc_signal< reset_type > reset;
+   sc_signal< bit_type > sign;
 
    // create stimulus signal object
    Stimulus<INPUT_WIDTH> stim("stimulus", TOTAL_SIMULATION_TIME);
@@ -65,4 +66,6 @@ int sc_main( int argc, char* argv[])
 
    // begin simulation
    sc_start( simulation_time );
+
+   return 0;
 }

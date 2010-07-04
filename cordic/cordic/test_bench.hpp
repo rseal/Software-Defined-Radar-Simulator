@@ -22,7 +22,7 @@ namespace test_bench{
    const int DATA_WIDTH=16;
    const int Z_WIDTH=16;
 
-   typedef sc_uint<1> bit_type;
+   typedef bool bit_type;
    typedef sc_int<DATA_WIDTH> data_type;
    typedef sc_int<Z_WIDTH> z_type;
 };

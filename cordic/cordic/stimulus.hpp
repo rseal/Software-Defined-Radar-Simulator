@@ -72,7 +72,6 @@ class Stimulus : public sc_module
       static int t=0;
       static int angle = 1;
       int x_amp = static_cast<int>(tr1::pow(2.0,DATA_WIDTH)*0.5);
-      static bool toggle = false;
 
       if(!reset.read()) {
 
@@ -130,9 +129,9 @@ class Stimulus : public sc_module
    Stimulus(sc_module_name nm, const double simulationTime ):
       sc_module(nm), 
       RESET_TIME_(10),
+      TITLE_("CORDIC_SHIFT_ADDER Stimulus Module"),
       VERSION_("1.0"),
       AUTHOR_("RSeal"),
-      TITLE_("CORDIC_SHIFT_ADDER Stimulus Module"),
       TWO_PI_(2.0f*boost::math::constants::pi<float>()),
       errors_(0)
    {

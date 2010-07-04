@@ -1,0 +1,9 @@
+project cordic
+        : default-build release
+	: usage-requirements <include>/usr/local/include/sdr_simulator
+        ;
+
+build-project cordic ;
+build-project cordic_shift_adder ;
+build-project cordic_stage ;
+
