@@ -19,12 +19,11 @@
 
 #include<systemc.h>
 #include<vector>
+#include<sdr_simulator/Types.hpp>
 
 template< unsigned int BIT_WIDTH >
 class SignalGenerator : public sc_module
 {
-   typedef bool bit_type;
-   typedef sc_int< BIT_WIDTH > sample_type;
    unsigned int index_;
 
    // default implementation that relies on samples_ vector, which is filled 
@@ -40,6 +39,7 @@ class SignalGenerator : public sc_module
 
    protected:
 
+   typedef sc_int< BIT_WIDTH > sample_type;
    const int SAMPLE_SIZE;
    std::vector< sample_type > samples_;
 
@@ -59,7 +59,7 @@ class SignalGenerator : public sc_module
    }
 
    // define port IO
-   sc_in< bit_type > reset;
+   sc_in< sdr_types::reset_type > reset;
    sc_in_clk clock;
    sc_out< sample_type > output;
 

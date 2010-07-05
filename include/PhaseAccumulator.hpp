@@ -19,12 +19,12 @@
 
 #include <boost/math/constants/constants.hpp>
 #include <boost/shared_ptr.hpp>
+#include <sdr_simulator/Types.hpp>
 
 template <uint BIT_WIDTH>
 class PhaseAccumulator: public sc_module  {
 
    typedef sc_uint<BIT_WIDTH> data_type;
-   typedef sc_uint<1> bit_type;
 
    data_type stepSize_;
 
@@ -45,7 +45,7 @@ class PhaseAccumulator: public sc_module  {
       }
 
    // port definition
-   sc_in< bit_type > reset;
+   sc_in< sdr_types::reset_type > reset;
    sc_in_clk clock;
    sc_out<data_type> out;
 };

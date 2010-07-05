@@ -19,6 +19,7 @@
 #include <list>
 
 #include<sdr_simulator/FirFilter.hpp>
+#include<sdr_simulator/Types.hpp>
 #include<sdr_simulator/util/FileRecorder.hpp>
 #include<sdr_simulator/util/GaussianNoiseStimulus.hpp>
 
@@ -33,6 +34,7 @@ int main()
    const double TIME_RESOLUTION = 1.0;
    const double TOTAL_SIMULATION_TIME = 500000.0;
    const double CLOCK_PERIOD = 2.0;
+   const unsigned int RESET_TIME = 10;
    const string OUTPUT_FILE_NAME = "output.dat";
 
    // Create a set of filter coefficients for testing DUT
@@ -76,7 +78,7 @@ int main()
    coeff.push_back(-49);
    
    // define signals
-   sc_signal< testbench::bit_type > reset_signal;
+   sdr_types::reset_signal reset_signal;
    sc_signal< testbench::data_input_type > input_signal;
    sc_signal< testbench::data_output_type > output_signal;
    sc_signal< bool > clk_signal;
@@ -85,11 +87,11 @@ int main()
    sc_set_time_resolution( TIME_RESOLUTION , SC_NS );
    sc_time simulation_time(TOTAL_SIMULATION_TIME,SC_NS);
    sc_time clock_time(CLOCK_PERIOD,SC_NS);
+   sc_clock stimulus_clock( "clock", clock_time );
 
    // create stimulus signals for DUT
    GaussianNoiseStimulus< testbench::data_input_type, testbench::INPUT_WIDTH >
-      stimulus( "stimulus", 0.0, 1.0, 0.25 );
-   stimulus.reset( reset_signal );
+      stimulus( "stimulus", RESET_TIME, stimulus_clock, 0.0, 1.0, 0.25 );
    stimulus.output( output_signal );
 
    // record output test data to file
@@ -103,9 +105,9 @@ int main()
       testbench::COEFF_WIDTH, testbench::SUM_WIDTH > filter( "fir");
    filter.Initialize( coeff );
    filter.clock( stimulus.clock );
+   filter.reset( stimulus.reset );
    filter.input( output_signal );
    filter.output( input_signal );
-   filter.reset( reset_signal );
 
    // begin simulation
    sc_start( simulation_time );

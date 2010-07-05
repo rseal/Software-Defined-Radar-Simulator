@@ -26,83 +26,91 @@ template < unsigned int INPUT_WIDTH, unsigned int OUTPUT_WIDTH,
          unsigned int COEFF_WIDTH, unsigned int SUM_WIDTH> 
          class FirFilter: public sc_module 
 {
+   protected:
 
-   // data type definitions
-   typedef bool bit_type;
-   typedef sc_int< INPUT_WIDTH > data_input_type;
-   typedef sc_int< OUTPUT_WIDTH > data_output_type;
-   typedef sc_int< COEFF_WIDTH > coeff_type;
+      typedef sc_int< COEFF_WIDTH > coeff_type;
+      typedef std::list< coeff_type > CoeffList;
+      typedef typename CoeffList::iterator CoeffIterator;
+      typedef std::deque< coeff_type > CoeffDeque;
 
-   typedef std::deque< coeff_type > CoeffDeque;
-   CoeffDeque queue_;
-   typedef std::list< coeff_type > CoeffList;
-   CoeffList coeff_;
-   typedef typename CoeffList::iterator CoeffIterator;
-   CoeffIterator coeff_iter_;
+      CoeffDeque queue_;
+      CoeffList coeff_;
+      CoeffIterator coeff_iter_;
+      sc_int< SUM_WIDTH> sum_;
 
-   bool initialized_;
-   sc_int< SUM_WIDTH> sum_;
+   private:
 
-   void Reset(){
+      bool initialized_;
 
-      if(!initialized_){
-         throw std::runtime_error("FirFilter coefficients uninitialized! "
-            "Call Initialize() before beginning simulation");
+      // data type definitions
+      typedef bool bit_type;
+      typedef sc_int< INPUT_WIDTH > data_input_type;
+      typedef sc_int< OUTPUT_WIDTH > data_output_type;
+
+
+      void Reset(){
+
+         if(!initialized_){
+            throw std::runtime_error("FirFilter coefficients uninitialized! "
+                  "Call Initialize() before beginning simulation");
+         }
+
+         cout << "calling reset" << endl;
+
       }
 
-      cout << "calling reset" << endl;
+      // default implementation
+      virtual void Compute() {
 
-   }
+         sum_ = 0.0;
 
-   // default implementation
-   virtual void Compute() {
+         // delete the oldest sample
+         queue_.pop_front();
+         // add the latest sample
+         queue_.push_back( input.read() );
 
-      sum_ = 0.0;
+         // compute convolution sum
+         coeff_iter_ = coeff_.end();
+         for( int i=0; i<queue_.size(); ++i) {
+            sum_ += queue_[i]* *(--coeff_iter_);
+         }
 
-      // delete the oldest sample
-      queue_.pop_front();
-      // add the latest sample
-      queue_.push_back( input.read() );
-
-      // compute convolution sum
-      coeff_iter_ = coeff_.end();
-      for( int i=0; i<queue_.size(); ++i) {
-         sum_ += queue_[i]* *(--coeff_iter_);
+         // compute output
+         output.write( sum_.range(SUM_WIDTH-1,SUM_WIDTH-OUTPUT_WIDTH) );
       }
 
-      // compute output
-      output.write( sum_.range(SUM_WIDTH-1,SUM_WIDTH-OUTPUT_WIDTH) );
-   }
 
    public:
 
-   SC_HAS_PROCESS( FirFilter );
 
-   // CTOR
-   FirFilter( const sc_module_name& nm ):
-      sc_module( nm ), initialized_(false) {
+      SC_HAS_PROCESS( FirFilter );
 
-         SC_METHOD( Compute );
-         sensitive << clock.pos();
+      // CTOR
+      FirFilter( const sc_module_name& nm ):
+         sc_module( nm ), initialized_(false) {
 
-         SC_THREAD( Reset );
-         sensitive << reset.pos();
+            SC_METHOD( Compute );
+            sensitive << clock.pos();
 
-      }
+            SC_THREAD( Reset );
+            sensitive << reset.pos();
 
-   void Initialize( const CoeffList& coeff )
-   {
-      coeff_ = coeff;
-      queue_.resize(coeff_.size());
-      coeff_iter_ = coeff_.begin();
-      initialized_ = true;
-   }
+         }
 
-   // port IO definitions
-   sc_in_clk clock;
-   sc_in< bit_type > reset;
-   sc_in< data_input_type > input;
-   sc_out< data_output_type > output;
+      void Initialize() { initialized_ = true; }
+      //void Initialize( const CoeffList& coeff )
+      //{
+      //   coeff_ = coeff;
+      //   queue_.resize(coeff_.size());
+      //   coeff_iter_ = coeff_.begin();
+      //   initialized_ = true;
+      //}
+
+      // port IO definitions
+      sc_in_clk clock;
+      sc_in< bit_type > reset;
+      sc_in< data_input_type > input;
+      sc_out< data_output_type > output;
 
 };
 

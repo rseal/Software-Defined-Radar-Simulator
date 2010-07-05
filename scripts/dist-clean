@@ -10,4 +10,5 @@ rm -rf ../cordic/cordic_stage/bin
 rm -rf ../fir_filter/basic_filter/bin
 rm -rf ../signal_generator/test_generator/bin
 rm -rf ../signal_generator/gaussian_generator/bin
+rm -rf ../receive_chain/bin
 

@@ -54,16 +54,20 @@ class GaussianNoiseStimulus: public Stimulus<T>
       SC_HAS_PROCESS( GaussianNoiseStimulus );
 
       // CTOR
-      GaussianNoiseStimulus
+      GaussianNoiseStimulus 
          ( 
           const sc_module_name& nm, 
+          const unsigned int resetTime,
+          sc_clock& stimClock,
           const double mean,
           const double variance, 
           const double amplitude
-         ): Stimulus<T>(nm),MEAN(mean), VARIANCE(variance), 
-         AMPLITUDE(amplitude) {
-            Init();
-         }
+         ): 
+            Stimulus<T>( nm, resetTime, stimClock ), MEAN(mean), 
+            VARIANCE(variance), AMPLITUDE(amplitude) {
+
+               Init();
+            }
 
 };
 

@@ -18,51 +18,54 @@
 #define STIMULUS_HPP
 
 #include <systemc.h>
-#include <tr1/math.h>
-#include <fstream>
-#include <boost/math/constants/constants.hpp>
-#include <boost/shared_ptr.hpp>
+#include <sdr_simulator/Types.hpp>
 
 // abstract class to assist in stimulus IO development for hardware testing.
 template< typename T >
 class Stimulus: public sc_module
 {
-   typedef bool bit_type;
    const unsigned int RESET_TIME_;
 
-   // define an exportable clock signal for clock generation
-   typedef sc_export< sc_signal_inout_if<bool> > clk_out;
-   sc_clock clock_;
+   // define internal signals for use with exports
+   sdr_types::reset_signal reset_;
 
    // reset signal
    void Reset() {
-      reset = 1;
+
+      reset_.write( true );
       wait(RESET_TIME_, SC_NS);
-      reset = 0;
+      reset_.write( false );
+
    }
 
    // override to connect custom stimulus modules
    // must call this from derived class
-   virtual void Init()=0;
+   virtual void Init()
+   {
+      // TODO: Override and add default signal outputs here
+   };
 
    public:
-      SC_HAS_PROCESS( Stimulus );
+   SC_HAS_PROCESS( Stimulus );
 
-      // CTOR
-      Stimulus( const sc_module_name nm): sc_module(nm), RESET_TIME_(10), 
-         clock_( "clock", sc_time( 2, SC_NS) ) {
+   // CTOR
+   Stimulus( const sc_module_name& nm, const unsigned int resetTime, sc_clock& stimClock ): 
+      sc_module(nm), RESET_TIME_(10) 
+   {
 
-         SC_THREAD( Reset );
-         sensitive << clock_.posedge_event();
+      SC_THREAD( Reset );
+      sensitive << stimClock.posedge_event();
 
-         // tie internal clock signal to exported clock output
-         clock(clock_);
-      }
+      // tie internal clock signal to exported clock output
+      clock( stimClock );
+      reset(reset_);
 
-      // define port IO
-      sc_out< bit_type > reset;
-      clk_out clock;
-      sc_out< T > output;
+   }
+
+   // define port IO
+   sdr_types::reset_export_out reset;
+   sdr_types::clk_export_out clock;
+   sc_out< T > output;
 };
 
 #endif

@@ -21,14 +21,16 @@
 
 class sc_timer: public sc_module  {
 
-	typedef sc_uint<1> bit_type;
+	typedef bool reset_type;
+   typedef sc_uint<1> bit_type;
+
    unsigned int timeOutValue_;
    unsigned int value_;
 
    // main function
    void Execute() { 
       time_out =  value_ == 0U ? 1 : 0;
-      value_ =  reset.read() == 1 ? timeOutValue_ : value_ - 1U;
+      value_ =  reset.read() ? timeOutValue_ : value_ - 1U;
    }
 
    public: 
@@ -36,7 +38,7 @@ class sc_timer: public sc_module  {
    SC_HAS_PROCESS(sc_timer);
 
    // port definition
-   sc_in<bit_type> reset;
+   sc_in< reset_type > reset;
    sc_in_clk clk;
    sc_out<bit_type> time_out;
 

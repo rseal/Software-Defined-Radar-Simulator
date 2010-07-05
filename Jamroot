@@ -6,3 +6,4 @@ build-project accumulator ;
 build-project cic ;
 build-project cordic ;
 build-project fir_filter ;
+build-project receive_chain ;

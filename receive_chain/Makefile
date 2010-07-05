@@ -4,7 +4,7 @@ NAME=receive_chain
 INCLUDE=/usr/local/include/sdr_simulator
 HEADERS=$(shell ls -1 $(INCLUDE)/*.hpp)
 
-FLAGS= -march=native -msse3 -pipe
+FLAGS= -march=native -fomit-frame-pointer -msse2 -msse3 -pipe
 
 .PHONY: test
 

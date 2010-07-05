@@ -20,76 +20,160 @@
 #include<systemc.h>
 
 #include<sdr_simulator/Settings.hpp>
+#include<sdr_simulator/Types.hpp>
 #include<sdr_simulator/PhaseAccumulator.hpp>
 #include<sdr_simulator/Cordic.hpp>
 #include<sdr_simulator/Cic.hpp>
-#include<sdr_simulator/HalfBandFilter.hpp>
+#include<sdr_simulator/usrp/HalfBandFilterGeneric.hpp>
 
 using namespace settings;
 
 template < unsigned int INPUT_WIDTH, unsigned int OUTPUT_WIDTH >
-class ReceiveChain: sc_module { 
+class ReceiveChain: public sc_module { 
 
+   // cordic definitions
    typedef Cordic<CORDIC::XY_WIDTH, CORDIC::Z_WIDTH> CordicModule;
-   typedef PhaseAccumulator<PHASE_ACCUMULATOR::BIT_WIDTH> AccumulatorModule;
+   typedef boost::shared_ptr< CordicModule > CordicPtr;
+   CordicPtr cordic_;
+
+   // phase accumulator definitions
+   typedef PhaseAccumulator<ACCUMULATOR::BIT_WIDTH> AccumulatorModule;
+   typedef boost::shared_ptr< AccumulatorModule > AccumulatorPtr;
+   AccumulatorPtr accumulator_;
+
+   // cic definitions
    typedef Cic< CIC::INPUT_WIDTH, CIC::OUTPUT_WIDTH > CicModule;
-   typedef HalfBandFilter< HALF_BAND_FILTER::BIT_WIDTH > HalfBandFilterModule;
+   typedef boost::shared_ptr< CicModule > CicPtr;
+   CicPtr cic_;
+
+   // half band filter definitions
+   typedef HalfBandFilterGeneric< 
+      HALF_BAND_FILTER::INPUT_WIDTH,
+      HALF_BAND_FILTER::OUTPUT_WIDTH,
+      HALF_BAND_FILTER::SUM_WIDTH,
+      HALF_BAND_FILTER::COEFF_WIDTH > HalfBandFilterModule;
+   typedef boost::shared_ptr< HalfBandFilterModule > HalfBandFilterPtr;
+   HalfBandFilterPtr halfBandFilter_;
    
-   typedef sc_uint<1> bit_type;
-   typedef sc_uint< PHASE_ACCUMULATOR::BIT_WIDTH > phase_type;
+   // data type definitions
+   typedef bool bit_type;
+   typedef sc_uint< ACCUMULATOR::BIT_WIDTH > phase_out_type;
+   typedef sc_int< CORDIC::Z_WIDTH > phase_in_type;
    typedef sc_int< INPUT_WIDTH > data_input_type;
    typedef sc_int< OUTPUT_WIDTH > data_output_type;
+   typedef sc_int< CIC::OUTPUT_WIDTH > cic_output_type;
+   typedef sc_int< CIC::DECIMATION_WIDTH > cic_decimation_type;
+   typedef sc_int< HALF_BAND_FILTER::OUTPUT_WIDTH > hbf_output_type;
 
-   CordicModule cordic_;
-   AccumulatorModule accumulator_;
-   CicModule cic_;
-   HalfBandFilterModule halfBandFilter_;
+   // data signal definitions
+   sc_signal < phase_in_type > z_data_out_signal;
+   sc_signal < phase_in_type > phase_in_signal;
+   sc_signal < phase_out_type > phase_out_signal;
+   sc_signal < data_input_type > port_input_signal;
+   sc_signal < data_input_type > y_data_in_signal;
+   sc_signal < data_output_type > x_data_out_signal;
+   sc_signal < data_output_type > y_data_out_signal;
+   sc_signal < cic_output_type > cic_output_signal; 
+   sc_signal < cic_decimation_type > cic_decimation_signal; 
+   sc_signal < hbf_output_type > port_output_signal; 
 
-   //sc_in_clk clock_signal;
-   sc_signal < phase_type > phase_signal;
-   //sc_signal < data_type > data_in_signal;
-   //sc_signal < data_type > data_out_signal;
-
+   // wrapper to initialize all modules
    void Initialize()
    {
-      
+      InitializeSignals();
+      InitializeNCO();
+      InitializeAccumulator();
+      InitializeFilter();
 
+   }
+
+   // setup signal constants
+   void InitializeSignals()
+   {
+      // set cordic y-input to gnd.
+      y_data_in_signal.write(0);
+      cic_decimation_signal.write( CIC::DECIMATION );
+   }
+
+   // setup down-converter module
+   void InitializeNCO()
+   {
+      cordic_ = CordicPtr( 
+            new CordicModule( CORDIC::NAME, CORDIC::NUM_STAGES )
+            );
+      cordic_->clock ( clock );
+      cordic_->reset ( reset );
+      cordic_->xin ( input );
+      cordic_->yin( y_data_in_signal );
+      cordic_->zin( phase_in_signal );
+      cordic_->xout( x_data_out_signal );
+      cordic_->yout( y_data_out_signal );
+      cordic_->zout( z_data_out_signal );
+
+   }
+
+   // setup phase accumulator
+   void InitializeAccumulator()
+   {
+      // initialize accumulator signals
+      accumulator_ = AccumulatorPtr( 
+            new AccumulatorModule( ACCUMULATOR::NAME, ACCUMULATOR::StepSize() ) 
+            );
+      accumulator_->reset ( reset );
+      accumulator_->clock ( clock );
+      accumulator_->out ( phase_out_signal );
+
+   }
+
+   // setup filter stages
+   void InitializeFilter()
+   {
+      cic_ = CicPtr( new CicModule( CIC::NAME ) );
+      cic_->clock( clock );
+      cic_->decimation( cic_decimation_signal );
+      cic_->input( x_data_out_signal );
+      cic_->output( cic_output_signal );
+      cic_->reset( reset );
+
+      halfBandFilter_ = HalfBandFilterPtr( 
+            new HalfBandFilterModule( HALF_BAND_FILTER::NAME )
+            );
+      halfBandFilter_->clock( clock );
+      halfBandFilter_->reset(reset );
+      halfBandFilter_->input( cic_output_signal );
+      halfBandFilter_->output( output );
+   }
+
+   // computation performed on each clock cycle
+   void Compute()
+   {
+      if(!reset.read())
+      {
+         // write the upper 16 bits of the phase accumulator to the cordic z input
+         phase_in_signal.write(
+               sc_int< ACCUMULATOR::BIT_WIDTH >( phase_out_signal.read() ).range( 
+                  ACCUMULATOR::BIT_WIDTH-1, 
+                  ACCUMULATOR::BIT_WIDTH - CORDIC::Z_WIDTH ) 
+               );
+      }
    }
 
    public:
 
+   SC_HAS_PROCESS( ReceiveChain );
+
    //CTOR
-   ReceiveChain(): 
-      cordic_(CORDIC::NAME, CORDIC::NUM_STAGES),
-      accumulator_ ( 
-            PHASE_ACCUMULATOR::NAME, 
-            PHASE_ACCUMULATOR::StepSize(), 
-            PHASE_ACCUMULATOR::USE_LOGGING, 
-            PHASE_ACCUMULATOR::USE_DISPLAY
-            ),
-      cic_( CIC::NAME ),
-      halfBandFilter_( HALF_BAND_FILTER::NAME )
-   {
+   ReceiveChain(const sc_module_name& nm): sc_module( nm ) {
+
       Initialize();
-      
-      // initialize accumulator signals
-      accumulator_.reset ( reset );
-      accumulator_.clock ( clock );
-      accumulator_.out ( phase_signal );
 
-      //// initialize cordic signals
-      //cordic_.clock ( clock );
-      //cordic_.reset ( reset );
-      //cordic_.xin ( data_in_signal );
-      //cordic_.yin(0);
-      //cordic_.zin( phase_signal );
-      //cordic_.out( data_out_signal );
-
+      SC_METHOD( Compute );
+      sensitive << clock.pos();
    }
 
    // define interface
    sc_in_clk clock;
-   sc_in < bit_type > reset;
+   sc_in < sdr_types::reset_type > reset;
    sc_in < data_input_type > input;
    sc_out < data_output_type > output;
 
