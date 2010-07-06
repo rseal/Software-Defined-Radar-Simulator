@@ -50,7 +50,7 @@ class Stimulus: public sc_module
 
    // CTOR
    Stimulus( const sc_module_name& nm, const unsigned int resetTime, sc_clock& stimClock ): 
-      sc_module(nm), RESET_TIME_(10) 
+      sc_module(nm), RESET_TIME_( resetTime ) 
    {
 
       SC_THREAD( Reset );

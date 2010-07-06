@@ -28,27 +28,27 @@ class HalfBandFilterGeneric:
 
    bool clockToggle_;
 
-   virtual void Compute()
-   {
-      this->sum_ = 0.0;
+   //virtual void Compute()
+   //{
+   //   this->sum_ = 0.0;
 
-      // delete the oldest sample
-      this->queue_.pop_front();
-      // add the latest sample
-      this->queue_.push_back( this->input.read() );
+   //   // delete the oldest sample
+   //   this->queue_.pop_front();
+   //   // add the latest sample
+   //   this->queue_.push_back( this->input.read() );
 
-      // compute convolution sum
-      this->coeff_iter_ = this->coeff_.end();
-      for( int i=0; i<this->queue_.size(); ++i) {
-         this->sum_ += this->queue_[i]* *(--this->coeff_iter_);
-      }
+   //   // compute convolution sum
+   //   this->coeff_iter_ = this->coeff_.end();
+   //   for( int i=0; i<this->queue_.size(); ++i) {
+   //      this->sum_ += this->queue_[i]* *(--this->coeff_iter_);
+   //   }
 
-      // compute output
-      //if(clockToggle_)
-         this->output.write( this->sum_.range(SUM_WIDTH-1,SUM_WIDTH-OUTPUT_WIDTH) );
+   //   // compute output
+   //   //if(clockToggle_)
+   //      this->output.write( this->sum_.range(SUM_WIDTH-1,SUM_WIDTH-OUTPUT_WIDTH) );
 
-      //clockToggle_ != clockToggle_;
-   }
+   //   //clockToggle_ != clockToggle_;
+   //}
 
    public:
 
@@ -70,13 +70,13 @@ class HalfBandFilterGeneric:
          this->coeff_.push_back( 0 );
          this->coeff_.push_back( 3135 );
          this->coeff_.push_back( 0 );
-         this->coeff_.push_back( 6282 );
+         this->coeff_.push_back( -6282 );
          this->coeff_.push_back( 0 );
          this->coeff_.push_back( 20628 );
          this->coeff_.push_back( 32767 );
          this->coeff_.push_back( 20628 );
          this->coeff_.push_back( 0 );
-         this->coeff_.push_back( 6282 );
+         this->coeff_.push_back( -6282 );
          this->coeff_.push_back( 0 );
          this->coeff_.push_back( 3135 );
          this->coeff_.push_back( 0 );
@@ -90,6 +90,7 @@ class HalfBandFilterGeneric:
          this->coeff_.push_back( 0 );
          this->coeff_.push_back( -49 );
          this->queue_.resize( this->coeff_.size() );
+         this->coeff_iter_ = this->coeff_.begin();
 
          this->Initialize();
    }

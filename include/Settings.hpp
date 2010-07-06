@@ -52,9 +52,9 @@ namespace settings{
 
    namespace ACCUMULATOR{
       const char* NAME="accumulator";
-      const float SAMPLE_RATE = 64e6;
-      const float SIGNAL_RATE = 14e6;
-      const unsigned int BIT_WIDTH = 48;
+      const double SAMPLE_RATE = 64e6;
+      const double SIGNAL_RATE = -19.609375e6;
+      const unsigned int BIT_WIDTH = 32;
 
       // static helper function
       static const sc_int< BIT_WIDTH> StepSize() { 

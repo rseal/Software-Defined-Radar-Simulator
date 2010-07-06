@@ -18,6 +18,7 @@
 #define SINUSOID_GENERATOR_HPP
 
 #include<sdr_simulator/util/SignalGenerator.hpp>
+#include<boost/math/constants/constants.hpp>
 #include<tr1/math.h>
 
 // Gaussian noise generator with adjustable mean, variance, and amplitude
@@ -35,7 +36,7 @@ class SinusoidGenerator: public SignalGenerator<BIT_WIDTH>
    virtual void Compute()
    {
       if(!this->reset.read()) {
-         this->output = sc_int< BIT_WIDTH >( SCALE*AMPLITUDE*tr1::sin(time_++*TWO_PI*NORMALIZED_FREQUENCY));
+         this->output = sc_int< BIT_WIDTH >( SCALE*AMPLITUDE*std::tr1::sin(time_++*TWO_PI*NORMALIZED_FREQUENCY));
       }
    }
 

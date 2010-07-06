@@ -50,8 +50,9 @@ class ReceiveChain: public sc_module {
    typedef HalfBandFilterGeneric< 
       HALF_BAND_FILTER::INPUT_WIDTH,
       HALF_BAND_FILTER::OUTPUT_WIDTH,
-      HALF_BAND_FILTER::SUM_WIDTH,
-      HALF_BAND_FILTER::COEFF_WIDTH > HalfBandFilterModule;
+      HALF_BAND_FILTER::COEFF_WIDTH,
+      HALF_BAND_FILTER::SUM_WIDTH
+      > HalfBandFilterModule;
    typedef boost::shared_ptr< HalfBandFilterModule > HalfBandFilterPtr;
    HalfBandFilterPtr halfBandFilter_;
    
@@ -76,6 +77,7 @@ class ReceiveChain: public sc_module {
    sc_signal < cic_output_type > cic_output_signal; 
    sc_signal < cic_decimation_type > cic_decimation_signal; 
    sc_signal < hbf_output_type > port_output_signal; 
+   sc_signal < data_output_type > null_signal;
 
    // wrapper to initialize all modules
    void Initialize()
@@ -132,7 +134,7 @@ class ReceiveChain: public sc_module {
       cic_->clock( clock );
       cic_->decimation( cic_decimation_signal );
       cic_->input( x_data_out_signal );
-      cic_->output( cic_output_signal );
+      cic_->output( output); //cic_output_signal );
       cic_->reset( reset );
 
       halfBandFilter_ = HalfBandFilterPtr( 
@@ -141,7 +143,7 @@ class ReceiveChain: public sc_module {
       halfBandFilter_->clock( clock );
       halfBandFilter_->reset(reset );
       halfBandFilter_->input( cic_output_signal );
-      halfBandFilter_->output( output );
+      halfBandFilter_->output( null_signal );// output );
    }
 
    // computation performed on each clock cycle

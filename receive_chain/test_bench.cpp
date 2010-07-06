@@ -28,8 +28,8 @@ int main (void) {
    const double CLOCK_PERIOD = 2.0;
    const std::string RECORDER_FILE_NAME = "output.dat";
    const unsigned int RESET_TIME = 20;
-   const double AMPLITUDE = 0.125;
-   const double FREQUENCY = 14.01e6;
+   const double AMPLITUDE = 0.45;
+   const double FREQUENCY = 20.1e6;
    const double SAMPLERATE = 64e6;
    const double NORMALIZED_FREQUENCY = FREQUENCY/SAMPLERATE;
 
