@@ -58,8 +58,7 @@ namespace settings{
 
       // static helper function
       static const sc_int< BIT_WIDTH> StepSize() { 
-         return sc_int< BIT_WIDTH > 
-            ( std::tr1::pow(2.0,BIT_WIDTH*1.0) * SIGNAL_RATE / SAMPLE_RATE );
+        return rint( std::tr1::pow(2.0,BIT_WIDTH) * SIGNAL_RATE / SAMPLE_RATE );
       };
    };
 

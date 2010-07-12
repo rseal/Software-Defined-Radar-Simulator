@@ -43,12 +43,14 @@ class Cordic: public sc_module
 
    typedef sc_int<XY_WIDTH+2> int_data_type;
    typedef sc_int<Z_WIDTH-1> int_z_type;
+   typedef sc_uint<Z_WIDTH> theta_input_type;
 
    // data signal definitions 
    typedef sc_signal<data_type> data_signal;
    typedef sc_signal<z_type> z_signal;
    typedef sc_signal<int_data_type> int_data_signal;
    typedef sc_signal<int_z_type> int_z_signal;
+   typedef sc_signal< theta_input_type > ThetaInputSignal;
 
    // define shared_ptrs to manage module and signal containers
    typedef CordicStage< XY_WIDTH+2, Z_WIDTH-1> CordicStageModule;
@@ -68,6 +70,8 @@ class Cordic: public sc_module
    typedef CordicThetaMap< XY_WIDTH, XY_WIDTH+2, Z_WIDTH, Z_WIDTH-1> theta_map;
    typedef boost::shared_ptr<theta_map> ThetaMapPtr;
    ThetaMapPtr thetaMap_;
+
+   ThetaInputSignal theta_input_signal;
 
    int_data_signal x_theta;
    int_data_signal y_theta;
@@ -94,7 +98,6 @@ class Cordic: public sc_module
                // add 2 bits to data width and reduce z width by 1 bit
                CordicStagePtr ( new CordicStageModule( stageNumber.c_str(), i ) )
                );
-
       }
 
       for( int i=0; i<NUM_STAGES; ++i)
@@ -134,7 +137,7 @@ class Cordic: public sc_module
       thetaMap_ = ThetaMapPtr( new theta_map("theta_map") );
       thetaMap_->xin(xin);
       thetaMap_->yin(yin);
-      thetaMap_->zin(zin);
+      thetaMap_->zin( theta_input_signal );
       thetaMap_->xout(x_theta);
       thetaMap_->yout(y_theta);
       thetaMap_->zout(z_theta);
@@ -155,17 +158,11 @@ class Cordic: public sc_module
 
    void Compute()
    {
-      int_data_type x_buff,y_buff;
-      z_type z_buff;
+      theta_input_signal.write( theta_input_type( zin.read() ) );
 
-      // convert 18-bit --> 16-bit
-      x_buff = xout_buff;
-      y_buff = yout_buff;
-      z_buff = zout_buff;
-
-      xout = x_buff.range(XY_WIDTH+1,1);
-      yout = y_buff.range(XY_WIDTH+1,1);
-      zout = z_buff;
+      xout = int_data_type( xout_buff.read() ).range(XY_WIDTH+1,2);
+      yout = int_data_type( yout_buff.read() ).range(XY_WIDTH+1,2);
+      zout = z_type( zout_buff.read() );
 
    }
 

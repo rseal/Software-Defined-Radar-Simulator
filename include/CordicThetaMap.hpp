@@ -25,24 +25,22 @@ class CordicThetaMap : public sc_module
 {
    typedef sc_int<INPUT_WIDTH> cordic_input_type; 
    typedef sc_int<OUTPUT_WIDTH> cordic_output_type; 
-   typedef sc_int<Z_INPUT_WIDTH> cordic_z_input_type;
+   typedef sc_uint<Z_INPUT_WIDTH> cordic_z_input_type;
    typedef sc_int<Z_OUTPUT_WIDTH> cordic_z_output_type;
 
    void Compute()
    {
-      sc_int<Z_INPUT_WIDTH> z_buff = zin.read();
-      cordic_output_type x_buff = xin.read();
-      cordic_output_type y_buff = yin.read();
+      cordic_z_input_type z_buff = zin.read();
 
       // xor bits to determine quadrant - tested
       int sign = (z_buff[Z_INPUT_WIDTH-1] ^ z_buff[Z_INPUT_WIDTH-2]) ? -1 : 1;
 
       // flip sign if x,y fall in quadrant 2 or 3 - tested
-      xout = sign*xin.read();//x_buff;
-      yout = sign*yin.read();//y_buff;
+      xout = sign*xin.read();
+      yout = sign*yin.read();
 
-      // trim one bit - tested 05/29/2010 with 38229 --> 5461.
-      zout = zin.read();//z_buff;
+      // trim one bit (MSB) - tested 05/29/2010 with 38229 --> 5461.
+      zout = cordic_z_output_type( z_buff.range(Z_INPUT_WIDTH-2,0));
    }
 
    public:

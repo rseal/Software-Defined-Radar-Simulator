@@ -24,7 +24,7 @@
 template <uint BIT_WIDTH>
 class PhaseAccumulator: public sc_module  {
 
-   typedef sc_uint<BIT_WIDTH> data_type;
+   typedef sc_int<BIT_WIDTH> data_type;
 
    data_type stepSize_;
 

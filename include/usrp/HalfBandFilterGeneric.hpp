@@ -23,34 +23,13 @@
 template < unsigned int INPUT_WIDTH, unsigned int OUTPUT_WIDTH, 
          unsigned int COEFF_WIDTH, unsigned int SUM_WIDTH> 
 class HalfBandFilterGeneric: 
-
    public FirFilter<INPUT_WIDTH,OUTPUT_WIDTH,COEFF_WIDTH,SUM_WIDTH> {
 
    bool clockToggle_;
 
-   //virtual void Compute()
-   //{
-   //   this->sum_ = 0.0;
-
-   //   // delete the oldest sample
-   //   this->queue_.pop_front();
-   //   // add the latest sample
-   //   this->queue_.push_back( this->input.read() );
-
-   //   // compute convolution sum
-   //   this->coeff_iter_ = this->coeff_.end();
-   //   for( int i=0; i<this->queue_.size(); ++i) {
-   //      this->sum_ += this->queue_[i]* *(--this->coeff_iter_);
-   //   }
-
-   //   // compute output
-   //   //if(clockToggle_)
-   //      this->output.write( this->sum_.range(SUM_WIDTH-1,SUM_WIDTH-OUTPUT_WIDTH) );
-
-   //   //clockToggle_ != clockToggle_;
-   //}
-
    public:
+
+   SC_HAS_PROCESS( HalfBandFilterGeneric );
 
    //CTOR
    HalfBandFilterGeneric(const sc_module_name& nm ): 
@@ -90,9 +69,6 @@ class HalfBandFilterGeneric:
          this->coeff_.push_back( 0 );
          this->coeff_.push_back( -49 );
          this->queue_.resize( this->coeff_.size() );
-         this->coeff_iter_ = this->coeff_.begin();
-
-         this->Initialize();
    }
 
 };

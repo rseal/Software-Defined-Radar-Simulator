@@ -23,8 +23,8 @@ int sc_main( int argc, char* argv[])
    
    // create constants
    const unsigned int NUM_STAGES = 12;
-   const double TIME_RESOLUTION = 10.0;
-   const double CLOCK_PERIOD = 20;
+   const double TIME_RESOLUTION = 100.0;
+   const double CLOCK_PERIOD = 15.68;
    const double TOTAL_SIMULATION_TIME = 1e6*CLOCK_PERIOD;
 
    // set time parameters

@@ -50,12 +50,19 @@ template < unsigned int INPUT_WIDTH, unsigned int OUTPUT_WIDTH,
 
       void Reset(){
 
-         if(!initialized_){
+         if(coeff_.empty()){
             throw std::runtime_error("FirFilter coefficients uninitialized! "
                   "Call Initialize() before beginning simulation");
          }
 
-         cout << "calling reset" << endl;
+         cout << "FIR Filter reset initiated\n";
+         cout 
+            << "Input width = " << INPUT_WIDTH << "\n"
+            << "Output width = " << OUTPUT_WIDTH << "\n"
+            << "Coeff width = " << COEFF_WIDTH << "\n"
+            << "Sum width = " << SUM_WIDTH << endl;
+
+         queue_.resize( coeff_.size() );
 
       }
 
@@ -97,17 +104,17 @@ template < unsigned int INPUT_WIDTH, unsigned int OUTPUT_WIDTH,
 
          }
 
-      void Initialize() { initialized_ = true; }
+      //void Initialize() { initialized_ = true; }
 
-      // TODO: Refactor/Redesign this class to simplify 
-      // potential headaches
-      void Initialize( const CoeffList& coeff )
-      {
-        coeff_ = coeff;
-        queue_.resize(coeff_.size());
-        coeff_iter_ = coeff_.begin();
-        initialized_ = true;
-      }
+      //// TODO: Refactor/Redesign this class to simplify 
+      //// potential headaches
+      //void Initialize( const CoeffList& coeff )
+      //{
+      //  coeff_ = coeff;
+      //  queue_.resize(coeff_.size());
+      //  coeff_iter_ = coeff_.begin();
+      //  initialized_ = true;
+      //}
 
       // port IO definitions
       sc_in_clk clock;

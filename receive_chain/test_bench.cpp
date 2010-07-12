@@ -21,33 +21,41 @@
 #include <systemc.h>
 #include <iostream>
 
+
 int main (void) {
 
    const double TIME_RESOLUTION = 100.0;
    const double TOTAL_SIMULATION_TIME = 500000.0;
-   const double CLOCK_PERIOD = 2.0;
-   const std::string RECORDER_FILE_NAME = "output.dat";
+   const double CLOCK_PERIOD = 15.68;
+   const std::string X_RECORDER_FILE_NAME = "inphase.dat";
+   const std::string Y_RECORDER_FILE_NAME = "quadrature.dat";
    const unsigned int RESET_TIME = 20;
-   const double AMPLITUDE = 0.45;
-   const double FREQUENCY = 20.1e6;
+   const double AMPLITUDE = 0.75;
+   const double FREQUENCY = 20.0e6;
    const double SAMPLERATE = 64e6;
    const double NORMALIZED_FREQUENCY = FREQUENCY/SAMPLERATE;
+   const unsigned int DECIMATION = 8;
 
    const unsigned int INPUT_WIDTH = 16;
    const unsigned int OUTPUT_WIDTH = 16;
 
    typedef sc_int< INPUT_WIDTH > data_input_type;
    typedef sc_int< OUTPUT_WIDTH > data_output_type;
+   typedef sc_int< INPUT_WIDTH > decimation_type;
    typedef bool bit_type;
 
    sc_signal < data_input_type > input_signal;
-   sc_signal < data_output_type > output_signal;
+   sc_signal < data_output_type > x_output_signal;
+   sc_signal < data_output_type > y_output_signal;
+   sc_signal < decimation_type > decimation_signal;
    sc_signal < bit_type > reset;
 
    sc_set_time_resolution( TIME_RESOLUTION , SC_PS );
    sc_time simulation_time(TOTAL_SIMULATION_TIME,SC_NS);
    sc_time clock_time(CLOCK_PERIOD,SC_NS);
    sc_clock stimulus_clock( "clock", clock_time);
+
+   decimation_signal.write( DECIMATION );
 
    // sinusoidal noise test bench stimulus
    SinusoidStimulus< data_output_type, OUTPUT_WIDTH> stimulus( 
@@ -60,16 +68,23 @@ int main (void) {
    stimulus.output( input_signal );
    
    // test bench data recorder
-   FileRecorder< data_output_type > recorder( "recorder", RECORDER_FILE_NAME );
-   recorder.input( output_signal );
-   recorder.clock( stimulus.clock );
+   FileRecorder< data_output_type > xRecorder( "xRecorder", X_RECORDER_FILE_NAME );
+   xRecorder.input( x_output_signal );
+   xRecorder.clock( stimulus.clock );
+
+   // test bench data recorder
+   FileRecorder< data_output_type > yRecorder( "yRecorder", Y_RECORDER_FILE_NAME );
+   yRecorder.input( y_output_signal );
+   yRecorder.clock( stimulus.clock );
 
    // DUT
    ReceiveChain< INPUT_WIDTH, OUTPUT_WIDTH> receiveChain( "rx_chain");
    receiveChain.input( input_signal );
-   receiveChain.output( output_signal );
+   receiveChain.x_output( x_output_signal );
+   receiveChain.y_output( y_output_signal );
    receiveChain.reset( stimulus.reset );
    receiveChain.clock( stimulus.clock );
+   receiveChain.decimation( decimation_signal );
 
    // begin simulation
    sc_start( simulation_time );

@@ -23,6 +23,8 @@
 #include <sdr_simulator/sc_timer.hpp>
 #include <sdr_simulator/Types.hpp>
 
+#include "TruncatedRecorder.hpp"
+
 #include <iostream>
 #include <boost/math/constants/constants.hpp>
 #include <boost/lexical_cast.hpp>
@@ -35,13 +37,14 @@ int sc_main(int argc, char* argv[]){
 
   const int BIT_WIDTH = 32;
   const double SAMPLE_RATE = 64e6;
-  const double FREQUENCY = 1.0e6;
+  const double FREQUENCY = 31.0e6;
   const double RESET_HOLD_TIME = 5;
   const string RECORDER_FILE_NAME = "output.dat";
+  const string TRUNC_RECORDER_FILE_NAME = "trunc_output.dat";
   const double CLOCK_PERIOD = 15.68; //NS
 
   // define signals and data types 
-  typedef sc_uint< BIT_WIDTH > data_output_type;
+  typedef sc_int< BIT_WIDTH > data_output_type;
   sdr_types::reset_signal reset_signal;
   sc_signal< data_output_type > out_signal;
   sc_signal< data_output_type > null_signal;
@@ -74,6 +77,11 @@ int sc_main(int argc, char* argv[]){
   FileRecorder< data_output_type > record( "recorder", RECORDER_FILE_NAME );
   record.clock( stimulus.clock );
   record.input( out_signal );
+
+  TruncatedRecorder< data_output_type > t_record( "trunc_recorder", TRUNC_RECORDER_FILE_NAME );
+  t_record.clock( stimulus.clock );
+  t_record.input( out_signal );
+
 
   //run simulations for 22 nsec
   sc_start(sc_time(5000, SC_NS));

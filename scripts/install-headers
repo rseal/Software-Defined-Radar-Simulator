@@ -8,7 +8,7 @@ root = Dir.pwd
 
 #remove temps from include/
 Dir.chdir("#{root}/include")
-system("rm -f *~")
+system("rm -f *~ *.swp *.swo")
 
 if user == "root"
 

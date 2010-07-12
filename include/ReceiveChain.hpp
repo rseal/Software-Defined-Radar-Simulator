@@ -23,13 +23,17 @@
 #include<sdr_simulator/Types.hpp>
 #include<sdr_simulator/PhaseAccumulator.hpp>
 #include<sdr_simulator/Cordic.hpp>
-#include<sdr_simulator/Cic.hpp>
-#include<sdr_simulator/usrp/HalfBandFilterGeneric.hpp>
+#include<sdr_simulator/usrp/FilterStage.hpp>
 
 using namespace settings;
 
 template < unsigned int INPUT_WIDTH, unsigned int OUTPUT_WIDTH >
 class ReceiveChain: public sc_module { 
+
+   // filter stage definitions
+   typedef boost::shared_ptr< usrp::FilterStage > FilterStagePtr;
+   FilterStagePtr xFilterStage_;
+   FilterStagePtr yFilterStage_;
 
    // cordic definitions
    typedef Cordic<CORDIC::XY_WIDTH, CORDIC::Z_WIDTH> CordicModule;
@@ -41,24 +45,9 @@ class ReceiveChain: public sc_module {
    typedef boost::shared_ptr< AccumulatorModule > AccumulatorPtr;
    AccumulatorPtr accumulator_;
 
-   // cic definitions
-   typedef Cic< CIC::INPUT_WIDTH, CIC::OUTPUT_WIDTH > CicModule;
-   typedef boost::shared_ptr< CicModule > CicPtr;
-   CicPtr cic_;
-
-   // half band filter definitions
-   typedef HalfBandFilterGeneric< 
-      HALF_BAND_FILTER::INPUT_WIDTH,
-      HALF_BAND_FILTER::OUTPUT_WIDTH,
-      HALF_BAND_FILTER::COEFF_WIDTH,
-      HALF_BAND_FILTER::SUM_WIDTH
-      > HalfBandFilterModule;
-   typedef boost::shared_ptr< HalfBandFilterModule > HalfBandFilterPtr;
-   HalfBandFilterPtr halfBandFilter_;
-   
    // data type definitions
    typedef bool bit_type;
-   typedef sc_uint< ACCUMULATOR::BIT_WIDTH > phase_out_type;
+   typedef sc_int< ACCUMULATOR::BIT_WIDTH > phase_out_type;
    typedef sc_int< CORDIC::Z_WIDTH > phase_in_type;
    typedef sc_int< INPUT_WIDTH > data_input_type;
    typedef sc_int< OUTPUT_WIDTH > data_output_type;
@@ -70,14 +59,10 @@ class ReceiveChain: public sc_module {
    sc_signal < phase_in_type > z_data_out_signal;
    sc_signal < phase_in_type > phase_in_signal;
    sc_signal < phase_out_type > phase_out_signal;
-   sc_signal < data_input_type > port_input_signal;
    sc_signal < data_input_type > y_data_in_signal;
    sc_signal < data_output_type > x_data_out_signal;
    sc_signal < data_output_type > y_data_out_signal;
    sc_signal < cic_output_type > cic_output_signal; 
-   sc_signal < cic_decimation_type > cic_decimation_signal; 
-   sc_signal < hbf_output_type > port_output_signal; 
-   sc_signal < data_output_type > null_signal;
 
    // wrapper to initialize all modules
    void Initialize()
@@ -86,7 +71,6 @@ class ReceiveChain: public sc_module {
       InitializeNCO();
       InitializeAccumulator();
       InitializeFilter();
-
    }
 
    // setup signal constants
@@ -94,7 +78,6 @@ class ReceiveChain: public sc_module {
    {
       // set cordic y-input to gnd.
       y_data_in_signal.write(0);
-      cic_decimation_signal.write( CIC::DECIMATION );
    }
 
    // setup down-converter module
@@ -111,7 +94,6 @@ class ReceiveChain: public sc_module {
       cordic_->xout( x_data_out_signal );
       cordic_->yout( y_data_out_signal );
       cordic_->zout( z_data_out_signal );
-
    }
 
    // setup phase accumulator
@@ -124,40 +106,42 @@ class ReceiveChain: public sc_module {
       accumulator_->reset ( reset );
       accumulator_->clock ( clock );
       accumulator_->out ( phase_out_signal );
-
    }
 
    // setup filter stages
    void InitializeFilter()
    {
-      cic_ = CicPtr( new CicModule( CIC::NAME ) );
-      cic_->clock( clock );
-      cic_->decimation( cic_decimation_signal );
-      cic_->input( x_data_out_signal );
-      cic_->output( output); //cic_output_signal );
-      cic_->reset( reset );
+      xFilterStage_ = FilterStagePtr( new usrp::FilterStage("xFilters") );
+      xFilterStage_->clock( clock);
+      xFilterStage_->decimation( decimation );
+      xFilterStage_->input( x_data_out_signal );
+      xFilterStage_->output( x_output );
+      xFilterStage_->reset( reset );
 
-      halfBandFilter_ = HalfBandFilterPtr( 
-            new HalfBandFilterModule( HALF_BAND_FILTER::NAME )
-            );
-      halfBandFilter_->clock( clock );
-      halfBandFilter_->reset(reset );
-      halfBandFilter_->input( cic_output_signal );
-      halfBandFilter_->output( null_signal );// output );
+      yFilterStage_ = FilterStagePtr( new usrp::FilterStage("yFilters") );
+      yFilterStage_->clock( clock);
+      yFilterStage_->decimation( decimation );
+      yFilterStage_->input( y_data_out_signal );
+      yFilterStage_->output( y_output );
+      yFilterStage_->reset( reset );
+
    }
 
    // computation performed on each clock cycle
    void Compute()
    {
-      if(!reset.read())
-      {
-         // write the upper 16 bits of the phase accumulator to the cordic z input
-         phase_in_signal.write(
-               sc_int< ACCUMULATOR::BIT_WIDTH >( phase_out_signal.read() ).range( 
-                  ACCUMULATOR::BIT_WIDTH-1, 
-                  ACCUMULATOR::BIT_WIDTH - CORDIC::Z_WIDTH ) 
-               );
-      }
+      phase_out_type buffer = phase_out_signal.read();
+
+      phase_in_signal.write(
+            phase_in_type(
+            buffer.range( 
+               ACCUMULATOR::BIT_WIDTH-1, 
+               ACCUMULATOR::BIT_WIDTH-CORDIC::Z_WIDTH
+               )
+            )
+            );
+
+      cout << buffer << endl;
    }
 
    public:
@@ -177,7 +161,9 @@ class ReceiveChain: public sc_module {
    sc_in_clk clock;
    sc_in < sdr_types::reset_type > reset;
    sc_in < data_input_type > input;
-   sc_out < data_output_type > output;
+   sc_in < cic_decimation_type > decimation;
+   sc_out < data_output_type > x_output;
+   sc_out < data_output_type > y_output;
 
 };
 

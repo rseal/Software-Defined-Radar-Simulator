@@ -21,6 +21,8 @@ namespace test_bench{
 
    const int DATA_WIDTH=16;
    const int Z_WIDTH=16;
+   const int THETA_WIDTH=32;
+   const int SAMPLE_WIDTH=12;
 
    typedef bool bit_type;
    typedef sc_int<DATA_WIDTH> data_type;

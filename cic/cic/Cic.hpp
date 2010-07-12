@@ -35,6 +35,7 @@ class Cic : public sc_module {
    sc_signal< sc_int< 20 > > sig_8_;
 
    sc_signal< bool > div_clock;
+   int idx_;
 
    boost::shared_ptr<CicIntegrator< 52, 43 > > integrator_0_;
    boost::shared_ptr<CicIntegrator< 43, 34 > > integrator_1_;
@@ -53,31 +54,16 @@ class Cic : public sc_module {
    };
 
    void ComputeOutput(){
-      //output = sig_8_.read();
       output = data_output_type( sc_int<20>( sig_8_.read() ).range(19,3) );
    }
 
    void DivClock(){
-      int R = decimation.read();
-      static int idx = 0;
 
-      if( idx++ == (R-1) )
+      if( idx_++ == (decimation.read() - 1) )
       {
-         idx = 0;
+         idx_ = 0;
          div_clock = !div_clock.read();
       }
-   }
-
-   void DebugOutputDisplay(){
-      cout << "output = " << output.read() << " at " << sc_time_stamp() << endl;
-   }
-
-   void DebugInputDisplay(){
-      cout << "input = " << input.read() << " at " << sc_time_stamp() << endl;
-      cout << "integrator_0 " << integrator_0_->input.read() << endl;
-      cout << "integrator_1 " << integrator_1_->input.read() << endl;
-      cout << "integrator_2 " << integrator_2_->input.read() << endl;
-      cout << "integrator_3 " << integrator_3_->input.read() << endl;
 
    }
 
@@ -99,12 +85,6 @@ class Cic : public sc_module {
 
       SC_METHOD( DivClock );
       sensitive << clock.pos();
-
-      //SC_METHOD( DebugOutputDisplay );
-      //sensitive << div_clock.posedge_event();
-
-      //SC_METHOD( DebugInputDisplay );
-      //sensitive << clock.pos();
 
       integrator_0_ = boost::shared_ptr<CicIntegrator< 52, 43 > >
          (

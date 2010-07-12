@@ -46,58 +46,52 @@ class Stimulus : public sc_module
    const string AUTHOR_;
    const float TWO_PI_;
    int errors_;
+   int t;
+
+   sc_int<test_bench::SAMPLE_WIDTH> sig_out;
+   sc_int<test_bench::THETA_WIDTH> theta;
 
    // Reset signal
    void Reset()
    {
+      t=0;
       reset = 1;
       wait(RESET_TIME_, SC_NS);
       reset = 0;
-      cout << "RESET cleared at " << sc_time_stamp() << endl;
+      //cout << "RESET cleared at " << sc_time_stamp() << endl;
    }
 
    // Data input - executed once per clock edge
    void Data()
    {
       // TODO: Move these to file for run-time simulation options
-      const int THETA_WIDTH = 32;
-      const int DATA_WIDTH = 12;
       const double f = 20.0e6;
       const double fddc = -19.609375e6;
-
       const double Fs = 64e6;
-      const double SCALE = tr1::pow(2.0,THETA_WIDTH);
-      static sc_uint<THETA_WIDTH> theta = 0;
-      static sc_int<DATA_WIDTH> x_sig = 0;
-      static int t=0;
-      static int angle = 1;
-      int x_amp = static_cast<int>(tr1::pow(2.0,DATA_WIDTH)*0.5);
+
+      const double SCALE = tr1::pow(2.0,test_bench::THETA_WIDTH);
+      static sc_int<test_bench::SAMPLE_WIDTH> x_sig = 0;
+
+      int x_amp = tr1::pow(2.0,test_bench::SAMPLE_WIDTH-1)*0.75;
 
       if(!reset.read()) {
 
          theta += rint(SCALE*fddc/Fs);
-         x_sig = x_amp*tr1::cos(t*TWO_PI_*f/Fs);
+         sig_out = x_amp*tr1::cos(TWO_PI_*f/Fs * t++);
 
          // 12-bit real signal from the ADCs
-         x_out = x_sig;
-         y_out = 0;
+         x_out.write( sig_out );
+         y_out.write(0);
 
          // take upper 16 bits from 32-bit phase accumulator
-         z_out = static_cast< sc_int<THETA_WIDTH> >(theta.range(THETA_WIDTH-1,THETA_WIDTH - 16));
-         ++t;
-         ++angle;
-
-            //cout 
-            //   << "angle = " << tr1::atan2((double)y_in.read(), (double)x_in.read())*360/TWO_PI_ 
-            //   << " current = " << angle
-            //   << endl;
+         z_out = z_type(theta.range(test_bench::THETA_WIDTH-1,test_bench::THETA_WIDTH - test_bench::Z_WIDTH));
 
          // write variables to file
          *xFile_ << x_in << endl;
          *yFile_ << y_in << endl;
          *zFile_ << z_in << endl;
 
-         //Display();
+         //cout << sig_out << endl;
       }
       else
       {
@@ -160,12 +154,12 @@ class Stimulus : public sc_module
    // write summary on exit
    ~Stimulus()
    {
-      cout << "\n\n\n" << TITLE_ << "    Version " << VERSION_ << "   " << AUTHOR_ << "\n" << endl;
+      //cout << "\n\n\n" << TITLE_ << "    Version " << VERSION_ << "   " << AUTHOR_ << "\n" << endl;
 
-      if(!errors_)
-         cout << "All test cases passed" << endl;
-      else
-         cout << "Found " + boost::lexical_cast<string>(errors_) + " errors " << endl;
+      //if(!errors_)
+      //   cout << "All test cases passed" << endl;
+      //else
+      //   cout << "Found " + boost::lexical_cast<string>(errors_) + " errors " << endl;
    }
 };
 

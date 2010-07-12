@@ -68,6 +68,11 @@ class GaussianNoiseGenerator: public SignalGenerator<BIT_WIDTH>
       SCALE( std::tr1::pow(2.0,BIT_WIDTH)-1 ), MEAN(mean), VARIANCE(variance),
       AMPLITUDE( amplitude ), nDistribution(MEAN,VARIANCE) { }
 
+   void Seed( const int seed )
+   {
+      rng.seed( seed );
+   }
+
 };
 
 

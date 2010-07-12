@@ -62,12 +62,17 @@ class GaussianNoiseStimulus: public Stimulus<T>
           const double mean,
           const double variance, 
           const double amplitude
-         ): 
+          ): 
             Stimulus<T>( nm, resetTime, stimClock ), MEAN(mean), 
             VARIANCE(variance), AMPLITUDE(amplitude) {
 
                Init();
             }
+
+      void Seed( const int seed )
+      {
+         noiseGenerator->Seed( seed );
+      }
 
 };
 

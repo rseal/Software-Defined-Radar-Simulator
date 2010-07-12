@@ -44,23 +44,11 @@ class CordicShiftAdder : public sc_module
 
       if(!reset.read()){
          out = in_a.read() + s*(in_b.read()>>SHIFT_);
-         //Display();
       }
       else{
          out = 0;
       }
 
-   }
-
-   void Display() {
-         *ofStream_
-            << std::setw(10) << this->name()
-            << " a = " << std::setw(6) << in_a.read() 
-            << " b = " << std::setw(6) << in_b.read() 
-            << " s = " << std::setw(3) << (sign.read() == 0 ? 1 : -1)
-            << " o = " << std::setw(6) << out.read() 
-            << " at  " << sc_time_stamp()
-            << endl;
    }
 
    public:
@@ -72,10 +60,6 @@ class CordicShiftAdder : public sc_module
       SC_METHOD(compute);
       sensitive << in_a << in_b << sign << reset;
 
-      //DEBUG ONLY
-      //string name = this->name();
-      //name += ".dat";
-      //ofStream_ = OutputFileStream( new ofstream( name.c_str(), ios::out ) );
    }
 
    sc_in_clk clock;

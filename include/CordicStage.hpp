@@ -107,28 +107,12 @@ class CordicStage: public sc_module
          not_sign_ = ~sign_bit;
 
          // compute error 
-         zout = z - sign*atan_vector_[STAGE];
+         zout.write( z - sign*atan_vector_[STAGE] );
       }
       else{
          sign_ = 0;
          not_sign_ = 0;
          zout = 0;
-      }
-
-      //Display();
-   }
-
-   void Display() {
-      if( !reset.read() ) {
-         *ofStream_ 
-            << std::setw(12) << this->name()   
-            << " x_in = " << std::setw(6) << xin.read() 
-            << " y_in = " << std::setw(6) << yin.read() 
-            << " z_in = " << std::setw(6) << zin.read() 
-            << " x_out = " << std::setw(6) << xout.read() 
-            << " y_out = " << std::setw(6) << yout.read() 
-            << " z_out = " << std::setw(6) << zout.read() 
-            << " at " << std::setw(6) << sc_time_stamp() << endl;
       }
    }
 
@@ -147,10 +131,6 @@ class CordicStage: public sc_module
       // define clock sensitive methods
       SC_METHOD(Z);
       sensitive << zin << reset;
-
-      //string name = this->name();
-      //name += ".dat";
-      //ofStream_ = OutputFileStream( new ofstream( name.c_str(), ios::out ) );
    }
 
    // define data types for ports
