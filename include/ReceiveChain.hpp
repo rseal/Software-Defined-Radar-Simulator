@@ -32,8 +32,8 @@ class ReceiveChain: public sc_module {
 
    // filter stage definitions
    typedef boost::shared_ptr< usrp::FilterStage > FilterStagePtr;
-   FilterStagePtr xFilterStage_;
-   FilterStagePtr yFilterStage_;
+   FilterStagePtr iFilter_;
+   FilterStagePtr qFilter_;
 
    // cordic definitions
    typedef Cordic<CORDIC::XY_WIDTH, CORDIC::Z_WIDTH> CordicModule;
@@ -111,20 +111,19 @@ class ReceiveChain: public sc_module {
    // setup filter stages
    void InitializeFilter()
    {
-      xFilterStage_ = FilterStagePtr( new usrp::FilterStage("xFilters") );
-      xFilterStage_->clock( clock);
-      xFilterStage_->decimation( decimation );
-      xFilterStage_->input( x_data_out_signal );
-      xFilterStage_->output( x_output );
-      xFilterStage_->reset( reset );
+      iFilter_ = FilterStagePtr( new usrp::FilterStage("iFilters") );
+      iFilter_->clock( clock);
+      iFilter_->decimation( decimation );
+      iFilter_->input( x_data_out_signal );
+      iFilter_->output( i_output );
+      iFilter_->reset( reset );
 
-      yFilterStage_ = FilterStagePtr( new usrp::FilterStage("yFilters") );
-      yFilterStage_->clock( clock);
-      yFilterStage_->decimation( decimation );
-      yFilterStage_->input( y_data_out_signal );
-      yFilterStage_->output( y_output );
-      yFilterStage_->reset( reset );
-
+      qFilter_ = FilterStagePtr( new usrp::FilterStage("qFilters") );
+      qFilter_->clock( clock);
+      qFilter_->decimation( decimation );
+      qFilter_->input( y_data_out_signal );
+      qFilter_->output( q_output );
+      qFilter_->reset( reset );
    }
 
    // computation performed on each clock cycle
@@ -132,6 +131,7 @@ class ReceiveChain: public sc_module {
    {
       phase_out_type buffer = phase_out_signal.read();
 
+      // verified 07/12/2010
       phase_in_signal.write(
             phase_in_type(
             buffer.range( 
@@ -140,8 +140,6 @@ class ReceiveChain: public sc_module {
                )
             )
             );
-
-      cout << buffer << endl;
    }
 
    public:
@@ -162,8 +160,8 @@ class ReceiveChain: public sc_module {
    sc_in < sdr_types::reset_type > reset;
    sc_in < data_input_type > input;
    sc_in < cic_decimation_type > decimation;
-   sc_out < data_output_type > x_output;
-   sc_out < data_output_type > y_output;
+   sc_out < data_output_type > i_output;
+   sc_out < data_output_type > q_output;
 
 };
 

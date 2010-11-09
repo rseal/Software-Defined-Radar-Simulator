@@ -1,14 +1,8 @@
-rm -f ../bin/*
-rm -rf ../accumulator/bin
-rm -rf ../cic/cic/bin
-rm -rf ../cic/integrator/bin
-rm -rf ../cic/differentiator/bin
-rm -rf ../cic/error_analysis/bin
-rm -rf ../cordic/cordic/bin
-rm -rf ../cordic/cordic_shift_adder/bin
-rm -rf ../cordic/cordic_stage/bin
-rm -rf ../fir_filter/basic_filter/bin
-rm -rf ../signal_generator/test_generator/bin
-rm -rf ../signal_generator/gaussian_generator/bin
-rm -rf ../receive_chain/bin
+#!/bin/bash
+
+#remove all dat files
+find ../ -name "*.dat" -delete
+
+#remove all bjam generated directories
+find ../ -name "bin" -and -not -wholename "../bin" | xargs rm -rf  
 

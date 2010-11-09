@@ -34,7 +34,7 @@ int main (void) {
    const double FREQUENCY = 20.0e6;
    const double SAMPLERATE = 64e6;
    const double NORMALIZED_FREQUENCY = FREQUENCY/SAMPLERATE;
-   const unsigned int DECIMATION = 8;
+   const unsigned int DECIMATION = 4;
 
    const unsigned int INPUT_WIDTH = 16;
    const unsigned int OUTPUT_WIDTH = 16;
@@ -45,8 +45,8 @@ int main (void) {
    typedef bool bit_type;
 
    sc_signal < data_input_type > input_signal;
-   sc_signal < data_output_type > x_output_signal;
-   sc_signal < data_output_type > y_output_signal;
+   sc_signal < data_output_type > i_output_signal;
+   sc_signal < data_output_type > q_output_signal;
    sc_signal < decimation_type > decimation_signal;
    sc_signal < bit_type > reset;
 
@@ -68,20 +68,20 @@ int main (void) {
    stimulus.output( input_signal );
    
    // test bench data recorder
-   FileRecorder< data_output_type > xRecorder( "xRecorder", X_RECORDER_FILE_NAME );
-   xRecorder.input( x_output_signal );
+   FileRecorder< data_output_type > xRecorder( "inphaseRecorder", X_RECORDER_FILE_NAME );
+   xRecorder.input( i_output_signal );
    xRecorder.clock( stimulus.clock );
 
    // test bench data recorder
-   FileRecorder< data_output_type > yRecorder( "yRecorder", Y_RECORDER_FILE_NAME );
-   yRecorder.input( y_output_signal );
+   FileRecorder< data_output_type > yRecorder( "quadratureRecorder", Y_RECORDER_FILE_NAME );
+   yRecorder.input( q_output_signal );
    yRecorder.clock( stimulus.clock );
 
    // DUT
    ReceiveChain< INPUT_WIDTH, OUTPUT_WIDTH> receiveChain( "rx_chain");
    receiveChain.input( input_signal );
-   receiveChain.x_output( x_output_signal );
-   receiveChain.y_output( y_output_signal );
+   receiveChain.i_output( i_output_signal );
+   receiveChain.q_output( q_output_signal );
    receiveChain.reset( stimulus.reset );
    receiveChain.clock( stimulus.clock );
    receiveChain.decimation( decimation_signal );
