@@ -14,8 +14,8 @@ namespace xml
       public:
 
          // virtual Parse method
-         virtual NodeMap Parse( ticpp::Node* )=0;
-         virtual std::string Name()=0;
+         virtual const NodeMap Parse( ticpp::Node* )=0;
+         virtual const std::string& Name()=0;
    };
 };
 

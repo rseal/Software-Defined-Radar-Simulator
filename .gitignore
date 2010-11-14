@@ -2,3 +2,4 @@
 *.swo
 ttd.txt
 include/Cic.hpp
+.sconsign.dblite

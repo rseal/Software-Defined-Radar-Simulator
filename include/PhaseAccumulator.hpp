@@ -37,7 +37,7 @@ class PhaseAccumulator: public sc_module  {
    SC_HAS_PROCESS(PhaseAccumulator);
 
    // Constructor 
-   PhaseAccumulator( const sc_module_name& name, unsigned int stepSize ):
+   PhaseAccumulator( const sc_module_name& name, int stepSize ):
       sc_module(name), stepSize_(stepSize) {
 
          SC_METHOD(Accumulate);

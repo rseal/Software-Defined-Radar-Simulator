@@ -1,0 +1,44 @@
+<sdr_simulator>
+
+   <!-- Define ADC Module -->
+   <adc>
+      <module_name>adc</module_name>
+      <bit_width>16</bit_width>
+      <model>guassian</model>
+   </adc>
+   
+   <!-- Define Accumulator Module -->
+   <accumulator>
+      <module_name>accumulator</module_name>
+      <bit_width>32</bit_width>
+      <sample_rate>64e6</sample_rate>
+      <tuning_frequency>-14.4e6</tuning_frequency>
+   </accumulator>
+
+   <!-- Define CIC Module -->
+   <cic>
+      <module_name>cic</module_name>
+      <input_width>16</input_width>
+      <output_width>16</output_width>
+      <decimation>8</decimation>
+      <num_stages>4</num_stages>
+   </cic>
+
+   <!-- Define Half Band Filter Module -->
+   <filter>
+      <module_name>filter</module_name>
+      <type>halfband</type>
+      <input_width>16</input_width>
+      <output_width>16</output_width>
+   </filter>
+
+   <!-- Define CORDIC module -->
+   <down_converter>
+      <module_name>down_converter</module_name>
+      <model>cordic</model>
+      <num_stages>12</num_stages>
+      <xy_width>16</xy_width>
+      <z_width>18</z_width>
+   </down_converter>
+   
+</sdr_simulator>

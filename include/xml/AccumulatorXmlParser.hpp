@@ -5,6 +5,7 @@
 
 class AccumulatorXmlParser : public xml::IXmlParser
 {
+   std::string name_;
    xml::NodeMap map_;
 
    void Insert( ticpp::Node* node, const std::string& value )
@@ -20,7 +21,9 @@ class AccumulatorXmlParser : public xml::IXmlParser
 
    public:
 
-   xml::NodeMap Parse( ticpp::Node* node )
+   AccumulatorXmlParser(): name_("accumulator") {}
+
+   const xml::NodeMap Parse( ticpp::Node* node )
    {
       Insert( node, "module_name" );
       Insert( node, "bit_width" );
@@ -30,7 +33,7 @@ class AccumulatorXmlParser : public xml::IXmlParser
       return map_;
    }
 
-   std::string Name() { return "accumulator"; }
+   const std::string& Name() { return name_; }
 };
 
 #endif
