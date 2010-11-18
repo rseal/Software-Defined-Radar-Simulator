@@ -49,17 +49,15 @@ class Stimulus: public sc_module
    SC_HAS_PROCESS( Stimulus );
 
    // CTOR
-   Stimulus( const sc_module_name& nm, const unsigned int resetTime, sc_clock& stimClock ): 
-      sc_module(nm), RESET_TIME_( resetTime ) 
+   Stimulus( const sc_module_name& nm, const unsigned int resetTime, 
+         sc_clock& stimClock ): sc_module(nm), RESET_TIME_( resetTime ) 
    {
-
       SC_THREAD( Reset );
       sensitive << stimClock.posedge_event();
 
       // tie internal clock signal to exported clock output
       clock( stimClock );
       reset(reset_);
-
    }
 
    // define port IO

@@ -21,23 +21,29 @@
 #include<boost/math/constants/constants.hpp>
 #include<tr1/math.h>
 
+//Use an unnamed namespace to properly get a const from a computation
+namespace 
+{
+   const static double TWO_PI = 2.0f*boost::math::constants::pi<float>();
+};
+
 // Gaussian noise generator with adjustable mean, variance, and amplitude
-template< unsigned int BIT_WIDTH>
-class SinusoidGenerator: public SignalGenerator<BIT_WIDTH>
+template<typename DATA_TYPE, typename RESET_TYPE>
+class SinusoidGenerator: public SignalGenerator<DATA_TYPE,RESET_TYPE>
 {
    // define constants
    const double AMPLITUDE;
    const double NORMALIZED_FREQUENCY;
    const int SCALE;
-   const double TWO_PI;
    int time_;
+   DATA_TYPE data_;
 
    // compute a new sample on each clock cycle
    virtual void Compute()
    {
-      if(!this->reset.read()) {
-         this->output = sc_int< BIT_WIDTH >( SCALE*AMPLITUDE*std::tr1::sin(time_++*TWO_PI*NORMALIZED_FREQUENCY));
-      }
+         data_ = this->reset.read() ? 
+            0 : SCALE*AMPLITUDE*std::tr1::cos( time_++*TWO_PI* NORMALIZED_FREQUENCY );
+         this->output.write( data_ );
    }
 
    public:
@@ -48,15 +54,16 @@ class SinusoidGenerator: public SignalGenerator<BIT_WIDTH>
    SinusoidGenerator( 
          const sc_module_name& nm, 
          const double normalizedFrequency,
+         const int sampleBits,
          const double amplitude = 1.0
          ):
-      SignalGenerator<BIT_WIDTH>( nm , 0), 
+      SignalGenerator< DATA_TYPE,RESET_TYPE>( nm , 0), 
       NORMALIZED_FREQUENCY( normalizedFrequency ),  
-      AMPLITUDE( amplitude/2.0 ),
-      SCALE( std::tr1::pow(2.0,BIT_WIDTH)-1 ), 
-      TWO_PI(2.0f*boost::math::constants::pi<float>()),
+      AMPLITUDE( amplitude ),
+      SCALE(std::tr1::pow( 2.0, sampleBits-1 )),
       time_(0)
-   {}
+   {
+   }
 };
 
 

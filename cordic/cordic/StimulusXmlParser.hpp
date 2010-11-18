@@ -1,11 +1,11 @@
-#ifndef DOWN_CONVERTER_XML_PARSER_HPP
-#define DOWN_CONVERTER_XML_PARSER_HPP
+#ifndef STIMULUS_XML_PARSER_HPP
+#define STIMULUS_XML_PARSER_HPP
 
 #include <sdr_simulator/xml/IXmlParser.hpp>
 
-class DownConverterXmlParser : public xml::IXmlParser
+class StimulusXmlParser : public xml::IXmlParser
 {
-   const std::string name_;
+   std::string name_;
    xml::NodeMap map_;
 
    void Insert( ticpp::Node* node, const std::string& value )
@@ -21,15 +21,13 @@ class DownConverterXmlParser : public xml::IXmlParser
 
    public:
 
-   DownConverterXmlParser(): name_("down_converter"){}
+   StimulusXmlParser(): name_("stimulus") {}
 
    const xml::NodeMap Parse( ticpp::Node* node )
    {
-      Insert( node, "module_name" );
-      Insert( node, "model" );
-      Insert( node, "num_stages" );
-      Insert( node, "xy_width" );
-      Insert( node, "z_width" );
+      Insert( node, "signal_frequency" );
+      Insert( node, "ddc_frequency" );
+      Insert( node, "sample_rate" );
 
       return map_;
    }

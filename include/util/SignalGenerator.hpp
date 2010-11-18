@@ -19,9 +19,8 @@
 
 #include<systemc.h>
 #include<vector>
-#include<sdr_simulator/Types.hpp>
 
-template< unsigned int BIT_WIDTH >
+template<typename DATA_TYPE, typename RESET_TYPE>
 class SignalGenerator : public sc_module
 {
    unsigned int index_;
@@ -39,9 +38,8 @@ class SignalGenerator : public sc_module
 
    protected:
 
-   typedef sc_int< BIT_WIDTH > sample_type;
    const int SAMPLE_SIZE;
-   std::vector< sample_type > samples_;
+   std::vector< DATA_TYPE > samples_;
 
    public:
 
@@ -59,9 +57,9 @@ class SignalGenerator : public sc_module
    }
 
    // define port IO
-   sc_in< sdr_types::reset_type > reset;
+   sc_in< RESET_TYPE > reset;
    sc_in_clk clock;
-   sc_out< sample_type > output;
+   sc_out< DATA_TYPE > output;
 
    // must call this prior to use - if using a fixed vector generated data. 
    // A good example of this would be a sine table.

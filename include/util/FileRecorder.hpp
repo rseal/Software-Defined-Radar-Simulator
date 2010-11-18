@@ -22,8 +22,8 @@
 #include <boost/shared_ptr.hpp>
 #include <sdr_simulator/util/Recorder.hpp>
 
-template < typename T >
-class FileRecorder: public Recorder<T>
+template < typename DATA_TYPE, typename RESET_TYPE >
+class FileRecorder: public Recorder<DATA_TYPE, RESET_TYPE>
 {
    // define output file stream for data file recording.
    typedef boost::shared_ptr<std::ofstream> OutputFileStreamPtr;
@@ -31,7 +31,10 @@ class FileRecorder: public Recorder<T>
 
    // override method to write data to the outputstream
    virtual void Log() {
-      *outputFileStream << this->input.read() << "\n";
+      if( !this->reset.read() )
+      {
+         *outputFileStream << this->input.read() << "\n";
+      }
    }
 
    public:
@@ -40,7 +43,7 @@ class FileRecorder: public Recorder<T>
 
       // CTOR
       FileRecorder( const sc_module_name& nm, const std::string& fileName ): 
-         Recorder<T>( nm ) {
+         Recorder<DATA_TYPE,RESET_TYPE>( nm ) {
 
          outputFileStream = OutputFileStreamPtr( 
                new ofstream( fileName.c_str() ) 

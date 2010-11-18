@@ -15,6 +15,15 @@
       <tuning_frequency>-14.4e6</tuning_frequency>
    </accumulator>
 
+   <!-- Define CORDIC module -->
+   <down_converter>
+      <module_name>down_converter</module_name>
+      <model>cordic</model>
+      <num_stages>12</num_stages>
+      <xy_width>16</xy_width>
+      <z_width>16</z_width>
+   </down_converter>
+
    <!-- Define CIC Module -->
    <cic>
       <module_name>cic</module_name>
@@ -32,13 +41,5 @@
       <output_width>16</output_width>
    </filter>
 
-   <!-- Define CORDIC module -->
-   <down_converter>
-      <module_name>down_converter</module_name>
-      <model>cordic</model>
-      <num_stages>12</num_stages>
-      <xy_width>16</xy_width>
-      <z_width>18</z_width>
-   </down_converter>
    
 </sdr_simulator>

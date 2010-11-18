@@ -21,6 +21,7 @@ namespace code_generator{
    const static std::string NEW_LINE = "\n";
    const static std::string CPP_DELIM = ";";
    const static std::string CONST = "const";
+   const static std::string STATIC = "static";
    const static std::string EQUALS = "=";
    const static std::string PERIOD = ".";
    const static std::string UNDER_SCORE = "_";
@@ -53,7 +54,7 @@ namespace code_generator{
             const std::string data_type = iter->second;
 
             result = 
-               CONST + SPACE + data_type + SPACE + 
+               CONST + SPACE + STATIC + SPACE + data_type + SPACE + 
                name + SPACE + EQUALS + SPACE + 
                boost::lexical_cast<std::string>( value ) + CPP_DELIM;
 

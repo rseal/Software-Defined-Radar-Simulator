@@ -37,7 +37,8 @@ using namespace boost;
 
 int sc_main(int argc, char* argv[]){
 
-   // define local constants
+   //TODO: Create a local xml file to read these and add 
+   // to the existing header generator code.
    const double RESET_HOLD_TIME = 5;
    const string RECORDER_FILE_NAME = "accumulator_output.dat";
    const string TRUNC_RECORDER_FILE_NAME = "accumulator_trunc_output.dat";
@@ -51,22 +52,25 @@ int sc_main(int argc, char* argv[]){
 
    const double STEP_SIZE = tr1::pow(2.0, BIT_WIDTH*1.0 )*TUNING_FREQUENCY/SAMPLE_RATE;
    // determine phase step size from desired frequency
-   sc_int<BIT_WIDTH> step_size = static_cast< sc_int<BIT_WIDTH> >( STEP_SIZE );
 
    // display settings
    cout 
       << "\nsample rate = " << SAMPLE_RATE 
       << "\nfrequency   = " << TUNING_FREQUENCY 
       << "\nbit width   = " << BIT_WIDTH 
-      << "\nstep size   = " << step_size 
+      << "\nstep size   = " << STEP_SIZE
       << "\n\n";
 
    // define testbench stimulus
    Stimulus< data_output_type > stimulus( "stimulus", RESET_HOLD_TIME, clock);
+
+   // In this test bench, we're not using the output signal, only 
+   // clock and reset.
    stimulus.output( null_signal );
 
    // DUT
-   PhaseAccumulator<BIT_WIDTH> accumulator("accumulator", step_size );
+   PhaseAccumulator<data_output_type,reset_type> accumulator(
+         "accumulator", STEP_SIZE );
    accumulator.clock( stimulus.clock );
    accumulator.out(out_signal);
    accumulator.reset( stimulus.reset );
@@ -79,7 +83,6 @@ int sc_main(int argc, char* argv[]){
    TruncatedRecorder< data_output_type > t_record( "trunc_recorder", TRUNC_RECORDER_FILE_NAME );
    t_record.clock( stimulus.clock );
    t_record.input( out_signal );
-
 
    //run simulations for 22 nsec
    sc_start(sc_time(5000, SC_NS));

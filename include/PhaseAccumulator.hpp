@@ -17,19 +17,18 @@
 #ifndef PHASE_ACC_HPP
 #define PHASE_ACC_HPP
 
-#include <boost/math/constants/constants.hpp>
-#include <boost/shared_ptr.hpp>
-#include <sdr_simulator/Types.hpp>
+#include<systemc.h>
 
-template <uint BIT_WIDTH>
+template <typename DATA_TYPE, typename RESET_TYPE >
 class PhaseAccumulator: public sc_module  {
 
-   typedef sc_int<BIT_WIDTH> data_type;
+   const double STEP_SIZE;
+   DATA_TYPE theta;
 
-   data_type stepSize_;
-
-   void Accumulate() { 
-      out = reset.read() ? 0U : out.read() + stepSize_; 
+   void Accumulate() 
+   { 
+      theta = reset.read() ? 0 : rint( theta + STEP_SIZE ); 
+      out.write( theta );
    }
 
    public: 
@@ -37,17 +36,17 @@ class PhaseAccumulator: public sc_module  {
    SC_HAS_PROCESS(PhaseAccumulator);
 
    // Constructor 
-   PhaseAccumulator( const sc_module_name& name, int stepSize ):
-      sc_module(name), stepSize_(stepSize) {
-
-         SC_METHOD(Accumulate);
-         sensitive << clock.pos();
-      }
+   PhaseAccumulator( const sc_module_name& name, const double stepSize ):
+      sc_module(name), STEP_SIZE(stepSize)
+   {
+      SC_METHOD(Accumulate);
+      sensitive << clock.pos();
+   }
 
    // port definition
-   sc_in< sdr_types::reset_type > reset;
+   sc_in<RESET_TYPE> reset;
    sc_in_clk clock;
-   sc_out<data_type> out;
+   sc_out<DATA_TYPE> out;
 };
 
 #endif

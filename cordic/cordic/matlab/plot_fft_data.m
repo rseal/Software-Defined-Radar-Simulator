@@ -9,8 +9,7 @@ z = x(offset:end) + j*y(offset:end);
 %z = conv(z,hamming(2*63));
 fs = 64e6;
 num_fft_points = 8*1024;
-num_ffts = length(z)/num_fft_points
-
+num_ffts = floor( length(z)/num_fft_points )
 
 result = zeros(1,num_fft_points);
 data = zeros(1,num_fft_points);
@@ -22,16 +21,23 @@ for idx=1:num_ffts
    data = z(start_idx : end_idx );
    data = fft(data,num_fft_points);
    data = (data .* conj(data))/num_fft_points;
-   
+
    result = result + transpose(data);
 end
-   
-%result = result/num_ffts;
+
+%normalize results
 result = result/max(result);
-result = fftshift(transpose(result));
+
+%reorder fft output
+result = fftshift( transpose( result ) );
+
+%setup log format
 result = 10*log10(result);
 
+%create x scale
 x_scale = -fs/2:fs/num_fft_points:fs/2-1;
+
+%plot power spectrum
 plot(x_scale,result);
 grid("minor", "on");
 title( "12 Stage 16-bit CORDIC DDC" );

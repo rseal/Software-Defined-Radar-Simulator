@@ -20,7 +20,7 @@
 #include <systemc.h>
 
 // abstract class - override Log method in your own class 
-template < typename T >
+template < typename DATA_TYPE, typename RESET_TYPE >
 class Recorder: public sc_module
 {
    // pure virtual method 
@@ -34,11 +34,12 @@ class Recorder: public sc_module
       Recorder( const sc_module_name& nm ): sc_module(nm){
 
          SC_METHOD( Log );
-         sensitive << input;
+         sensitive << clock.pos();
       }
 
       // define Port IO
-      sc_in< T > input;
+      sc_in< DATA_TYPE > input;
+      sc_in< RESET_TYPE > reset;
       sc_in_clk clock;
 };
 
