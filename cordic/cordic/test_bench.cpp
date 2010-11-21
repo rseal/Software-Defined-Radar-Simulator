@@ -20,7 +20,6 @@
 #include <sdr_simulator/util/FileRecorder.hpp>
 
 #include "test_bench.hpp"
-#include "Accumulator.hpp"
 
 int sc_main( int argc, char* argv[])
 {

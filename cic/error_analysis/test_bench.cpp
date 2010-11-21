@@ -28,8 +28,8 @@ int main()
    const int DIFF_DELAY = 1;
    const int OUTPUT_WIDTH = 16;
 
-   CicErrorAnalysis cea;
-   vector<int> bitWidths = cea.ComputeBitWidths(
+   CicErrorAnalysis cic_error_analysis;
+   vector<int> bitWidths = cic_error_analysis.ComputeBitWidths( 
          NUM_STAGES, MAX_DECIMATION, DIFF_DELAY, OUTPUT_WIDTH
          );
   

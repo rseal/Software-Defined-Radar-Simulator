@@ -1,0 +1,11 @@
+#target name
+target_name = 'cic_differentiator_test'
+source_files = 'test_bench.cpp'
+libs = ['systemc']
+#custom build flags
+flags = ['-Wall', '-W']
+
+#define build environment
+env = Environment(LIBS=libs,CXXFLAGS=flags)
+
+prog = env.Program( target=target_name , source=source_files )

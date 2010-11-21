@@ -18,7 +18,7 @@
 #define FILTER_STAGE_HPP
 
 #include<systemc.h>
-#include<sdr_simulator/Cic.hpp>
+//include<sdr_simulator/Cic.hpp>
 #include<sdr_simulator/usrp/HalfBandFilterGeneric.hpp>
 #include<sdr_simulator/Types.hpp>
 #include<boost/shared_ptr.hpp>

@@ -29,7 +29,9 @@
       <module_name>cic</module_name>
       <input_width>16</input_width>
       <output_width>16</output_width>
-      <decimation>8</decimation>
+      <min_decimation>8</min_decimation>
+      <max_decimation>1024</max_decimation>
+      <differential_delay>1</differential_delay>
       <num_stages>4</num_stages>
    </cic>
 

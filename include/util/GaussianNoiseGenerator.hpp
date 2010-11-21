@@ -6,7 +6,7 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-//  
+//
 // SDRS is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -25,16 +25,16 @@
 #include<tr1/math.h>
 
 // Gaussian noise generator with adjustable mean, variance, and amplitude
-template< unsigned int BIT_WIDTH>
-class GaussianNoiseGenerator: public SignalGenerator<BIT_WIDTH>
+template< typename DATA_TYPE, typename RESET_TYPE >
+class GaussianNoiseGenerator: public SignalGenerator< DATA_TYPE, RESET_TYPE>
 {
    // define constants
-   const int SCALE;
+   int SCALE;
    const float MEAN;
    const float VARIANCE;
    const float AMPLITUDE;
 
-   // random number number generating algorithm 
+   // random number number generating algorithm
    boost::mt11213b rng;
    // gaussian distribution
    boost::normal_distribution<> nDistribution;
@@ -42,35 +42,42 @@ class GaussianNoiseGenerator: public SignalGenerator<BIT_WIDTH>
    // compute a new sample on each clock cycle
    virtual void Compute()
    {
-      if(!this->reset.read())
-         this->output = sc_int< BIT_WIDTH >( getRandomNumber()*SCALE*AMPLITUDE );
+      if ( !this->reset.read() )
+         {
+            this->output = DATA_TYPE ( getRandomNumber() * SCALE * AMPLITUDE );
+         }
    }
 
    // returns a pseudo-random number based on the mt11213b RNG.
    double getRandomNumber()
    {
-      boost::variate_generator< boost::mt11213b&, boost::normal_distribution<> > random_number(rng,nDistribution);
+      boost::variate_generator< boost::mt11213b&, boost::normal_distribution<> > 
+         random_number ( rng, nDistribution );
       return random_number();
    }
-   
-   public:
 
-   SC_HAS_PROCESS( GaussianNoiseGenerator );
+public:
+
+   SC_HAS_PROCESS ( GaussianNoiseGenerator );
 
    // CTOR
-   GaussianNoiseGenerator( 
-         const sc_module_name& nm, 
-         const float mean = 0.0, 
-         const float variance = 1.0, 
-         const float amplitude = 1.0
-         ):
-      SignalGenerator<BIT_WIDTH>( nm , 0), 
-      SCALE( std::tr1::pow(2.0,BIT_WIDTH)-1 ), MEAN(mean), VARIANCE(variance),
-      AMPLITUDE( amplitude ), nDistribution(MEAN,VARIANCE) { }
+   GaussianNoiseGenerator (
+      const sc_module_name& nm,
+      const float mean = 0.0,
+      const float variance = 1.0,
+      const float amplitude = 1.0
+   ) :
+      SignalGenerator<DATA_TYPE,RESET_TYPE> ( nm , 0 ),
+      MEAN ( mean ), VARIANCE ( variance ),
+      AMPLITUDE ( amplitude ), nDistribution ( MEAN, VARIANCE ) 
+   { 
+      DATA_TYPE buffer;
+      SCALE = std::tr1::pow( 2.0, buffer.length() ) -1;
+   }
 
-   void Seed( const int seed )
+   void Seed ( const int seed )
    {
-      rng.seed( seed );
+      rng.seed ( seed );
    }
 
 };

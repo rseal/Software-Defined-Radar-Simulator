@@ -31,11 +31,11 @@ class CicErrorAnalysis
       > c_policy;
 
    std::vector<double> GetError( 
-         const unsigned int& numStages, 
-         const unsigned int& maxDecimation, 
-         const unsigned int& diffDelay, 
-         const unsigned int& numOutputBits, 
-         const unsigned int& type
+         const unsigned int numStages, 
+         const unsigned int maxDecimation, 
+         const unsigned int diffDelay, 
+         const unsigned int numOutputBits, 
+         const unsigned int type
          ) 
    {
 
@@ -94,10 +94,10 @@ class CicErrorAnalysis
    public:
 
    const std::vector<int> ComputeBitWidths( 
-         const unsigned int& numStages,
-         const unsigned int& maxDecimation, 
-         const unsigned int& diffDelay, 
-         const unsigned int& numOutputBits 
+         const unsigned int numStages,
+         const unsigned int maxDecimation, 
+         const unsigned int diffDelay, 
+         const unsigned int numOutputBits 
          ) 
    {
 
@@ -108,6 +108,7 @@ class CicErrorAnalysis
       long bitDiscard = bitMax - numOutputBits;
       double totalOutputStdDeviation = std::tr1::pow(2.0,bitDiscard)/std::tr1::sqrt(12.0);
 
+      std::cout << "gain max = " << gainMax << std::endl;
       std::cout << "bit max  = " << bitMax << std::endl;
       std::cout << "bit gain = " << bitGain << std::endl;
       std::cout << "bit MSB  = " << bitMSB << std::endl;
@@ -130,7 +131,7 @@ class CicErrorAnalysis
             VAR
             );
 
-      std::vector<int> discard(2*numStages+1,0);
+      std::vector<int> discard(2*numStages+2,0);
 
       for( int i=0; i<numStages; ++i)
       {
@@ -141,12 +142,12 @@ class CicErrorAnalysis
             0.5*std::tr1::log2(6.0/numStages);
       }
 
-      for( int i=numStages; i< 2*numStages; ++i)
+      for( int i=numStages; i< 2*numStages+1; ++i)
       {
          discard[i] = discard[i-1] + 1;
       }
 
-      discard[2*numStages] = bitDiscard;
+      discard[2*numStages+1] = bitDiscard;
 
       for( int i=0; i<discard.size(); ++i)
       {

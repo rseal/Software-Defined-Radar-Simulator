@@ -14,11 +14,10 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with SDRS.  If not, see <http://www.gnu.org/licenses/>.
-//#include <sdr_simulator/CicIntegrator.hpp>
 #include "Cic.hpp"
 #include "test_bench.hpp"
 #include <sdr_simulator/util/FileRecorder.hpp>
-#include <sdr_simulator/util/GaussianNoiseStimulus.hpp>
+#include <sdr_simulator/util/GaussianNoiseGenerator.hpp>
 
 using namespace std;
 
@@ -27,19 +26,20 @@ int main()
    const double TIME_RESOLUTION = 1.0;
    const double TOTAL_SIMULATION_TIME = 500000.0;
    const double CLOCK_PERIOD = 2.0;
+   const unsigned int RESET_TIME = 20;
+
    const double MEAN = 0.0;
    const double VARIANCE = 1.0;
    const double AMPLITUDE = 0.25;
-   const unsigned int RESET_TIME = 20;
    const string RECORDER_FILE_NAME = "output.dat";
 
-   sc_signal< testbench::bit_type > reset_signal;
-   sc_signal< testbench::data_input_type > input_signal;
-   sc_signal< testbench::data_output_type > output_signal;
+   sc_signal< reset_type> reset_signal;
+   sc_signal< data_input_type > dut_input_signal;
+   sc_signal< data_output_type > dut_output_signal;
    sc_signal< bool > clk_signal;
-   sc_signal< testbench::data_input_type > decimate_signal;
+   sc_signal< data_input_type > decimate_signal;
 
-   decimate_signal = testbench::DECIMATION;
+   decimate_signal = 8;
 
    // set time parameters
    sc_set_time_resolution( TIME_RESOLUTION , SC_NS );
@@ -48,22 +48,25 @@ int main()
    sc_clock stimulus_clock( "clock", clock_time);
 
    // gaussian noise source
-   GaussianNoiseStimulus<testbench::data_input_type, testbench::INPUT_WIDTH> 
-      stimulus( "stimulus", RESET_TIME, stimulus_clock, MEAN, VARIANCE, AMPLITUDE );
-   stimulus.output( output_signal );
+   GaussianNoiseGenerator<data_output_type, reset_type > 
+      gaussianNoiseGen( "stimulus", MEAN, VARIANCE, AMPLITUDE );
+   gaussianNoiseGen.output( dut_input_signal );
+   gaussianNoiseGen.reset( reset_signal );
+   gaussianNoiseGen.clock( stimulus_clock );
 
    // record output to file
-   FileRecorder<testbench::data_input_type> record( "record", RECORDER_FILE_NAME );
-   record.input( input_signal );
-   record.clock( stimulus.clock );
+   FileRecorder<data_output_type, reset_type> record( "record", RECORDER_FILE_NAME );
+   record.input( dut_output_signal );
+   record.reset( reset_signal );
+   record.clock( stimulus_clock );
 
    // DUT
-   Cic< testbench::INPUT_WIDTH, testbench::OUTPUT_WIDTH > 
+   Cic< INPUT_WIDTH, OUTPUT_WIDTH > 
       cic( "cic" );
-   cic.clock( stimulus.clock );
-   cic.reset( stimulus.reset );
-   cic.input( output_signal );
-   cic.output( input_signal );
+   cic.clock( stimulus_clock );
+   cic.reset( reset_signal );
+   cic.input( dut_input_signal );
+   cic.output( dut_output_signal );
    cic.decimation( decimate_signal );
 
    // begin simulation

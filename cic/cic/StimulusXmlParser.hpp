@@ -1,11 +1,11 @@
-#ifndef CIC_XML_PARSER_HPP
-#define CIC_XML_PARSER_HPP
+#ifndef STIMULUS_XML_PARSER_HPP
+#define STIMULUS_XML_PARSER_HPP
 
 #include <sdr_simulator/xml/IXmlParser.hpp>
 
-class CicXmlParser : public xml::IXmlParser
+class StimulusXmlParser : public xml::IXmlParser
 {
-   const std::string name_;
+   std::string name_;
    xml::NodeMap map_;
 
    void Insert( ticpp::Node* node, const std::string& value )
@@ -21,23 +21,18 @@ class CicXmlParser : public xml::IXmlParser
 
    public:
 
-   CicXmlParser(): name_("cic"){}
+   StimulusXmlParser(): name_("stimulus") {}
 
    const xml::NodeMap Parse( ticpp::Node* node )
    {
-      Insert( node, "module_name" );
-      Insert( node, "input_width" );
-      Insert( node, "output_width" );
-      Insert( node, "min_decimation" );
-      Insert( node, "max_decimation" );
-      Insert( node, "differential_delay");
-      Insert( node, "num_stages" );
+      Insert( node, "signal_frequency" );
+      Insert( node, "ddc_frequency" );
+      Insert( node, "sample_rate" );
 
       return map_;
    }
 
    const std::string& Name() { return name_; }
-
 };
 
 #endif
