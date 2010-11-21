@@ -1,8 +1,0 @@
-project cic
-	: default-build release
-	;
-
-build-project cic ;
-build-project differentiator ;
-build-project error_analysis ;
-build-project integrator ;
