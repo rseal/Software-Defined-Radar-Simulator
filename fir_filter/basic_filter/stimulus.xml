@@ -1,0 +1,9 @@
+<stimulus>
+   <input_width>16</input_width>
+   <output_width>16</output_width>
+   <coeff_width>16</coeff_width>
+   <accumulator_width>37</accumulator_width>
+   <mean>0.0</mean>
+   <variance>1.0</variance>
+   <amplitude>1.0</amplitude>
+</stimulus>

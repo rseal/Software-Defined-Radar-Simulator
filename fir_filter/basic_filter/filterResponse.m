@@ -3,7 +3,7 @@ function result = filterResponse( file_name, num_fft_points);
 % load data
 x = load(file_name);
 %decimate by 2
-x = x(1:2:end);
+%x = x(1:2:end);
 
 %y = cic(x,4,1,4,4**(-4));
 %y=x;

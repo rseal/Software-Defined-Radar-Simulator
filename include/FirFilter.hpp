@@ -108,13 +108,13 @@ template < unsigned int INPUT_WIDTH, unsigned int OUTPUT_WIDTH,
 
       //// TODO: Refactor/Redesign this class to simplify 
       //// potential headaches
-      //void Initialize( const CoeffList& coeff )
-      //{
-      //  coeff_ = coeff;
-      //  queue_.resize(coeff_.size());
-      //  coeff_iter_ = coeff_.begin();
-      //  initialized_ = true;
-      //}
+      void Initialize( const CoeffList& coeff )
+      {
+        coeff_ = coeff;
+        queue_.resize(coeff_.size());
+        coeff_iter_ = coeff_.begin();
+        initialized_ = true;
+      }
 
       // port IO definitions
       sc_in_clk clock;

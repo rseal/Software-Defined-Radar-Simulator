@@ -21,49 +21,45 @@
 #include <sdr_simulator/Types.hpp>
 
 // abstract class to assist in stimulus IO development for hardware testing.
-template< typename T >
+template< typename RESET_TYPE >
 class Stimulus: public sc_module
 {
-   const unsigned int RESET_TIME_;
+   typedef sc_export< sc_signal_inout_if< bool > > clk_out_export;
+
+   const unsigned int RESET_TIME;
 
    // define internal signals for use with exports
-   sdr_types::reset_signal reset_;
+   sc_signal<RESET_TYPE> reset_;
+   sc_clock clock_;
 
    // reset signal
    void Reset() {
 
       reset_.write( true );
-      wait(RESET_TIME_, SC_NS);
+      wait(RESET_TIME, SC_NS);
       reset_.write( false );
 
    }
-
-   // override to connect custom stimulus modules
-   // must call this from derived class
-   virtual void Init()
-   {
-      // TODO: Override and add default signal outputs here
-   };
 
    public:
    SC_HAS_PROCESS( Stimulus );
 
    // CTOR
-   Stimulus( const sc_module_name& nm, const unsigned int resetTime, 
-         sc_clock& stimClock ): sc_module(nm), RESET_TIME_( resetTime ) 
+   Stimulus( const sc_module_name& nm, const sc_time& time,
+         const unsigned int resetLength ):
+      sc_module(nm), RESET_TIME( resetLength ), clock_( "clock", time )
    {
       SC_THREAD( Reset );
-      sensitive << stimClock.posedge_event();
+      sensitive << clock_.posedge_event();
 
       // tie internal clock signal to exported clock output
-      clock( stimClock );
-      reset(reset_);
+      clock( clock_ );
+      reset( reset_ );
    }
 
    // define port IO
-   sdr_types::reset_export_out reset;
-   sdr_types::clk_export_out clock;
-   sc_out< T > output;
+   clk_out_export clock;
+   sc_out< RESET_TYPE > reset;
 };
 
 #endif
