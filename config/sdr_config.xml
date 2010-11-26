@@ -10,7 +10,7 @@
    <!-- Define Accumulator Module -->
    <accumulator>
       <module_name>accumulator</module_name>
-      <bit_width>32</bit_width>
+      <bit_width>16</bit_width>
       <sample_rate>64e6</sample_rate>
       <tuning_frequency>-14.4e6</tuning_frequency>
    </accumulator>

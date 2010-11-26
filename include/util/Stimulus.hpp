@@ -18,7 +18,6 @@
 #define STIMULUS_HPP
 
 #include <systemc.h>
-#include <sdr_simulator/Types.hpp>
 
 // abstract class to assist in stimulus IO development for hardware testing.
 template< typename RESET_TYPE >
