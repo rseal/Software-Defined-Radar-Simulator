@@ -17,20 +17,22 @@
 #ifndef SIGNAL_GENERATOR_HPP
 #define SIGNAL_GENERATOR_HPP
 
-#include<systemc.h>
+#include <sdr_simulator/SdrModule.hpp>
+
 #include<vector>
 
 template<typename DATA_TYPE, typename RESET_TYPE>
-class SignalGenerator : public sc_module
+class SignalGenerator : public sdr_module::Module< DATA_TYPE, DATA_TYPE >
 {
    unsigned int index_;
+   sc_signal< DATA_TYPE > null_input_signal_;
 
    // default implementation that relies on samples_ vector, which is filled 
    // by implementing GenerateSamples.
    virtual void Compute()
    {
-     if( index_ == samples_.size() || reset.read() ) index_ = 0;
-     output = samples_[index_++];
+     if( index_ == SAMPLE_SIZE || this->reset.read() ) index_ = 0;
+     this->output = ++index_;
    }
 
    // Optional method for providing a fixed number of random samples
@@ -38,8 +40,9 @@ class SignalGenerator : public sc_module
 
    protected:
 
+   typedef std::vector< DATA_TYPE > SampleVector;
    const int SAMPLE_SIZE;
-   std::vector< DATA_TYPE > samples_;
+   SampleVector samples_;
 
    public:
 
@@ -47,19 +50,11 @@ class SignalGenerator : public sc_module
 
    // CTOR: Set sampleSize to zero if overriding the Compute method.
    SignalGenerator( const sc_module_name& nm, const int sampleSize):
-      sc_module( nm ), SAMPLE_SIZE( sampleSize ), samples_(sampleSize), index_(0)
+      sdr_module::Module<DATA_TYPE, DATA_TYPE>( nm ), 
+      SAMPLE_SIZE( sampleSize ), samples_(sampleSize), index_(0)
    {
-      // virtual method is sensitive to clock edge. A custom implementation 
-      // should be provided to override Compute, producing a single sample 
-      // output per clock cycle. See GaussianNoiseGenerator.hpp
-      SC_METHOD( Compute );
-      sensitive << clock.pos();
+      this->input( null_input_signal_ );
    }
-
-   // define port IO
-   sc_in< RESET_TYPE > reset;
-   sc_in_clk clock;
-   sc_out< DATA_TYPE > output;
 
    // must call this prior to use - if using a fixed vector generated data. 
    // A good example of this would be a sine table.

@@ -21,45 +21,42 @@
 #include<systemc.h>
 #include<boost/shared_ptr.hpp>
 
-#include "Cic.hpp"
 #include<sdr_simulator/receiver/usrp/HalfBandFilterGeneric.hpp>
 
-namespace{
-   const static int COEFF_WIDTH = 16;
-   const static int SUM_WIDTH = 37;
-};
+// locally-generated files.
+#include "Cic.hpp"
+#include "configuration.hpp"
 
 namespace usrp
 {
 
-template< typename INPUT_DATA_TYPE, typename OUTPUT_DATA_TYPE > 
-class FilterStage: public sdr_module::Module< INPUT_DATA_TYPE, OUTPUT_DATA_TYPE>
+class FilterStage: 
+   public sdr_module::Module< filter::INPUT_TYPE, filter::OUTPUT_TYPE >
 {
     typedef sc_export< sc_signal_inout_if<bool> > sc_export_clk;
-    typedef sc_int<16> DECIMATION_TYPE;
-    typedef sc_int< ::COEFF_WIDTH > COEFF_TYPE;
-    typedef std::list< COEFF_TYPE > COEFF_LIST;
-    COEFF_LIST coeff_;
+
 
     // cic definitions
     // TODO: Read parameters from config file.
-    typedef Cic< INPUT_DATA_TYPE, INPUT_DATA_TYPE > CicModule;
-    typedef boost::shared_ptr< CicModule > CicPtr;
+    typedef boost::shared_ptr< Cic > CicPtr;
     CicPtr cic_;
 
     // half band filter definitions
     // TODO: Read parameters from config file.
-    typedef HalfBandFilterGeneric< INPUT_DATA_TYPE, OUTPUT_DATA_TYPE,
-            COEFF_LIST, ::SUM_WIDTH > HalfBandFilterModule;
-    typedef boost::shared_ptr< HalfBandFilterModule > HalfBandFilterPtr;
+    typedef boost::shared_ptr< HalfBandFilterGeneric > HalfBandFilterPtr;
     HalfBandFilterPtr halfBandFilter_;
 
     // signal and data type definitions
-    sc_signal< INPUT_DATA_TYPE > internal_signal_1;
-    sc_signal< OUTPUT_DATA_TYPE > internal_signal_2;
+    sc_signal< filter::INPUT_TYPE > internal_signal_1;
+    sc_signal< filter::OUTPUT_TYPE > internal_signal_2;
 
     virtual void Compute() {
-        this->output.write( internal_signal_2 );
+        //this->output.write( internal_signal_2.read() );
+    }
+
+    void DecimatedCompute()
+    {
+       this->output.write( internal_signal_2.read() );
     }
 
 public:
@@ -68,63 +65,41 @@ public:
 
     // CTOR
     FilterStage( const sc_module_name& nm ): 
-       sdr_module::Module<INPUT_DATA_TYPE,OUTPUT_DATA_TYPE>(nm) {
+       sdr_module::Module< filter::INPUT_TYPE, filter::OUTPUT_TYPE >(nm) {
 
-      // poor implementation of a 31-tap half-band filter
-         coeff_.push_back( -49 );
-         coeff_.push_back( 0 );
-         coeff_.push_back( 165 );
-         coeff_.push_back( 0 );
-         coeff_.push_back( -412 );
-         coeff_.push_back( 0 );
-         coeff_.push_back( 873 );
-         coeff_.push_back( 0 );
-         coeff_.push_back( -1681 );
-         coeff_.push_back( 0 );
-         coeff_.push_back( 3135 );
-         coeff_.push_back( 0 );
-         coeff_.push_back( -6282 );
-         coeff_.push_back( 0 );
-         coeff_.push_back( 20628 );
-         coeff_.push_back( 32767 );
-         coeff_.push_back( 20628 );
-         coeff_.push_back( 0 );
-         coeff_.push_back( -6282 );
-         coeff_.push_back( 0 );
-         coeff_.push_back( 3135 );
-         coeff_.push_back( 0 );
-         coeff_.push_back( -1681 );
-         coeff_.push_back( 0 );
-         coeff_.push_back( 873 );
-         coeff_.push_back( 0 );
-         coeff_.push_back( -412 );
-         coeff_.push_back( 0 );
-         coeff_.push_back( 165 );
-         coeff_.push_back( 0 );
-         coeff_.push_back( -49 );
-
-        cic_ = CicPtr( new CicModule( "cic" ) );
+        cic_ = CicPtr( new Cic( "cic" ) );
         cic_->clock( this->clock );
+        cic_->reset( this->reset );
         cic_->decimation( decimation );
         cic_->input( this->input );
         cic_->output( internal_signal_1 );
-        cic_->reset( this->reset );
 
-        halfBandFilter_ = HalfBandFilterPtr( new HalfBandFilterModule( "hbFilter") );
+        cic_output_clock( cic_->div_clock );
 
-        // the halfband filter is clocked at the cic's output rate
+        halfBandFilter_ = HalfBandFilterPtr( new HalfBandFilterGeneric( "hbFilter") );
         halfBandFilter_->clock( cic_->div_clock );
         halfBandFilter_->reset( this->reset );
         halfBandFilter_->input( internal_signal_1 );
         halfBandFilter_->output( internal_signal_2 );
-        halfBandFilter_->LoadCoefficients( coeff_ );
+        halfBandFilter_->LoadCoefficients( filter::COEFFICIENTS );
 
         // export the div_clock to the user
         div_clock( halfBandFilter_->div_clock );
+
+        // TODO: Debug only 
+        debug_cic_output( internal_signal_1 );
+
+        SC_METHOD( DecimatedCompute );
+        sensitive << halfBandFilter_->div_clock->posedge_event();
     }
 
-    sc_in< DECIMATION_TYPE > decimation;
+    sc_in< filter::DECIMATION_TYPE > decimation;
     sc_export_clk div_clock; 
+    sc_export_clk cic_output_clock;
+
+    // TODO: Debug only 
+    debug::sc_export_cic_output debug_cic_output;
+
 };
 };
 

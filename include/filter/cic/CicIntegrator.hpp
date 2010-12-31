@@ -17,46 +17,42 @@
 #ifndef CIC_INTEGRATOR_HPP
 #define CIC_INTEGRATOR_HPP
 
+#include <sdr_simulator/SdrModule.hpp>
+
 #include <systemc.h>
 
-template < unsigned int INPUT_WIDTH, unsigned int OUTPUT_WIDTH > 
-class CicIntegrator : public sc_module {
+template < int INPUT_SIZE, int OUTPUT_SIZE > 
+class CicIntegrator : public sdr_module::Module< sc_int<INPUT_SIZE>, sc_int<OUTPUT_SIZE> >
+{
+   sc_bv<INPUT_SIZE> memory_;
+   sc_bv<INPUT_SIZE> buffer_;
+   sc_int<OUTPUT_SIZE> output_;
+   const int SHIFT;
 
-   const unsigned int MSB;
-   const unsigned int LSB;
-
-   typedef sc_int< INPUT_WIDTH > data_input_type;
-   typedef sc_int< OUTPUT_WIDTH > data_output_type;
-   typedef sc_int< INPUT_WIDTH+1 > buffer_type;
-   typedef bool bit_type;
-
-   buffer_type memory;
-
-   void Initialize(){
-
-   //TODO: Initialize Modules and interconnects
-
-   }
-
-   void Compute(){
-
-      data_input_type buffer = input.read() + data_input_type(memory);
-      data_output_type out = data_output_type( buffer.range(MSB,LSB) );
+   virtual void Compute(){
 
       // NOTE: output is a signal and updated after a delta-delay.
-      if( reset.read() )
+      if( !this->reset.read() )
       {
-         output.write( 0 );
-         memory = 0;
+         buffer_ = sc_bv<INPUT_SIZE>( this->input.read() + memory_.to_int() );
+         memory_ = buffer_;
+         output_ = buffer_.range( INPUT_SIZE-1 , SHIFT ).to_int();
+
+         this->output.write( output_ );
+         
+         //std::cout << "\ninput width = " << buffer.length() << std::endl;
+         //std::cout << "output width = " << output.length() << std::endl;
+         //std::cout << "msb = " << buffer.length()-1 << std::endl;
+         //std::cout << "lsb = " << SHIFT << std::endl << std::endl;
+         //std::cout << "shift = " << SHIFT << std::endl;
+         //std::cout << "memory = " << memory_ << std::endl;
+         //std::cout << "buffer = " << buffer << std::endl;
+         //std::cout << "output = " << output_ << " at " << sc_time_stamp() << endl;
       }
       else
       {
-         //cout 
-         //<< " i = " << input.read() 
-         //<< " o = " << out 
-         //<< " m = " << memory << endl;
-         output.write( out );
-         memory = buffer_type( input.read() + memory);
+         this->output.write( 0 );
+         memory_ = 0;
       }
    }
 
@@ -65,19 +61,9 @@ class CicIntegrator : public sc_module {
    SC_HAS_PROCESS( CicIntegrator );
 
    CicIntegrator( const sc_module_name& nm ): 
-      sc_module( nm ),
-      MSB( INPUT_WIDTH -1),
-      LSB( INPUT_WIDTH - OUTPUT_WIDTH )
-   {
-      SC_METHOD( Compute );
-      sensitive << clock.pos();
-   }
-
-   sc_in_clk clock;
-   sc_in< bit_type > reset;
-   sc_in< data_input_type > input;
-   sc_out< data_output_type > output;
-
+      sdr_module::Module< sc_int<INPUT_SIZE>, sc_int<OUTPUT_SIZE> >( nm ),
+      SHIFT( INPUT_SIZE - OUTPUT_SIZE )
+   { }
 };
 
 

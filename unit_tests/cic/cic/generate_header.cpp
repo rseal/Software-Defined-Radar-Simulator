@@ -32,6 +32,7 @@ int main(void)
    const std::string CONFIGURATION_FILE_NAME = "../../../config/sdr_config.xml";
    const std::string STIMULUS_FILE_NAME = "stimulus.xml";
    const string HEADER_FILE_NAME = "test_bench.hpp";
+   const string CIC_FILE_NAME = "Cic.hpp";
 
    // open the configuration file for parsing
    ticpp::Document doc( CONFIGURATION_FILE_NAME );
@@ -61,18 +62,18 @@ int main(void)
 
    // generate data input type
    code_generator.AddTypeDef(
-         "data_input_type",
+         "INPUT_TYPE",
          "sc_int<" + lexical_cast< string >( INPUT_WIDTH ) + ">"
          );
 
    // generate data output type
    code_generator.AddTypeDef(
-         "data_output_type",
+         "OUTPUT_TYPE",
          "sc_int<" + lexical_cast< string >( OUTPUT_WIDTH ) + ">"
          );
 
    code_generator.AddTypeDef(
-         "reset_type",
+         "RESET_TYPE",
          "bool"
          );
 
@@ -86,11 +87,11 @@ int main(void)
          OUTPUT_WIDTH
          );
 
-   code_generator.AddInclude( "systemc.h", true );
+   code_generator.AddInclude( "systemc", true );
 
    code_generator.GenerateFile( HEADER_FILE_NAME );
 
-   CicGenerator cicGenerator;
+   CicGenerator cicGenerator( CONFIGURATION_FILE_NAME );
 
    return EXIT_SUCCESS;
 }

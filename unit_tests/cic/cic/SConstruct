@@ -25,7 +25,7 @@ generate_header = env.Command('test_bench.hpp', code_gen, './code_generator')
 env.Depends( generate_header, config_files )
 
 prog1 = env.Program( target=target_name , source=source_files )
-env.Depends( prog1, generate_header )
+env.Depends( prog1, generate_header)
 
 env.Clean('.', [env.Glob('*.dat'),'Cic.hpp'])
 

@@ -14,20 +14,40 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with SDRS.  If not, see <http://www.gnu.org/licenses/>.
-#ifndef TEST_BENCH_HPP
-#define TEST_BENCH_HPP
+#ifndef STIMULUS_XML_PARSER_HPP
+#define STIMULUS_XML_PARSER_HPP
 
-namespace testbench{
+#include <sdr_simulator/xml/IXmlParser.hpp>
 
-   const unsigned int INPUT_WIDTH=16;
-   const unsigned int OUTPUT_WIDTH=16;
+class StimulusXmlParser : public xml::IXmlParser
+{
+   std::string name_;
+   xml::NodeMap map_;
 
-   typedef bool bit_type;
-   typedef sc_int< INPUT_WIDTH > data_input_type;
-   typedef sc_int< OUTPUT_WIDTH > data_output_type;
+   void Insert( ticpp::Node* node, const std::string& value )
+   {
+      map_.insert
+         ( 
+          std::pair< std::string, std::string >( 
+             value,
+             node->FirstChildElement( value )->GetText() 
+             )
+         );
+   }
 
+   public:
+
+   StimulusXmlParser(): name_("stimulus") {}
+
+   const xml::NodeMap Parse( ticpp::Node* node )
+   {
+      Insert( node, "input_width" );
+      Insert( node, "output_width" );
+
+      return map_;
+   }
+
+   const std::string& Name() { return name_; }
 };
-
-
 
 #endif

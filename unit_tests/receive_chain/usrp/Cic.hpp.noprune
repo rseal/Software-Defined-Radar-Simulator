@@ -1,0 +1,130 @@
+#include<systemc.h>
+#include<iostream>
+
+#include<boost/shared_ptr.hpp>
+#include<sdr_simulator/filter/cic/CicIntegrator.hpp>
+#include<sdr_simulator/filter/cic/CicDifferentiator.hpp>
+#include<sdr_simulator/SdrModule.hpp>
+#include "configuration.hpp"
+
+class Cic : public sdr_module::Module< cic::INPUT_TYPE,cic::OUTPUT_TYPE > {
+
+   typedef sc_export< sc_signal_inout_if<bool> > clk_export_out;
+   sc_signal< bool > div_clock_;
+   int idx_;
+
+   sc_signal< sc_int< 55 > > sig_0_;
+   sc_signal< sc_int< 55 > > sig_1_;
+   sc_signal< sc_int< 55 > > sig_2_;
+   sc_signal< sc_int< 55 > > sig_3_;
+   sc_signal< sc_int< 55 > > sig_4_;
+   sc_signal< sc_int< 55 > > sig_5_;
+   sc_signal< sc_int< 55 > > sig_6_;
+   sc_signal< sc_int< 55 > > sig_7_;
+   sc_signal< sc_int< 55 > > sig_8_;
+
+
+   virtual void Compute(){
+      sc_int< 55> buffer = this->input.read();
+      sig_0_.write( buffer );
+}
+
+   void ComputeOutput(){
+      sc_bv< 16 > output = sc_bv< 16>( sig_8_.read().range(34,18));
+      this->output = output.to_int();
+}
+
+   void DivClock(){
+      if( ++idx_ == decimation.read()/2 )
+      {
+         idx_ = 0;
+         div_clock_ = !div_clock_.read();
+      }
+   }
+
+   boost::shared_ptr<   CicIntegrator< 55 , 55 > > integrator_0_;
+   boost::shared_ptr<   CicIntegrator< 55 , 55 > > integrator_1_;
+   boost::shared_ptr<   CicIntegrator< 55 , 55 > > integrator_2_;
+   boost::shared_ptr<   CicIntegrator< 55 , 55 > > integrator_3_;
+   boost::shared_ptr<   CicDifferentiator< 55 , 55 > > differentiator_4_;
+   boost::shared_ptr<   CicDifferentiator< 55 , 55 > > differentiator_5_;
+   boost::shared_ptr<   CicDifferentiator< 55 , 55 > > differentiator_6_;
+   boost::shared_ptr<   CicDifferentiator< 55 , 55 > > differentiator_7_;
+
+   public:
+
+      SC_HAS_PROCESS( Cic );
+
+      Cic( const sc_module_name& nm) :
+      sdr_module::Module< cic::INPUT_TYPE, cic::OUTPUT_TYPE>(nm){
+
+      SC_METHOD( ComputeOutput );
+      this->sensitive << div_clock_.posedge_event();
+
+      SC_METHOD( DivClock );
+      this->sensitive << this->clock.pos();
+      div_clock( div_clock_ );
+
+      integrator_0_ = boost::shared_ptr<CicIntegrator< 55 , 55 > >
+      ( new CicIntegrator< 55 , 55 >( "integrator_0_" ) );
+      integrator_0_->clock( this->clock );
+      integrator_0_->reset( this->reset );
+      integrator_0_->input( sig_0_ );
+      integrator_0_->output( sig_1_ );
+
+      integrator_1_ = boost::shared_ptr<CicIntegrator< 55 , 55 > >
+      ( new CicIntegrator< 55 , 55 >( "integrator_1_" ) );
+      integrator_1_->clock( this->clock );
+      integrator_1_->reset( this->reset );
+      integrator_1_->input( sig_1_ );
+      integrator_1_->output( sig_2_ );
+
+      integrator_2_ = boost::shared_ptr<CicIntegrator< 55 , 55 > >
+      ( new CicIntegrator< 55 , 55 >( "integrator_2_" ) );
+      integrator_2_->clock( this->clock );
+      integrator_2_->reset( this->reset );
+      integrator_2_->input( sig_2_ );
+      integrator_2_->output( sig_3_ );
+
+      integrator_3_ = boost::shared_ptr<CicIntegrator< 55 , 55 > >
+      ( new CicIntegrator< 55 , 55 >( "integrator_3_" ) );
+      integrator_3_->clock( this->clock );
+      integrator_3_->reset( this->reset );
+      integrator_3_->input( sig_3_ );
+      integrator_3_->output( sig_4_ );
+
+      differentiator_4_ = boost::shared_ptr<CicDifferentiator< 55 , 55 > >
+      ( new CicDifferentiator< 55 , 55 >( "differentiator_4_" ) );
+      differentiator_4_->clock( this->div_clock_ );
+      differentiator_4_->reset( this->reset );
+      differentiator_4_->input( sig_4_ );
+      differentiator_4_->output( sig_5_ );
+
+      differentiator_5_ = boost::shared_ptr<CicDifferentiator< 55 , 55 > >
+      ( new CicDifferentiator< 55 , 55 >( "differentiator_5_" ) );
+      differentiator_5_->clock( this->div_clock_ );
+      differentiator_5_->reset( this->reset );
+      differentiator_5_->input( sig_5_ );
+      differentiator_5_->output( sig_6_ );
+
+      differentiator_6_ = boost::shared_ptr<CicDifferentiator< 55 , 55 > >
+      ( new CicDifferentiator< 55 , 55 >( "differentiator_6_" ) );
+      differentiator_6_->clock( this->div_clock_ );
+      differentiator_6_->reset( this->reset );
+      differentiator_6_->input( sig_6_ );
+      differentiator_6_->output( sig_7_ );
+
+      differentiator_7_ = boost::shared_ptr<CicDifferentiator< 55 , 55 > >
+      ( new CicDifferentiator< 55 , 55 >( "differentiator_7_" ) );
+      differentiator_7_->clock( this->div_clock_ );
+      differentiator_7_->reset( this->reset );
+      differentiator_7_->input( sig_7_ );
+      differentiator_7_->output( sig_8_ );
+
+   };
+
+   sc_in< cic::INPUT_TYPE > decimation;
+
+   clk_export_out div_clock;
+
+};

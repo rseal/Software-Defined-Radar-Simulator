@@ -1,0 +1,3 @@
+set title "CORDIC Output"
+plot "freq.dat" with lines
+

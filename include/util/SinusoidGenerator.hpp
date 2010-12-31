@@ -37,12 +37,15 @@ class SinusoidGenerator: public SignalGenerator<DATA_TYPE,RESET_TYPE>
    const int SCALE;
    int time_;
    DATA_TYPE data_;
+   const int DATA_WIDTH;
+   const int SAMPLE_WIDTH;
 
    // compute a new sample on each clock cycle
    virtual void Compute()
    {
          data_ = this->reset.read() ? 
             0 : SCALE*AMPLITUDE*std::tr1::cos( time_++*TWO_PI* NORMALIZED_FREQUENCY );
+         //data_ = data_ << DATA_WIDTH-SAMPLE_WIDTH;
          this->output.write( data_ );
    }
 
@@ -60,10 +63,11 @@ class SinusoidGenerator: public SignalGenerator<DATA_TYPE,RESET_TYPE>
       SignalGenerator< DATA_TYPE,RESET_TYPE>( nm , 0), 
       NORMALIZED_FREQUENCY( normalizedFrequency ),  
       AMPLITUDE( amplitude ),
-      SCALE(std::tr1::pow( 2.0, sampleBits-1 )),
+      SCALE(std::tr1::pow( 2.0, sampleBits-1 )-1),
+      DATA_WIDTH( data_.length() ),
+      SAMPLE_WIDTH( sampleBits ),
       time_(0)
-   {
-   }
+   { }
 };
 
 

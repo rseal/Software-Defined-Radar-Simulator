@@ -12,7 +12,7 @@
       <module_name>accumulator</module_name>
       <bit_width>16</bit_width>
       <sample_rate>64e6</sample_rate>
-      <tuning_frequency>-14.4e6</tuning_frequency>
+      <tuning_frequency>-14.2e6</tuning_frequency>
    </accumulator>
 
    <!-- Define CORDIC module -->
@@ -30,9 +30,10 @@
       <input_width>16</input_width>
       <output_width>16</output_width>
       <min_decimation>8</min_decimation>
-      <max_decimation>1024</max_decimation>
+      <max_decimation>128</max_decimation>
       <differential_delay>1</differential_delay>
       <num_stages>4</num_stages>
+      <bit_pruning>false</bit_pruning>
    </cic>
 
    <!-- Define Half Band Filter Module -->

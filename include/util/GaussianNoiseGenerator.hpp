@@ -23,6 +23,7 @@
 
 #include<sdr_simulator/util/SignalGenerator.hpp>
 #include<tr1/math.h>
+#include<ctime>
 
 // Gaussian noise generator with adjustable mean, variance, and amplitude
 template< typename DATA_TYPE, typename RESET_TYPE >
@@ -34,26 +35,21 @@ class GaussianNoiseGenerator: public SignalGenerator< DATA_TYPE, RESET_TYPE>
    const float VARIANCE;
    const float AMPLITUDE;
 
+   typedef boost::mt19937 Engine;
+   typedef boost::normal_distribution<> Distribution;
+   typedef boost::variate_generator< Engine&, Distribution > Generator;
+
    // random number number generating algorithm
-   boost::mt11213b rng;
-   // gaussian distribution
-   boost::normal_distribution<> nDistribution;
+   Engine rng;
+   Generator randomNumber_;
 
    // compute a new sample on each clock cycle
    virtual void Compute()
    {
       if ( !this->reset.read() )
          {
-            this->output = DATA_TYPE ( getRandomNumber() * SCALE * AMPLITUDE );
+            this->output = DATA_TYPE ( randomNumber_() * SCALE * AMPLITUDE );
          }
-   }
-
-   // returns a pseudo-random number based on the mt11213b RNG.
-   double getRandomNumber()
-   {
-      boost::variate_generator< boost::mt11213b&, boost::normal_distribution<> > 
-         random_number ( rng, nDistribution );
-      return random_number();
    }
 
 public:
@@ -69,10 +65,12 @@ public:
    ) :
       SignalGenerator<DATA_TYPE,RESET_TYPE> ( nm , 0 ),
       MEAN ( mean ), VARIANCE ( variance ),
-      AMPLITUDE ( amplitude ), nDistribution ( MEAN, VARIANCE ) 
+      AMPLITUDE ( amplitude ), rng(std::time(0)), 
+      randomNumber_( rng, Distribution(mean,variance) )
    { 
       DATA_TYPE buffer;
-      SCALE = std::tr1::pow( 2.0, buffer.length() ) -1;
+      SCALE = std::tr1::pow( 2.0, buffer.length()-1 ) -1;
+
    }
 
    void Seed ( const int seed )

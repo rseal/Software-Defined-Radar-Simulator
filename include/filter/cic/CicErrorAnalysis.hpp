@@ -97,21 +97,28 @@ class CicErrorAnalysis
          const unsigned int numStages,
          const unsigned int maxDecimation, 
          const unsigned int diffDelay, 
+         const unsigned int numInputBits,
          const unsigned int numOutputBits 
          ) 
    {
 
+      // Maximum gain of the CIC filter
       double gainMax = std::tr1::pow( maxDecimation*diffDelay, numStages);
-      long bitGain = std::tr1::round( std::tr1::log2( gainMax ) );
-      long bitMax = numOutputBits + bitGain;
-      long bitMSB = bitMax -1;
-      long bitDiscard = bitMax - numOutputBits;
+
+      // Bit growth.
+      long bitGain = std::tr1::ceil( std::tr1::log2( gainMax ) );
+
+      // MSB of maximum register width size.
+      long bitMax = numInputBits + bitGain - 1;
+
+      // Number of bits to discard 
+      long bitDiscard = bitMax - numOutputBits + 1;
+
       double totalOutputStdDeviation = std::tr1::pow(2.0,bitDiscard)/std::tr1::sqrt(12.0);
 
       std::cout << "gain max = " << gainMax << std::endl;
       std::cout << "bit max  = " << bitMax << std::endl;
       std::cout << "bit gain = " << bitGain << std::endl;
-      std::cout << "bit MSB  = " << bitMSB << std::endl;
       std::cout << "bit discard  = " << bitDiscard << std::endl;
       std::cout << "total std dev = " << totalOutputStdDeviation << std::endl;
 

@@ -23,16 +23,23 @@
 #include <deque>
 #include <stdexcept>
 
-template < typename INPUT_DATA_TYPE, typename OUTPUT_DATA_TYPE, 
-         typename COEFF_TYPE, unsigned int SUM_WIDTH >
-class FirFilter: public sdr_module::Module< INPUT_DATA_TYPE, OUTPUT_DATA_TYPE>
+#include "configuration.hpp"
+
+namespace
+{
+   const int MAX_OUTPUT_INDEX = filter::SUM_WIDTH-1;
+   const int MIN_OUTPUT_INDEX = filter::SUM_WIDTH - filter::DATA_WIDTH;
+}
+
+class FirFilter: 
+   public sdr_module::Module< filter::INPUT_TYPE, filter::OUTPUT_TYPE>
 {
   bool initialized_;
 
-  std::deque< typename COEFF_TYPE::value_type > queue_;
-  COEFF_TYPE coeff_;
-  typename COEFF_TYPE::iterator coeff_iter_;
-  sc_int< SUM_WIDTH> sum_;
+  std::deque< filter::coeff_list::value_type > queue_;
+  filter::coeff_list coeff_;
+  filter::coeff_list::iterator coeff_iter_;
+  sc_int< filter::SUM_WIDTH> sum_;
 
   int data_output_width_;
 
@@ -53,15 +60,17 @@ class FirFilter: public sdr_module::Module< INPUT_DATA_TYPE, OUTPUT_DATA_TYPE>
 
         // compute convolution sum
         coeff_iter_ = coeff_.end();
+
         for( int i=0; i<queue_.size(); ++i)
           {
-            sum_ += queue_[i]* *(--coeff_iter_);
+             sum_ += queue_[i]* *(--coeff_iter_);
+             std::cout << "queue sample = " << queue_[i] << std::endl;
+             std::cout << "coeff = " << *coeff_iter_ << std::endl;
+             std::cout << "sum = " << sum_ << std::endl;
           }
 
         // trim the output to match the output width
-        this->output.write( 
-              sum_.range( SUM_WIDTH-1, SUM_WIDTH-data_output_width_ ) 
-              );
+        this->output.write( sum_.range( MAX_OUTPUT_INDEX, MIN_OUTPUT_INDEX ).to_int() );
       }
     else
     {
@@ -82,16 +91,16 @@ public:
 
   // CTOR
   FirFilter( const sc_module_name& nm ):
-     sdr_module::Module<INPUT_DATA_TYPE,OUTPUT_DATA_TYPE>( nm ), 
+     sdr_module::Module<filter::INPUT_TYPE,filter::OUTPUT_TYPE>( nm ), 
      initialized_( false ) { }
 
-  void LoadCoefficients( COEFF_TYPE& coeff ) { 
+  void LoadCoefficients( const filter::coeff_list& coeff ) { 
       coeff_ = coeff;
-      queue_.resize( coeff.size() );
-      coeff_iter_ = coeff.begin();
-      data_output_width_ = OUTPUT_DATA_TYPE().length();
+      queue_.resize( coeff_.size() );
+      coeff_iter_ = coeff_.begin();
       initialized_ = true;
    }
+
 };
 
 #endif

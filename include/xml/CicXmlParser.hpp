@@ -48,6 +48,7 @@ class CicXmlParser : public xml::IXmlParser
       Insert( node, "max_decimation" );
       Insert( node, "differential_delay");
       Insert( node, "num_stages" );
+      Insert( node, "bit_pruning" );
 
       return map_;
    }

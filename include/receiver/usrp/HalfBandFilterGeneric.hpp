@@ -20,14 +20,15 @@
 #include <systemc.h>
 #include <sdr_simulator/filter/fir/FirFilter.hpp>
 
-template < typename INPUT_DATA_TYPE, typename OUTPUT_DATA_TYPE,
-         typename COEFF_TYPE, unsigned int SUM_WIDTH> 
-class HalfBandFilterGeneric: 
-   public FirFilter<INPUT_DATA_TYPE,OUTPUT_DATA_TYPE,COEFF_TYPE,SUM_WIDTH> {
+// locally-generated constants file
+#include "configuration.hpp"
 
+class HalfBandFilterGeneric: public FirFilter 
+{
    typedef sc_export< sc_signal_inout_if<bool> > sc_export_clk;
    sc_signal< bool > div_clock_;
 
+   // decimate-by-2
    void DivClock( )
    {
       div_clock_ = !div_clock_.read();
@@ -38,14 +39,12 @@ class HalfBandFilterGeneric:
    SC_HAS_PROCESS( HalfBandFilterGeneric );
 
    //CTOR
-   HalfBandFilterGeneric(const sc_module_name& nm ): 
-      FirFilter<INPUT_DATA_TYPE,OUTPUT_DATA_TYPE,COEFF_TYPE,SUM_WIDTH>(nm )
+   HalfBandFilterGeneric(const sc_module_name& nm ): FirFilter(nm )
    {
       SC_METHOD( DivClock );
-      this->sensitive << this->clock.pos();
+      sensitive << this->clock.pos();
 
       div_clock( div_clock_ );
-
    }
 
    sc_export_clk div_clock;

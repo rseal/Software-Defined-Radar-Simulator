@@ -36,6 +36,10 @@ class Cordic:
    public sdr_module::ComplexModule< cordic::INPUT_TYPE, cordic::OUTPUT_TYPE>
 {
 
+    typedef sc_signal< cordic::OUTPUT_TYPE > DebugOutputSignal;
+    DebugOutputSignal real_output_debug_signal;
+    DebugOutputSignal imag_output_debug_signal;
+
     typedef sc_int<cordic::DATA_WIDTH> data_type;
     typedef sc_int<cordic::PHASE_WIDTH> z_type;
 
@@ -153,11 +157,21 @@ class Cordic:
         theta_input_signal.write ( theta_input_type ( phase_input.read() ) );
 
         this->real_output.write ( 
-              int_data_type ( xout_buff.read() ).range ( cordic::DATA_WIDTH + 1, 2 ) 
+              int_data_type ( xout_buff.read() ).range ( cordic::DATA_WIDTH-1 , 0 ) 
+              );
+
+        // TODO: Debug only 
+        real_output_debug_signal.write(
+              int_data_type ( xout_buff.read() ).range ( cordic::DATA_WIDTH-1 , 0 ) 
               );
 
         this->imag_output.write ( 
-              int_data_type ( yout_buff.read() ).range ( cordic::DATA_WIDTH + 1, 2 ) 
+              int_data_type ( yout_buff.read() ).range ( cordic::DATA_WIDTH-1 , 0 ) 
+              );
+
+        // TODO: Debug only 
+        imag_output_debug_signal.write( 
+              int_data_type ( yout_buff.read() ).range ( cordic::DATA_WIDTH-1 , 0 ) 
               );
 
         phase_output.write (  cordic::PHASE_TYPE ( zout_buff.read() ) );
@@ -175,10 +189,16 @@ public:
 
         // setup internal modules
         InitializeModules();
+        debug_cordic_i_output( real_output_debug_signal );
+        debug_cordic_q_output( imag_output_debug_signal );
     }
 
     sc_in< cordic::PHASE_TYPE >  phase_input;
     sc_out< cordic::PHASE_TYPE > phase_output;
+
+    // TODO: Debug only 
+    debug::sc_export_cordic_output debug_cordic_i_output;
+    debug::sc_export_cordic_output debug_cordic_q_output;
 };
 
 #endif

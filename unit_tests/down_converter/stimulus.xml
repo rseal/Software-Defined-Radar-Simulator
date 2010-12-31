@@ -1,0 +1,7 @@
+<stimulus>
+   <!--<signal_frequency>20.0e6</signal_frequency>-->
+   <signal_frequency>1.0e6</signal_frequency>
+   <ddc_frequency>-9.609375e5</ddc_frequency>
+   <!--<ddc_frequency>-19.609375e6</ddc_frequency>-->
+   <sample_rate>64.0e6</sample_rate>
+</stimulus>

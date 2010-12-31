@@ -14,12 +14,15 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with SDRS.  If not, see <http://www.gnu.org/licenses/>.
-#include <sdr_simulator/filter/cic/CicDifferentiator.hpp>
 #include <boost/lexical_cast.hpp>
 #include <vector>
+
+#include <sdr_simulator/filter/cic/CicDifferentiator.hpp>
+#include <sdr_simulator/util/FileRecorder.hpp>
+#include <sdr_simulator/util/Stimulus.hpp>
+#include <sdr_simulator/util/SignalGenerator.hpp>
+
 #include "test_bench.hpp"
-#include "Stimulus.hpp"
-#include "Recorder.hpp"
 
 using namespace std;
 using boost::lexical_cast;
@@ -27,34 +30,46 @@ using boost::lexical_cast;
 int main()
 {
    const double TIME_RESOLUTION = 1.0;
-   const double TOTAL_SIMULATION_TIME = 500.0;
+   const double TOTAL_SIMULATION_TIME = 5e5;
+   const int RESET_TIME = 10;
    const double CLOCK_PERIOD = 2.0;
+   const std::string OUTPUT_FILE_NAME = "data.dat";
 
-   sc_signal< testbench::bit_type > reset_signal;
-   sc_signal< testbench::data_input_type > input_signal;
-   sc_signal< testbench::data_output_type > output_signal;
-   sc_signal< bool > clk_signal;
+   sc_signal< INPUT_TYPE > input_signal;
+   sc_signal< OUTPUT_TYPE > output_signal;
 
    // set time parameters
    sc_set_time_resolution( TIME_RESOLUTION , SC_NS );
    sc_time simulation_time(TOTAL_SIMULATION_TIME,SC_NS);
    sc_time clock_time(CLOCK_PERIOD,SC_NS);
 
-   Stimulus stimulus( "stimulus" );
-   stimulus.reset( reset_signal );
-   stimulus.output( output_signal );
+   // clock and reset stimulus
+   Stimulus< RESET_TYPE >  stimulus( "stimulus", clock_time, RESET_TIME );
 
-   Recorder record( "record" );
-   record.input( input_signal );
-   record.clock( stimulus.clock );
+   SignalGenerator< INPUT_TYPE, RESET_TYPE > sigGen("sig_gen", 1024);
+   sigGen.output( input_signal );
+   sigGen.clock( stimulus.clock );
+   sigGen.reset( stimulus.reset );
 
-   CicDifferentiator< testbench::INPUT_WIDTH, testbench::OUTPUT_WIDTH > 
+   // DUT 
+   CicDifferentiator< INPUT_TYPE, OUTPUT_TYPE > 
       cic_differentiator( "cic_differentiator" );
-
    cic_differentiator.clock( stimulus.clock );
-   cic_differentiator.reset( reset_signal );
-   cic_differentiator.input( output_signal );
-   cic_differentiator.output( input_signal );
+   cic_differentiator.reset( stimulus.reset );
+   cic_differentiator.input( input_signal );
+   cic_differentiator.output( output_signal );
+
+   // record dut output data to file.
+   FileRecorder< INPUT_TYPE, RESET_TYPE>  record( "record", OUTPUT_FILE_NAME );
+   record.clock( stimulus.clock );
+   record.reset( stimulus.reset );
+   record.input( output_signal );
+
+   // record dut output data to file.
+   FileRecorder< INPUT_TYPE, RESET_TYPE>  inputRecord( "input", "input.dat" );
+   inputRecord.clock( stimulus.clock );
+   inputRecord.reset( stimulus.reset );
+   inputRecord.input( input_signal );
 
    // begin simulation
    sc_start( simulation_time );
