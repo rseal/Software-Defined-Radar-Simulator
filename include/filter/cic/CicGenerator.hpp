@@ -63,12 +63,12 @@ public:
         // Retrieve a map containing accumulator keywords
         xml::NodeMap config_map = parser.Parse( node );
 
-        inputWidth_ = boost::lexical_cast<int>( config_map["input_width"] );
-        outputWidth_ = boost::lexical_cast<int>( config_map["output_width"] );
-        maxDecimation_ = boost::lexical_cast<int>( config_map["max_decimation"] );
-        numStages_ = boost::lexical_cast<int>( config_map["num_stages"] );
+        inputWidth_        = boost::lexical_cast<int>( config_map["input_width"] );
+        outputWidth_       = boost::lexical_cast<int>( config_map["output_width"] );
+        maxDecimation_     = boost::lexical_cast<int>( config_map["max_decimation"] );
+        numStages_         = boost::lexical_cast<int>( config_map["num_stages"] );
         differentialDelay_ = boost::lexical_cast<int>( config_map["differential_delay"] );
-        useBitPruning_ = config_map["bit_pruning"] == "false" ? false : true;
+        useBitPruning_     = config_map["bit_pruning"] == "false" ? false : true;
 
         std::cout
                 << " input width    = " << inputWidth_    << "\n"
@@ -100,7 +100,7 @@ public:
         {
            for( int i=0; i<size; ++i )
            {
-              bitWidthVector_[i] = outputWidth_ + 
+              bitWidthVector_[i] = inputWidth_ + 
                  std::tr1::ceil( numStages_*std::tr1::log2( maxDecimation_ ) );
            }
         }

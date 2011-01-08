@@ -157,21 +157,21 @@ class Cordic:
         theta_input_signal.write ( theta_input_type ( phase_input.read() ) );
 
         this->real_output.write ( 
-              int_data_type ( xout_buff.read() ).range ( cordic::DATA_WIDTH-1 , 0 ) 
+              int_data_type ( xout_buff.read() ).range ( cordic::DATA_WIDTH , 1 ) 
               );
 
         // TODO: Debug only 
         real_output_debug_signal.write(
-              int_data_type ( xout_buff.read() ).range ( cordic::DATA_WIDTH-1 , 0 ) 
+              int_data_type ( xout_buff.read() ).range ( cordic::DATA_WIDTH , 1 ) 
               );
 
         this->imag_output.write ( 
-              int_data_type ( yout_buff.read() ).range ( cordic::DATA_WIDTH-1 , 0 ) 
+              int_data_type ( yout_buff.read() ).range ( cordic::DATA_WIDTH , 1 ) 
               );
 
         // TODO: Debug only 
         imag_output_debug_signal.write( 
-              int_data_type ( yout_buff.read() ).range ( cordic::DATA_WIDTH-1 , 0 ) 
+              int_data_type ( yout_buff.read() ).range ( cordic::DATA_WIDTH , 1 ) 
               );
 
         phase_output.write (  cordic::PHASE_TYPE ( zout_buff.read() ) );

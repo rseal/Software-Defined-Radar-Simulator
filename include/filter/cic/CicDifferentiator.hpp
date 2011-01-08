@@ -26,28 +26,23 @@ class CicDifferentiator:
    public sdr_module::Module< sc_int<INPUT_SIZE>, sc_int<OUTPUT_SIZE> > 
 {
    const int SHIFT;
-   sc_bv<INPUT_SIZE> memory_;
-   sc_bv<INPUT_SIZE> buffer_;
+   sc_int<INPUT_SIZE> memory_;
 
    virtual void Compute()
    {
       if( !this->reset.read() )
       {
-         //cout << "\n\n" << "TIME: " << sc_time_stamp() << "\n";
-         //cout << this->name() << ".input  = " << this->input.read() << "\n";
-         //cout << this->name() << ".memory = " << memory_ << "\n";
+         // Read the input signal.
+         sc_int<INPUT_SIZE> buffer = this->input.read();
 
-         buffer_ =  sc_bv<INPUT_SIZE>( this->input.read() - memory_.to_int() );
+         // Subtract the memory register from the buffer.
+         sc_int<INPUT_SIZE> out = sc_int<OUTPUT_SIZE>( buffer - memory_ );
 
-         sc_bv<OUTPUT_SIZE> out = sc_bv<OUTPUT_SIZE>( buffer_.range( INPUT_SIZE-1, SHIFT ) );
+         // Update the memory register with the input signal.
+         memory_ = buffer;
 
-         memory_ = sc_bv<INPUT_SIZE>( this->input.read() );
-         this->output.write( out.to_int() );
-
-         //cout << "\n" << this->name() << ".buffer = " << buffer_ << "\n";
-         //cout << this->name() << ".output = " << out << "\n";
-         //cout << "\n\n";
-
+         // Write to the output signal. Convert to double to avoid bit-width issues.
+         this->output.write( out.range(INPUT_SIZE-1,SHIFT).to_double() );
       }
       else
       {

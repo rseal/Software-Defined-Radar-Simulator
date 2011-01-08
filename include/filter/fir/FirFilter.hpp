@@ -64,9 +64,6 @@ class FirFilter:
         for( int i=0; i<queue_.size(); ++i)
           {
              sum_ += queue_[i]* *(--coeff_iter_);
-             std::cout << "queue sample = " << queue_[i] << std::endl;
-             std::cout << "coeff = " << *coeff_iter_ << std::endl;
-             std::cout << "sum = " << sum_ << std::endl;
           }
 
         // trim the output to match the output width
