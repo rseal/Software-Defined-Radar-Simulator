@@ -1,0 +1,3 @@
+[submodule "deps/ticpp"]
+	path = deps/ticpp
+	url = git@github.com:rseal/ticpp.git
