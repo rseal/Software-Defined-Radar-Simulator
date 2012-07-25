@@ -19,18 +19,17 @@ include:
 
 Dependencies:
 1. The latest version of the systemc software.
-2. Ruby ( required for install-header script).
-3. Python ( only required for copyright installation script ).
-4. Latest version of Gnu Compiler Collection (GCC) software.
-5. Latest version of Boost libraries ( www.boost.org ).
-6. Scons build tool.
+2. Python ( only required for copyright installation script ).
+3. Latest version of Gnu Compiler Collection (GCC) software.
+4. Latest version of Boost libraries ( www.boost.org ).
+5. Waf build tool.
 
 Installation Notes:
 
 At this point, the SDRS software is for development use only. Two steps are
 involved to build:
 1. As the root user, run the "install-headers" script in the scripts folder.
-2. As a standard user, run scons in subdirectories with an SConstruct file.
+2. As a standard user, run "waf config build" in subdirectories with an wscript file.
 
 There are currently several functioning blocks complete. However, the effort
 to move these binary tests to a more unified structure ( i.e. boost-test ) has
