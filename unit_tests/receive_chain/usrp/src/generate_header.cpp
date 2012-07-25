@@ -18,18 +18,15 @@
 #include <tr1/math.h>
 
 #include <sdr_simulator/filter/cic/CicGenerator.hpp>
-//#include <sdr_simulator/xml/CicXmlParser.hpp>
 #include <sdr_simulator/util/CodeGenerator.hpp>
-
-//#include "StimulusXmlParser.hpp"
 
 using namespace std;
 using namespace code_generator;
 using namespace boost;
 
-int main(void)
+int main(int argc, char* argv[])
 {
-   const std::string CONFIGURATION_FILE_NAME = "../../../config/sdr_config.xml";
+   const std::string CONFIGURATION_FILE_NAME = argv[1];
    CicGenerator cicGenerator( CONFIGURATION_FILE_NAME );
    return EXIT_SUCCESS;
 }

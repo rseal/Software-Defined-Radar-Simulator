@@ -20,7 +20,7 @@ namespace cic
 {
    const unsigned int DATA_WIDTH= 16;
    const unsigned int PHASE_WIDTH = 16;
-   const unsigned int NUM_STAGES = 4;
+   const unsigned int NUM_STAGES = 5;
    typedef sc_int<DATA_WIDTH> INPUT_TYPE;
    typedef sc_int<DATA_WIDTH> OUTPUT_TYPE;
 };

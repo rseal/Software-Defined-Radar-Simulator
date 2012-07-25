@@ -1,32 +1,22 @@
-#!/usr/bin/ruby 
+#!/usr/bin/env python
+import os
+import sys
+import shutil
 
-require 'ftools'
+if not os.geteuid()==0:
+   sys.exit('\nERROR: Root Acces is required to execute this script.\n')
 
-user = ENV['USER']
-Dir.chdir("..")
-root = Dir.pwd
+src_dir = '../include'
+dst_dir = '/usr/local/include/sdr_simulator'
 
-#remove temps from include/
-Dir.chdir("#{root}/include")
-system("rm -f *~ *.swp *.swo")
+try:
+   shutil.rmtree(dst_dir)
+except Exception as ex:
+   print(ex)
 
-if user == "root"
-
-  #create dirs if they don't exist
-  File.makedirs '/usr/local/include/sdr_simulator'
-  Dir.chdir('/usr/local/include/sdr_simulator')
-
-  #remove the current set of files
-  Dir.foreach('./') { |x|
-    if(x!='.' and x!='..')
-      File.delete("#{x}")
-    end
-  }
-
-  Dir.chdir("/usr/local/include/sdr_simulator")
-  path = "#{root}/include"
-  #create symlinks
-  system("ln -fs #{path}/* .")
-else
-  puts "ERROR: root access required for installation" 
-end
+try:
+   print('Creating Directory Tree...')
+   shutil.copytree(src_dir,dst_dir,symlinks=True)
+   print('Header installation complete.')
+except Exception as ex:
+   print(ex)
