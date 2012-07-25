@@ -186,12 +186,12 @@ public:
     void writeComputeOutput() {
 
         const int SIZE = bitWidthVector_.size();
-        int LAST_STAGE_MSB = bitWidthVector_[ SIZE - 1 ] - 1;
+        int LAST_STAGE_MSB = bitWidthVector_[ SIZE - 2 ] - 1;
         int OUTPUT_STAGE_MSB = outputWidth_-1;
         int LAST_STAGE_NUMBER = 2*numStages_;
 
-        int msb = LAST_STAGE_MSB;
-        int lsb = msb - outputWidth_;
+        int msb = LAST_STAGE_MSB-1;
+        int lsb = msb - outputWidth_+1;
         
         std::cout << "msb = " << msb << " lsb = " << lsb << std::endl;
 
@@ -201,8 +201,8 @@ public:
                 << "      int bit_gain = std::tr1::ceil( " 
                 << numStages_ 
                 << "*std::tr1::log2( user_decimation ));\n"
-                << "      int msb = " << outputWidth_ << " + bit_gain -1;\n"
-                << "      int lsb = msb - " << outputWidth_ << ";\n"
+                << "      int msb = " << msb << ";\n"
+                << "      int lsb = " << lsb << ";\n"
                 << "      sc_bv< " << outputWidth_ << " > output = sc_bv< " 
                 << outputWidth_ << ">( sig_" << LAST_STAGE_NUMBER 
                 << "_.read().range( msb , lsb ));\n"

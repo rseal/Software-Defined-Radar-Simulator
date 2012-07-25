@@ -1,7 +1,50 @@
 import os
+import sys
+import shutil
 
-top = '.'
-out = 'build'
+def remove_files(d):
+   try:
+      shutil.rmtree(d)
+   except Exception as ex:
+      print(ex)
+
+def install_symlinks(hdr):
+
+   sym_path =  os.path.abspath('../../../include')
+
+   if not os.geteuid()==0:
+      sys.exit('\nERROR: Root Acces is required to execute this script.\n')
+
+   dst_dir = '/usr/local/include/sdr_simulator'
+
+   remove_files(dst_dir)
+
+   try:
+      print('Creating Directory Tree...')
+      os.symlink(sym_path,dst_dir)
+      print('Header installation complete.')
+   except Exception as ex:
+      print(ex)
+
+
+
+def install_headers(hdr):
+
+   if not os.geteuid()==0:
+      sys.exit('\nERROR: Root Acces is required to execute this script.\n')
+
+   src_dir = '../../../include'
+   dst_dir = '/usr/local/include/sdr_simulator'
+
+   remove_files(dst_dir)
+
+   try:
+      print('Creating Directory Tree...')
+      shutil.copytree(src_dir,dst_dir,symlinks=True)
+      print('Header installation complete.')
+   except Exception as ex:
+      print(ex)
+
 
 def options(opt):
         opt.load('compiler_c compiler_cxx')
@@ -22,6 +65,7 @@ def configure(cnf):
         
 
 def build(bld):
+
 
       ## build code generator
       bld.add_group(
