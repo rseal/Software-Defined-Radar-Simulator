@@ -25,7 +25,7 @@
 
 using namespace std;
 
-int main()
+int sc_main(int argc, char* argv[] )
 {
    const double TIME_RESOLUTION = 100.0;
    const double CLOCK_PERIOD = 15.600;
@@ -101,4 +101,6 @@ int main()
 
    // begin simulation
    sc_start( simulation_time );
+   
+   return 0;
 }

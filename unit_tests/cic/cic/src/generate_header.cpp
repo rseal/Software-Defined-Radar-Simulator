@@ -27,9 +27,9 @@ using namespace std;
 using namespace code_generator;
 using namespace boost;
 
-int main(void)
+int main(int argc, char* argv[])
 {
-   const std::string CONFIGURATION_FILE_NAME = "../../../config/sdr_config.xml";
+   const std::string CONFIGURATION_FILE_NAME = argv[1];
    const std::string STIMULUS_FILE_NAME = "stimulus.xml";
    const string HEADER_FILE_NAME = "test_bench.hpp";
    const string CIC_FILE_NAME = "Cic.hpp";
