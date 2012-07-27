@@ -61,8 +61,7 @@ int sc_main(int argc, char* argv[]){
    Stimulus< reset_type > stimulus( "stimulus", time, RESET_HOLD_TIME );
 
    // DUT
-   PhaseAccumulator<data_output_type,reset_type> accumulator(
-         "accumulator", STEP_SIZE );
+   PhaseAccumulator accumulator("accumulator");
    accumulator.clock( stimulus.clock );
    accumulator.output(output_signal);
    accumulator.reset( stimulus.reset );

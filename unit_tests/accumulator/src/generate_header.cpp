@@ -22,13 +22,13 @@
 using namespace std;
 using namespace code_generator;
 
-int main(void)
+int main(int argc, char* argv[])
 {
-   const std::string CONFIG_FILE_NAME = "../../config/sdr_config.xml";
+   const std::string CONFIGURATION_FILE_NAME = argv[1];
    const string HEADER_FILE_NAME = "test_bench.hpp";
 
    // open the configuration file for parsing
-   ticpp::Document doc( CONFIG_FILE_NAME );
+   ticpp::Document doc( CONFIGURATION_FILE_NAME );
 
    // Create a parser object
    AccumulatorXmlParser parser;
