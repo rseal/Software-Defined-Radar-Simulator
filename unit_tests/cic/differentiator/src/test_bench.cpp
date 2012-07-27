@@ -27,7 +27,7 @@
 using namespace std;
 using boost::lexical_cast;
 
-int main()
+int sc_main(int argc, char* argv[] )
 {
    const double TIME_RESOLUTION = 1.0;
    const double TOTAL_SIMULATION_TIME = 5e5;
@@ -52,7 +52,7 @@ int main()
    sigGen.reset( stimulus.reset );
 
    // DUT 
-   CicDifferentiator< INPUT_TYPE, OUTPUT_TYPE > 
+   CicDifferentiator< INPUT_WIDTH, OUTPUT_WIDTH > 
       cic_differentiator( "cic_differentiator" );
    cic_differentiator.clock( stimulus.clock );
    cic_differentiator.reset( stimulus.reset );
@@ -73,4 +73,6 @@ int main()
 
    // begin simulation
    sc_start( simulation_time );
+
+   return 0;
 }

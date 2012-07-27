@@ -1,0 +1,57 @@
+import os
+import sys
+import shutil
+
+def options(opt):
+        opt.load('compiler_c compiler_cxx')
+
+def configure(cnf):
+        cnf.load('compiler_c compiler_cxx')
+        cnf.check(
+                  features     = 'cxx cxxprogram',
+                  libpath      = ['/usr/lib/','/usr/local/lib'],
+                  lib          = ['tinyxmlcpp'],
+                  cflags       = ['-std=gnu++0x','-Wall','-W','-02'],
+                  defines      = ['TIXML_USE_TICPP'],
+                  uselib_store = 'M'
+                 )
+
+        ## define config file location
+        cnf.env.CONFIG_FILE = cnf.path.abspath() + os.sep + 'config' + os.sep + 'stimulus.xml'
+
+def build(bld):
+
+      ## build code generator
+      bld.add_group(
+         bld(
+            name     = 'code_generator',
+            features = 'cxx cxxprogram',
+            includes = ['/usr/local/include','config'],
+            source   = 'src/generate_header.cpp',
+            target   = 'code_generator',
+            defines  = ['TIXML_USE_TICPP'],
+            lib      = ['tinyxmlcpp'],
+            )
+      )
+
+      ## generate code
+      bld.add_group(
+         bld(
+            name     = 'generate_header',
+            rule     = bld.path.abspath() + os.sep + 'build' + os.sep + 'code_generator ${CONFIG_FILE}',
+            source   = ['code_generator'],
+         )
+      )
+
+      ## build primary program
+      bld.add_group(
+         bld(
+            name     = 'test_bench',
+            features = 'cxx cxxprogram',
+            #cxxflags = ['-std=gnu++0x','-Wall', '-W', '-DTIXML_USE_TICPP'],
+            includes = ['.','src'],
+            source   = 'src/test_bench.cpp',
+            target   = 'differentiator_test',
+            lib      = ['tinyxmlcpp','systemc'],
+         )
+      )
