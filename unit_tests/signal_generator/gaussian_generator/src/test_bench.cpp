@@ -19,10 +19,10 @@
 #include <boost/lexical_cast.hpp>
 #include <vector>
 #include <sdr_simulator/util/GaussianNoiseGenerator.hpp>
+#include <sdr_simulator/util/FileRecorder.hpp>
+#include <sdr_simulator/util/Stimulus.hpp>
 
 #include "test_bench.hpp"
-#include "Stimulus.hpp"
-#include <sdr_simulator/util/FileRecorder.hpp>
 
 using namespace std;
 using boost::lexical_cast;
@@ -33,15 +33,14 @@ int sc_main(int argc, char* argv[])
    const double TIME_RESOLUTION       = 1.0;
    const double TOTAL_SIMULATION_TIME = 50000.0;
    const double CLOCK_PERIOD          = 2.0;
+   const double RESET_TIME            = 10.0;
    const float MEAN                   = 0.0;
    const float VARIANCE               = 1.0;
    const float AMPLITUDE              = 0.125;
    const char* RECORD_FILE_NAME     = "output.dat";
 
    // signal definition
-   sc_signal< testbench::RESET_TYPE > reset_signal;
    sc_signal< testbench::OUTPUT_TYPE > dut_output_signal;
-   sc_signal< bool > clock_signal;
 
    // set time parameters
    sc_set_time_resolution( TIME_RESOLUTION , SC_NS );
@@ -49,13 +48,12 @@ int sc_main(int argc, char* argv[])
    sc_time clock_time(CLOCK_PERIOD,SC_NS);
 
    // signal stimulus
-   Stimulus stimulus( "stimulus" );
-   stimulus.reset( reset_signal );
+   Stimulus<testbench::RESET_TYPE> stimulus( "stimulus", clock_time, RESET_TIME );
 
    // test signal generator
    GaussianNoiseGenerator< testbench::OUTPUT_TYPE, testbench::RESET_TYPE > 
       tsg( "TestSignalGenerator", MEAN, VARIANCE, AMPLITUDE );
-   tsg.reset( reset_signal );
+   tsg.reset( stimulus.reset );
    tsg.clock( stimulus.clock );
    tsg.output( dut_output_signal );
 
