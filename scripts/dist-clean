@@ -1,8 +1,0 @@
-#!/bin/bash
-
-#remove all dat files
-find ../ -name "*.dat" -delete
-
-#remove all bjam generated directories
-find ../ -name "bin" -and -not -wholename "../bin" | xargs rm -rf  
-

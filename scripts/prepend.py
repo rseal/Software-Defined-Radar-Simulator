@@ -2,7 +2,7 @@
 
 import os
 
-newList = list();
+newList = [];
 
 #find files without copyright statement
 fileList = os.popen('grep -RL "Copyright" ../')
