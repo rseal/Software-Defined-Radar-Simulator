@@ -1,0 +1,29 @@
+import os
+import sys
+import shutil
+
+def options(opt):
+        opt.load('compiler_c compiler_cxx')
+
+def configure(cnf):
+        cnf.load('compiler_c compiler_cxx')
+        cnf.check(
+                  features     = 'cxx cxxprogram',
+                  libpath      = ['/usr/lib/','/usr/local/lib'],
+                  cflags       = ['-std=gnu++0x','-msse3','-march=athlon-xp', '-fomit-frame-pointer',\
+                                  '-pipe','-Wall','-W','-02'],
+                 )
+
+def build(bld):
+
+      ## build primary program
+      bld.add_group(
+         bld(
+            name     = 'sinusoid_generator',
+            features = 'cxx cxxprogram',
+            includes = ['.','src'],
+            source   = 'src/test_bench.cpp',
+            target   = 'sinusoid_generator',
+            lib      = ['systemc'],
+         )
+      )

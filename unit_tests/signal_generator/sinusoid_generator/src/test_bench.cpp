@@ -19,57 +19,56 @@
 #include <boost/lexical_cast.hpp>
 #include <vector>
 #include <sdr_simulator/util/SinusoidGenerator.hpp>
-
-#include "test_bench.hpp"
 #include <sdr_simulator/util/FileRecorder.hpp>
 #include <sdr_simulator/util/Stimulus.hpp>
+
+#include "test_bench.hpp"
 
 using namespace std;
 using boost::lexical_cast;
 
-int main()
+int sc_main( int argc, char* argv[])
 {
    // constants
-   const double TIME_RESOLUTION = 1.0;
+   const double TIME_RESOLUTION       = 1.0;
    const double TOTAL_SIMULATION_TIME = 50000.0;
-   const double CLOCK_PERIOD = 2.0;
-   const double FREQUENCY = 14.0e6;
-   const double SAMPLE_RATE = 64.0e6;
-   const double NORMALIZED_FREQUENCY = FREQUENCY/SAMPLE_RATE;
-   const unsigned int RESET_TIME = 10;
-   const float AMPLITUDE = 0.125;
-   const char* FILE_NAME = "output.dat";
+   const double CLOCK_PERIOD          = 2.0;
+   const double FREQUENCY             = 14.0e6;
+   const double SAMPLE_RATE           = 64.0e6;
+   const double NORMALIZED_FREQUENCY  = FREQUENCY/SAMPLE_RATE;
+   const unsigned int RESET_TIME      = 10;
+   const float AMPLITUDE              = 0.125;
+   const char* RECORD_FILE_NAME       = "output.dat";
+   const int   SAMPLE_BITS            = 12;
 
    // signal definition
-   sc_signal< testbench::bit_type > reset_signal;
-   sc_signal< testbench::data_sample_type > output_signal;
-   sc_signal< testbench::data_sample_type > null_signal;
+   sc_signal< testbench::RESET_TYPE > reset_signal;
+   sc_signal< testbench::OUTPUT_TYPE > dut_output_signal;
    sc_signal< bool > clock_signal;
 
    // set time parameters
    sc_set_time_resolution( TIME_RESOLUTION , SC_NS );
    sc_time simulation_time(TOTAL_SIMULATION_TIME,SC_NS);
    sc_time clock_time(CLOCK_PERIOD,SC_NS);
-   sc_clock stimulus_clock( "stim_clock", clock_time);
 
    // signal stimulus
-   Stimulus< testbench::data_sample_type > stimulus( "stimulus", RESET_TIME, 
-         stimulus_clock 
-         );
-   stimulus.output( null_signal );
+   Stimulus<testbench::RESET_TYPE> stimulus( "stimulus", clock_time, RESET_TIME );
 
    // test signal generator
-   SinusoidGenerator< testbench::BIT_WIDTH > 
-      sg( "SinusoidGen", NORMALIZED_FREQUENCY, AMPLITUDE );
+   SinusoidGenerator< testbench::OUTPUT_TYPE, testbench::RESET_TYPE > 
+      sg( "SinusoidGen", NORMALIZED_FREQUENCY, SAMPLE_BITS, AMPLITUDE );
    sg.reset( stimulus.reset );
    sg.clock( stimulus.clock );
-   sg.output( output_signal );
+   sg.output( dut_output_signal );
 
    // output recorder
-   FileRecorder< testbench::data_sample_type> record( "record", FILE_NAME );
-   record.input( output_signal );
+   FileRecorder< testbench::OUTPUT_TYPE, testbench::RESET_TYPE> record( "record", RECORD_FILE_NAME );
+   record.input( dut_output_signal );
+   record.reset( stimulus.reset );
    record.clock( stimulus.clock );
 
    // begin simulation
    sc_start( simulation_time );
+
+   return 0;
 }
