@@ -1,0 +1,27 @@
+import os
+import sys
+import shutil
+
+def options(opt):
+        opt.load('compiler_c compiler_cxx')
+
+def configure(cnf):
+        cnf.load('compiler_c compiler_cxx')
+        cnf.check(
+                  features     = 'cxx cxxprogram',
+                  libpath      = ['/usr/lib/','/usr/local/lib'],
+                  cflags       = ['-std=gnu++0x','-Wall','-W','-02'],
+                  uselib_store = 'M'
+                 )
+
+def build(bld):
+
+      ## build primary program
+      bld.add_group(
+         bld(
+            name     = 'test_bench',
+            features = 'cxx cxxprogram',
+            source   = 'src/test_bench.cpp',
+            target   = 'error_test',
+         )
+      )

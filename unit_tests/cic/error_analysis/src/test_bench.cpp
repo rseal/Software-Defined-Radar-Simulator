@@ -23,18 +23,21 @@ using boost::lexical_cast;
 
 int main()
 {
-   const int NUM_STAGES = 4;
+   const int NUM_STAGES     = 4;
    const int MAX_DECIMATION = 128;
-   const int DIFF_DELAY = 1;
-   const int OUTPUT_WIDTH = 16;
+   const int DIFF_DELAY     = 1;
+   const int INPUT_WIDTH    = 16;
+   const int OUTPUT_WIDTH   = 16;
 
    CicErrorAnalysis cic_error_analysis;
    vector<int> bitWidths = cic_error_analysis.ComputeBitWidths( 
-         NUM_STAGES, MAX_DECIMATION, DIFF_DELAY, OUTPUT_WIDTH
+         NUM_STAGES, MAX_DECIMATION, DIFF_DELAY, INPUT_WIDTH, OUTPUT_WIDTH
          );
   
    for( unsigned int i=0; i< bitWidths.size(); ++i)
    {
       cout << " stage " << lexical_cast<string>(i) << " bit width = " << bitWidths[i] << endl;
    }
+
+   return 0;
 }
