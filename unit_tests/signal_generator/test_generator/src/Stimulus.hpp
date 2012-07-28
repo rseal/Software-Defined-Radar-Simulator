@@ -54,7 +54,7 @@ class Stimulus: public sc_module
 
       }
 
-      sc_out< testbench::bit_type > reset;
+      sc_out< testbench::RESET_TYPE > reset;
       clk_out clock;
 };
 

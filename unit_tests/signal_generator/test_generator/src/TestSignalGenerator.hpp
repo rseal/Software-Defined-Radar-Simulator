@@ -25,8 +25,10 @@
 #include<iostream>
 #include<tr1/math.h>
 
-template< unsigned int BIT_WIDTH>
-class TestSignalGenerator: public SignalGenerator<BIT_WIDTH>
+#include "test_bench.hpp"
+
+template<const int BIT_WIDTH, typename OUTPUT_TYPE, typename RESET_TYPE>
+class TestSignalGenerator: public SignalGenerator<OUTPUT_TYPE,RESET_TYPE>
 {
    const int SCALE;
    const double AMPLITUDE;
@@ -36,7 +38,7 @@ class TestSignalGenerator: public SignalGenerator<BIT_WIDTH>
 
    virtual void GenerateSamples() {
       for( int i=0; i< this->SAMPLE_SIZE; ++i) {
-         this->samples_[i] = sc_int< BIT_WIDTH>(getRandomNumber()*SCALE*AMPLITUDE);
+         this->samples_[i] = sc_int<BIT_WIDTH>(getRandomNumber()*SCALE*AMPLITUDE);
       }
    }
 
@@ -56,7 +58,7 @@ class TestSignalGenerator: public SignalGenerator<BIT_WIDTH>
    SC_HAS_PROCESS( TestSignalGenerator );
 
    TestSignalGenerator( const sc_module_name& nm, const int sampleSize, const double amplitude):
-      SignalGenerator<BIT_WIDTH>( nm, sampleSize ), SCALE( std::tr1::pow(2.0,BIT_WIDTH)-1 ),
+      SignalGenerator<OUTPUT_TYPE,RESET_TYPE>( nm, sampleSize ), SCALE( std::tr1::pow(2.0,BIT_WIDTH)-1 ),
       AMPLITUDE( amplitude )
    {
       this->Init();
