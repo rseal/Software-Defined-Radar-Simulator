@@ -27,20 +27,20 @@
 using namespace std;
 using boost::lexical_cast;
 
-int main()
+int sc_main(int argc, char* argv[])
 {
    // constants
-   const double TIME_RESOLUTION = 1.0;
+   const double TIME_RESOLUTION       = 1.0;
    const double TOTAL_SIMULATION_TIME = 50000.0;
-   const double CLOCK_PERIOD = 2.0;
-   const float MEAN = 0.0;
-   const float VARIANCE = 1.0;
-   const float AMPLITUDE = 0.125;
-   const char* FILE_NAME = "output.dat";
+   const double CLOCK_PERIOD          = 2.0;
+   const float MEAN                   = 0.0;
+   const float VARIANCE               = 1.0;
+   const float AMPLITUDE              = 0.125;
+   const char* RECORD_FILE_NAME     = "output.dat";
 
    // signal definition
-   sc_signal< testbench::bit_type > reset_signal;
-   sc_signal< testbench::data_sample_type > output_signal;
+   sc_signal< testbench::RESET_TYPE > reset_signal;
+   sc_signal< testbench::OUTPUT_TYPE > dut_output_signal;
    sc_signal< bool > clock_signal;
 
    // set time parameters
@@ -53,17 +53,20 @@ int main()
    stimulus.reset( reset_signal );
 
    // test signal generator
-   GaussianNoiseGenerator< testbench::BIT_WIDTH > 
+   GaussianNoiseGenerator< testbench::OUTPUT_TYPE, testbench::RESET_TYPE > 
       tsg( "TestSignalGenerator", MEAN, VARIANCE, AMPLITUDE );
    tsg.reset( reset_signal );
    tsg.clock( stimulus.clock );
-   tsg.output( output_signal );
+   tsg.output( dut_output_signal );
 
    // output recorder
-   FileRecorder< testbench::data_sample_type> record( "record", FILE_NAME );
-   record.input( output_signal );
+   FileRecorder< testbench::OUTPUT_TYPE, testbench::RESET_TYPE> record( "record", RECORD_FILE_NAME );
+   record.input( dut_output_signal );
+   record.reset( stimulus.reset );
    record.clock( stimulus.clock );
 
    // begin simulation
    sc_start( simulation_time );
+
+   return 0;
 }
