@@ -71,11 +71,11 @@ public:
         useBitPruning_     = config_map["bit_pruning"] == "false" ? false : true;
 
         std::cout
-                << " input width    = " << inputWidth_    << "\n"
-                << " output width   = " << outputWidth_   << "\n"
-                << " max decimation = " << maxDecimation_ << "\n"
-                << " num stages     = " << numStages_     << "\n"
-                << " bit pruning    = " << useBitPruning_ << "\n"
+                << "input width    = " << inputWidth_    << "\n"
+                << "output width   = " << outputWidth_   << "\n"
+                << "max decimation = " << maxDecimation_ << "\n"
+                << "num stages     = " << numStages_     << "\n"
+                << "bit pruning    = " << useBitPruning_ << "\n"
                 << std::endl;
 
         outputStream_ = FileOutputStream(
@@ -106,13 +106,14 @@ public:
         }
 
         for ( int i = 0; i < size; ++i ) {
-            std::cout
-                    << "stage "
-                    << boost::lexical_cast<std::string> ( i )
-                    << " = "
-                    << bitWidthVector_[i]
-                    << std::endl;
+            std::cout << "s" << boost::lexical_cast<std::string> ( i ) << " | ";
         }
+        std::cout << std::endl;
+
+        for ( int i = 0; i < size; ++i ) {
+            std::cout << bitWidthVector_[i] << " | ";
+        }
+        std::cout << std::endl;
 
         writeIncludes ();
         writeSignals ();
@@ -162,7 +163,7 @@ public:
 
         std::string dataType = ( bitWidthVector_[0] > MAX_INT_WIDTH ) ?  "sc_bigint< " : "sc_int< ";
 
-        for ( int i = 0; i < SIZE-1; ++i ) {
+        for ( int i = 0; i < SIZE; ++i ) {
             *outputStream_
                     << "   sc_signal< "
                     << dataType
@@ -186,28 +187,42 @@ public:
     void writeComputeOutput() {
 
         const int SIZE = bitWidthVector_.size();
-        int LAST_STAGE_MSB = bitWidthVector_[ SIZE - 2 ] - 1;
+        int LAST_STAGE_MSB = bitWidthVector_[ SIZE - 1 ] - 1;
         int OUTPUT_STAGE_MSB = outputWidth_-1;
         int LAST_STAGE_NUMBER = 2*numStages_;
 
-        int msb = LAST_STAGE_MSB-1;
-        int lsb = msb - outputWidth_+1;
+        int msb = LAST_STAGE_MSB;
+        int lsb = msb - outputWidth_ + 1;
         
-        std::cout << "msb = " << msb << " lsb = " << lsb << std::endl;
-
-        *outputStream_
-                << "   void ComputeOutput(){\n"
-                << "      int user_decimation = decimation.read();\n"
-                << "      int bit_gain = std::tr1::ceil( " 
-                << numStages_ 
-                << "*std::tr1::log2( user_decimation ));\n"
-                << "      int msb = " << msb << ";\n"
-                << "      int lsb = " << lsb << ";\n"
-                << "      sc_bv< " << outputWidth_ << " > output = sc_bv< " 
-                << outputWidth_ << ">( sig_" << LAST_STAGE_NUMBER 
-                << "_.read().range( msb , lsb ));\n"
-                << "      this->output = output.to_int();\n"
-                << "}\n\n";
+        if( !useBitPruning_ )
+        {
+           *outputStream_
+              << " void ComputeOutput(){\n"
+              << " int user_decimation = decimation.read();\n"
+              << " int bit_gain = std::tr1::ceil( "
+              << numStages_
+              << "*std::tr1::log2( user_decimation ));\n"
+              << " int msb = " << outputWidth_ << " + bit_gain -1;\n"
+              << " int lsb = msb - " << outputWidth_ << ";\n"
+              << " sc_bv< " << outputWidth_ << " > output = sc_bv< "
+              << outputWidth_ << ">( sig_" << LAST_STAGE_NUMBER
+              << "_.read().range( msb , lsb ));\n"
+              << " this->output = output.to_int();\n"
+              << "}\n\n";
+        }
+        else
+        {
+           *outputStream_
+              << "   void ComputeOutput(){\n"
+              << "      int user_decimation = decimation.read();\n"
+              << "      int msb = " << msb << ";\n"
+              << "      int lsb = " << lsb << ";\n"
+              << "      sc_bv< " << outputWidth_ << " > output = sc_bv< " 
+              << outputWidth_ << ">( sig_" << LAST_STAGE_NUMBER 
+              << "_.read().range( msb , lsb ));\n"
+              << "      this->output = output.to_int();\n"
+              << "}\n\n";
+        }
     }
 
     void writeDivClock() {
@@ -307,16 +322,16 @@ public:
           << "   public:\n\n"
           << "      SC_HAS_PROCESS( Cic );\n\n"
           << "      Cic( const sc_module_name& nm) :\n"
-                                                     << "      sdr_module::Module< cic::INPUT_TYPE, cic::OUTPUT_TYPE>(nm){\n\n"
-                                                        << "      SC_METHOD( ComputeOutput );\n"
-                                                        << "      this->sensitive << div_clock_.posedge_event();\n\n"
-                                                        << "      SC_METHOD( DivClock );\n"
-                                                        << "      this->sensitive << this->clock.pos();\n"
-                                                        << "      div_clock( div_clock_ );\n\n"
-                                                        << "      "
-                                                        << createSharedPtr ( "CicIntegrator", "integrator",
-                                                              bitWidthVector_[0], bitWidthVector_[1], 0 )
-                                                        << "\n";
+          << "      sdr_module::Module< cic::INPUT_TYPE, cic::OUTPUT_TYPE>(nm){\n\n"
+          << "      SC_METHOD( ComputeOutput );\n"
+          << "      this->sensitive << div_clock_.posedge_event();\n\n"
+          << "      SC_METHOD( DivClock );\n"
+          << "      this->sensitive << this->clock.pos();\n"
+          << "      div_clock( div_clock_ );\n\n"
+          << "      "
+          << createSharedPtr ( "CicIntegrator", "integrator",
+                bitWidthVector_[0], bitWidthVector_[1], 0 )
+          << "\n";
 
        for ( int i = 1; i < numStages_; ++i ) {
           *outputStream_

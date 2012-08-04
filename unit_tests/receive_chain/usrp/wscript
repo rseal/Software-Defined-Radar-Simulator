@@ -2,56 +2,17 @@ import os
 import sys
 import shutil
 
-def remove_files(d):
-   try:
-      shutil.rmtree(d)
-   except Exception as ex:
-      print(ex)
 
-def install_symlinks(hdr):
+def options(ctx):
+        ctx.load('compiler_c compiler_cxx')
+        ctx.add_option('--gc', action='store_true', default=False,
+              help='generate CIC filter')
+        ctx.add_option('--tb', action='store_true', default=False,
+              help='builds test bench')
 
-   sym_path =  os.path.abspath('../../../include')
-
-   if not os.geteuid()==0:
-      sys.exit('\nERROR: Root Acces is required to execute this script.\n')
-
-   dst_dir = '/usr/local/include/sdr_simulator'
-
-   remove_files(dst_dir)
-
-   try:
-      print('Creating Directory Tree...')
-      os.symlink(sym_path,dst_dir)
-      print('Header installation complete.')
-   except Exception as ex:
-      print(ex)
-
-
-
-def install_headers(hdr):
-
-   if not os.geteuid()==0:
-      sys.exit('\nERROR: Root Acces is required to execute this script.\n')
-
-   src_dir = '../../../include'
-   dst_dir = '/usr/local/include/sdr_simulator'
-
-   remove_files(dst_dir)
-
-   try:
-      print('Creating Directory Tree...')
-      shutil.copytree(src_dir,dst_dir,symlinks=True)
-      print('Header installation complete.')
-   except Exception as ex:
-      print(ex)
-
-
-def options(opt):
-        opt.load('compiler_c compiler_cxx')
-
-def configure(cnf):
-        cnf.load('compiler_c compiler_cxx')
-        cnf.check(
+def configure(ctx):
+        ctx.load('compiler_c compiler_cxx')
+        ctx.check(
                   features     = 'cxx cxxprogram',
                   libpath      = ['/usr/lib/','/usr/local/lib'],
                   lib          = ['tinyxmlcpp'],
@@ -61,46 +22,48 @@ def configure(cnf):
                  )
 
         ## define config file location
-        cnf.env.CONFIG_FILE = cnf.path.abspath() + os.sep + 'config' + os.sep + 'sdr_config.xml'
-        
+        ctx.env.CONFIG_FILE = ctx.path.abspath() + os.sep + 'config' + os.sep + 'sdr_config.xml'
 
-def build(bld):
+def build(ctx):
 
+   if ctx.options.gc:
+
+      print('GENERATING CIC FILTER ...')
 
       ## build code generator
-      bld.add_group(
-         bld(
-            name     = 'code_generator',
-            features = 'cxx cxxprogram',
-            cxxflags = ['-std=gnu++0x','-Wall', '-W', '-DTIXML_USE_TICPP'],
-            includes = '/usr/local/include',
-            source   = 'src/generate_header.cpp',
-            target   = 'code_generator',
-            defines  = ['TIXML_USE_TICPP'],
-            lib      = ['tinyxmlcpp'],
-            )
+      ctx.add_group(
+        ctx(
+           name     = 'code_generator',
+           features = 'cxx cxxprogram',
+           cxxflags = ['-std=gnu++0x','-Wall', '-W', '-DTIXML_USE_TICPP'],
+           includes = '/usr/local/include',
+           source   = 'src/generate_header.cpp',
+           target   = 'code_generator',
+           defines  = ['TIXML_USE_TICPP'],
+           lib      = ['tinyxmlcpp'],
+           )
       )
 
-      ## generate code
-      bld.add_group(
-         bld(
-            name     = 'generate_header',
-            rule     = bld.path.abspath() + os.sep + 'build' + os.sep + 'code_generator ${CONFIG_FILE}',
-            source   = ['code_generator'],
+      ### generate code
+      ctx.add_group(
+         ctx(
+         name     = 'generate_header',
+         rule     = ctx.path.abspath() + os.sep + 'build' + os.sep + 'code_generator ${CONFIG_FILE}',
+         source   = ['code_generator'],
          )
       )
 
-      ## build primary program
-      bld.add_group(
-         bld(
-            name     = 'test_bench',
-            features = 'cxx cxxprogram',
-            cxxflags = ['-std=gnu++0x','-Wall', '-W', '-DTIXML_USE_TICPP'],
-            includes = ['.','src'],
-            source   = 'src/test_bench.cpp',
-            target   = 'test_rx_channel',
-            defines  = ['TIXML_USE_TICPP'],
-            lib      = ['tinyxmlcpp','systemc'],
+   ## build primary program
+   ctx.add_group(
+      ctx(
+         name     = 'test_bench',
+         features = 'cxx cxxprogram',
+         cxxflags = ['-std=gnu++0x', '-Wall', '-W', '-DTIXML_USE_TICPP'],
+         includes = ['.','src'],
+         source   = 'src/test_bench.cpp',
+         target   = 'test_rx_channel',
+         defines  = ['TIXML_USE_TICPP'],
+         lib      = ['tinyxmlcpp','systemc'],
          )
       )
 

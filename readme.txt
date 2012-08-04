@@ -1,5 +1,5 @@
 Software Defined Radar Simulator Notes
-Date:    June 26, 2010
+Date:    July 28, 2012
 Version: 0.99
 Author:  Ryan Seal
 
@@ -19,7 +19,7 @@ include:
 
 Dependencies:
 1. The latest version of the systemc software.
-2. Python ( only required for copyright installation script ).
+2. Python2.
 3. Latest version of Gnu Compiler Collection (GCC) software.
 4. Latest version of Boost libraries ( www.boost.org ).
 5. Waf build tool.
@@ -28,21 +28,21 @@ Installation Notes:
 
 At this point, the SDRS software is for development use only. Two steps are
 involved to build:
-1. As the root user, run the "install-headers" script in the scripts folder.
-2. As a standard user, run "waf config build" in subdirectories with an wscript file.
+1. As the root user, run "waf install_headers" script in the scripts folder.
+2. From the project root, run "git submodule init" to pull in the tinyxml dependency ( see deps folder ).
+2. As a standard user, run "waf config build" in subdirectories containing a wscript file.
 
 There are currently several functioning blocks complete. However, the effort
 to move these binary tests to a more unified structure ( i.e. boost-test ) has
 yet to be completed. As development progresses, there are a number of TODO
 items that will take place:
 
-1. Create more generalized classes to assist in test bench tests as well as
-unit tests.
+1. Create more generalized classes to assist in test bench tests as well as unit tests.
 2. For each block, unit tests should be mandatory via boost test, and all
-tests should be linked to bjam's build system for automated testing.
+   tests should be linked to bjam's build system for automated testing.
 3. The RX receive chain, when complete, should provide an XML-based parameter
-tool to enable easy implementation of graphical tools at a later date.
+   tool to enable easy implementation of graphical tools at a later date.
 
 Code submission pre-commit:
-1. Run the dist-clean script in the script folder to perform proper clean-up.
+1. Run the cleanup.sh script in the script folder to perform proper clean-up.
 

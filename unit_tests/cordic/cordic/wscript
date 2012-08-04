@@ -18,10 +18,9 @@ def configure(cnf):
 
         ## define config file location
         cnf.env.CONFIG_FILE = cnf.path.abspath() + os.sep + 'config' + os.sep + 'sdr_config.xml'
-        
+        cnf.env.STIMULUS_FILE = cnf.path.abspath() + os.sep + 'config' + os.sep + 'stimulus.xml'
 
 def build(bld):
-
 
       ## build code generator
       bld.add_group(
@@ -41,7 +40,7 @@ def build(bld):
       bld.add_group(
          bld(
             name     = 'generate_header',
-            rule     = bld.path.abspath() + os.sep + 'build' + os.sep + 'code_generator ${CONFIG_FILE}',
+            rule     = bld.path.abspath() + os.sep + 'build' + os.sep + 'code_generator ${CONFIG_FILE} ${STIMULUS_FILE}',
             source   = ['code_generator'],
          )
       )
@@ -54,9 +53,8 @@ def build(bld):
             cxxflags = ['-std=gnu++0x','-Wall', '-W', '-DTIXML_USE_TICPP'],
             includes = ['.','src'],
             source   = 'src/test_bench.cpp',
-            target   = 'cic_test',
-            #defines  = ['TIXML_USE_TICPP'],
-            lib      = ['tinyxmlcpp','systemc'],
+            target   = 'cordic_test',
+            lib      = ['systemc'],
          )
       )
 

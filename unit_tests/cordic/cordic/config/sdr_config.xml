@@ -29,11 +29,11 @@
       <module_name>cic</module_name>
       <input_width>16</input_width>
       <output_width>16</output_width>
-      <min_decimation>4</min_decimation>
+      <min_decimation>8</min_decimation>
       <max_decimation>64</max_decimation>
       <differential_delay>1</differential_delay>
       <num_stages>5</num_stages>
-      <bit_pruning>false</bit_pruning>
+      <bit_pruning>true</bit_pruning>
    </cic>
 
    <!-- Define Half Band Filter Module -->

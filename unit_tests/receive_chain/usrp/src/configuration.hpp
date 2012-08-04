@@ -97,9 +97,4 @@ namespace debug
 }
 
    
-const int ADC_WIDTH = 12;
-const double SIGNAL_FREQUENCY = 2.00e6;
-const double SAMPLE_RATE = 64e6;
-const double NORMALIZED_FREQUENCY = SIGNAL_FREQUENCY/SAMPLE_RATE;
-
 #endif
