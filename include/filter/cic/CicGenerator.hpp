@@ -177,190 +177,205 @@ public:
     }
 
     void writeComputeInput() {
-        *outputStream_
-                << "   virtual void Compute(){\n"
-                << "      sc_int< " << bitWidthVector_[0] << "> buffer = this->input.read();\n"
-                << "      sig_0_.write( buffer );\n"
-                << "}\n\n";
-    }
+		 if(useBitPruning_)
+		 {
+			 const int b = bitWidthVector_[0]-inputWidth_+1;
+			 const double Rmax = std::tr1::pow(2.0,1.0*b/numStages_)/differentialDelay_;
+			 *outputStream_
+				 << "   virtual void Compute(){\n"
+				 << "      const double r = " << Rmax << "/decimation.read();\n"
+				 << "      const int bit_gain = std::tr1::ceil(" << numStages_ << "*std::tr1::log2(r));\n"
+				 << "      sc_int< " << bitWidthVector_[0] << "> buffer = this->input.read() << bit_gain;\n"
+				 << "      sig_0_.write( buffer );\n"
+				 << "}\n\n";
+		 }
+		 else
+		 {
+			 *outputStream_
+				 << "   virtual void Compute(){\n"
+				 << "      sc_int< " << bitWidthVector_[0] << "> buffer = this->input.read();\n"
+				 << "      sig_0_.write( buffer );\n"
+				 << "}\n\n";
+		 }
+	 }
 
-    void writeComputeOutput() {
+	 void writeComputeOutput() {
 
-        const int SIZE = bitWidthVector_.size();
-        int LAST_STAGE_MSB = bitWidthVector_[ SIZE - 1 ] - 1;
-        int OUTPUT_STAGE_MSB = outputWidth_-1;
-        int LAST_STAGE_NUMBER = 2*numStages_;
+		 const int SIZE = bitWidthVector_.size();
+		 int LAST_STAGE_MSB = bitWidthVector_[ SIZE - 1 ] - 1;
+		 int OUTPUT_STAGE_MSB = outputWidth_-1;
+		 int LAST_STAGE_NUMBER = 2*numStages_;
 
-        int msb = LAST_STAGE_MSB;
-        int lsb = msb - outputWidth_ + 1;
-        
-        if( !useBitPruning_ )
-        {
-           *outputStream_
-              << " void ComputeOutput(){\n"
-              << " int user_decimation = decimation.read();\n"
-              << " int bit_gain = std::tr1::ceil( "
-              << numStages_
-              << "*std::tr1::log2( user_decimation ));\n"
-              << " int msb = " << outputWidth_ << " + bit_gain -1;\n"
-              << " int lsb = msb - " << outputWidth_ << ";\n"
-              << " sc_bv< " << outputWidth_ << " > output = sc_bv< "
-              << outputWidth_ << ">( sig_" << LAST_STAGE_NUMBER
-              << "_.read().range( msb , lsb ));\n"
-              << " this->output = output.to_int();\n"
-              << "}\n\n";
-        }
-        else
-        {
-           *outputStream_
-              << "   void ComputeOutput(){\n"
-              << "      int user_decimation = decimation.read();\n"
-              << "      int msb = " << msb << ";\n"
-              << "      int lsb = " << lsb << ";\n"
-              << "      sc_bv< " << outputWidth_ << " > output = sc_bv< " 
-              << outputWidth_ << ">( sig_" << LAST_STAGE_NUMBER 
-              << "_.read().range( msb , lsb ));\n"
-              << "      this->output = output.to_int();\n"
-              << "}\n\n";
-        }
-    }
+		 int msb = LAST_STAGE_MSB;
+		 int lsb = msb - outputWidth_ + 1;
 
-    void writeDivClock() {
+		 if( !useBitPruning_ )
+		 {
+			 *outputStream_
+				 << " void ComputeOutput(){\n"
+				 << " int user_decimation = decimation.read();\n"
+				 << " int bit_gain = std::tr1::ceil( "
+				 << numStages_
+				 << "*std::tr1::log2( user_decimation ));\n"
+				 << " int msb = " << outputWidth_ << " + bit_gain -1;\n"
+				 << " int lsb = msb - " << outputWidth_ << ";\n"
+				 << " sc_bv< " << outputWidth_ << " > output = sc_bv< "
+				 << outputWidth_ << ">( sig_" << LAST_STAGE_NUMBER
+				 << "_.read().range( msb , lsb ));\n"
+				 << " this->output = output.to_int();\n"
+				 << "}\n\n";
+		 }
+		 else
+		 {
+			 *outputStream_
+				 << "   void ComputeOutput(){\n"
+				 << "      int user_decimation = decimation.read();\n"
+				 << "      int msb = " << msb << ";\n"
+				 << "      int lsb = " << lsb << ";\n"
+				 << "      sc_bv< " << outputWidth_ << " > output = sc_bv< " 
+				 << outputWidth_ << ">( sig_" << LAST_STAGE_NUMBER 
+				 << "_.read().range( msb , lsb ));\n"
+				 << "      this->output = output.to_int();\n"
+				 << "}\n\n";
+		 }
+	 }
 
-       const int SIZE = bitWidthVector_.size();
-       const int WIDTH = bitWidthVector_[ SIZE - 2 ];
-       const int NUM_MODULES = 2*numStages_;
+	 void writeDivClock() {
 
-       *outputStream_
-          << "   void DivClock(){\n"
-          << "      if( ++idx_ == decimation.read()/2 )\n"
-          << "      {\n"
-          << "         idx_ = 0;\n"
-          << "         div_clock_ = !div_clock_.read();\n"
-          << "      }\n   }\n\n";
-    }
+		 const int SIZE = bitWidthVector_.size();
+		 const int WIDTH = bitWidthVector_[ SIZE - 2 ];
+		 const int NUM_MODULES = 2*numStages_;
 
-    void writeStages() {
+		 *outputStream_
+			 << "   void DivClock(){\n"
+			 << "      if( ++idx_ == decimation.read()/2 )\n"
+			 << "      {\n"
+			 << "         idx_ = 0;\n"
+			 << "         div_clock_ = !div_clock_.read();\n"
+			 << "      }\n   }\n\n";
+	 }
 
-       for ( int i = 0; i < numStages_; ++i ) {
-          *outputStream_
-             << createTemplateName ( "   CicIntegrator", "integrator",
-                   bitWidthVector_[i], bitWidthVector_[i+1], i )
-             << ";\n";
-       }
+	 void writeStages() {
 
-       for ( int i = numStages_; i < 2 * numStages_; ++i ) {
-          *outputStream_
-             << createTemplateName ( "   CicDifferentiator", "differentiator",
-                   bitWidthVector_[i], bitWidthVector_[i+1], i )
-             << ";\n";
-       }
+		 for ( int i = 0; i < numStages_; ++i ) {
+			 *outputStream_
+				 << createTemplateName ( "   CicIntegrator", "integrator",
+						 bitWidthVector_[i], bitWidthVector_[i+1], i )
+				 << ";\n";
+		 }
 
-       *outputStream_ << "\n";
-    }
+		 for ( int i = numStages_; i < 2 * numStages_; ++i ) {
+			 *outputStream_
+				 << createTemplateName ( "   CicDifferentiator", "differentiator",
+						 bitWidthVector_[i], bitWidthVector_[i+1], i )
+				 << ";\n";
+		 }
 
-    const std::string createTemplateName (
-          const std::string& className,
-          const std::string& instanceName,
-          const int inputSize,
-          const int outputSize,
-          const int stageNumber
-          ) {
-       std::string result = "   boost::shared_ptr<" + className + "< " +
-          boost::lexical_cast<std::string> ( inputSize ) + 
-          " , " +
-          boost::lexical_cast<std::string> ( outputSize ) +
-          " > > " + instanceName + "_" +
-          boost::lexical_cast<std::string> ( stageNumber ) + "_";
+		 *outputStream_ << "\n";
+	 }
 
-       return result;
-    }
+	 const std::string createTemplateName (
+			 const std::string& className,
+			 const std::string& instanceName,
+			 const int inputSize,
+			 const int outputSize,
+			 const int stageNumber
+			 ) {
+		 std::string result = "   boost::shared_ptr<" + className + "< " +
+			 boost::lexical_cast<std::string> ( inputSize ) + 
+			 " , " +
+			 boost::lexical_cast<std::string> ( outputSize ) +
+			 " > > " + instanceName + "_" +
+			 boost::lexical_cast<std::string> ( stageNumber ) + "_";
 
-    const std::string createSharedPtr (
-          const std::string& className,
-          const std::string& instanceName,
-          const int inputSize,
-          const int outputSize,
-          const int stageNumber,
-          bool useDivClock = false
-          ) {
+		 return result;
+	 }
 
-       std::string templateStr;
-       std::string name;
-       std::string result;
+	 const std::string createSharedPtr (
+			 const std::string& className,
+			 const std::string& instanceName,
+			 const int inputSize,
+			 const int outputSize,
+			 const int stageNumber,
+			 bool useDivClock = false
+			 ) {
 
-       std::string stage0 = boost::lexical_cast<std::string> ( stageNumber );
-       std::string stage1 = boost::lexical_cast<std::string> ( stageNumber + 1 );
-       std::string size1 = boost::lexical_cast<std::string> ( inputSize );
-       std::string size2 = boost::lexical_cast<std::string> ( outputSize );
+		 std::string templateStr;
+		 std::string name;
+		 std::string result;
 
-       templateStr = className + "< " + size1 + " , " + size2 + " >";
-       name = instanceName + "_" + stage0 + "_";
+		 std::string stage0 = boost::lexical_cast<std::string> ( stageNumber );
+		 std::string stage1 = boost::lexical_cast<std::string> ( stageNumber + 1 );
+		 std::string size1 = boost::lexical_cast<std::string> ( inputSize );
+		 std::string size2 = boost::lexical_cast<std::string> ( outputSize );
 
-       result = name + " = boost::shared_ptr<" + className + "< " + 
-          size1 + " , " + size2 + " > >\n      ( new " + templateStr + "( \"" + name + "\" ) );\n";
+		 templateStr = className + "< " + size1 + " , " + size2 + " >";
+		 name = instanceName + "_" + stage0 + "_";
 
-       if( useDivClock )
-       {
-          result += "      " + name + "->clock( this->div_clock_ );\n";
-       }
-       else
-       {
-          result += "      " + name + "->clock( this->clock );\n";
-       }
-       result += "      " + name + "->reset( this->reset );\n";
-       result += "      " + name + "->input( sig_" + stage0 + "_ );\n";
-       result += "      " + name + "->output( sig_" + stage1 + "_ );\n";
+		 result = name + " = boost::shared_ptr<" + className + "< " + 
+			 size1 + " , " + size2 + " > >\n      ( new " + templateStr + "( \"" + name + "\" ) );\n";
 
-       return result;
-    }
+		 if( useDivClock )
+		 {
+			 result += "      " + name + "->clock( this->div_clock_ );\n";
+		 }
+		 else
+		 {
+			 result += "      " + name + "->clock( this->clock );\n";
+		 }
+		 result += "      " + name + "->reset( this->reset );\n";
+		 result += "      " + name + "->input( sig_" + stage0 + "_ );\n";
+		 result += "      " + name + "->output( sig_" + stage1 + "_ );\n";
 
-    void writeCTOR () {
-       std::string portName;
+		 return result;
+	 }
 
-       *outputStream_
-          << "   public:\n\n"
-          << "      SC_HAS_PROCESS( Cic );\n\n"
-          << "      Cic( const sc_module_name& nm) :\n"
-          << "      sdr_module::Module< cic::INPUT_TYPE, cic::OUTPUT_TYPE>(nm){\n\n"
-          << "      SC_METHOD( ComputeOutput );\n"
-          << "      this->sensitive << div_clock_.posedge_event();\n\n"
-          << "      SC_METHOD( DivClock );\n"
-          << "      this->sensitive << this->clock.pos();\n"
-          << "      div_clock( div_clock_ );\n\n"
-          << "      "
-          << createSharedPtr ( "CicIntegrator", "integrator",
-                bitWidthVector_[0], bitWidthVector_[1], 0 )
-          << "\n";
+	 void writeCTOR () {
+		 std::string portName;
 
-       for ( int i = 1; i < numStages_; ++i ) {
-          *outputStream_
-             << "      "
-             << createSharedPtr ( "CicIntegrator", "integrator",
-                   bitWidthVector_[i], bitWidthVector_[i+1], i )
-             << "\n";
-       }
+		 *outputStream_
+			 << "   public:\n\n"
+			 << "      SC_HAS_PROCESS( Cic );\n\n"
+			 << "      Cic( const sc_module_name& nm) :\n"
+			 << "      sdr_module::Module< cic::INPUT_TYPE, cic::OUTPUT_TYPE>(nm){\n\n"
+			 << "      SC_METHOD( ComputeOutput );\n"
+			 << "      this->sensitive << div_clock_.posedge_event();\n\n"
+			 << "      SC_METHOD( DivClock );\n"
+			 << "      this->sensitive << this->clock.pos();\n"
+			 << "      div_clock( div_clock_ );\n\n"
+			 << "      "
+			 << createSharedPtr ( "CicIntegrator", "integrator",
+					 bitWidthVector_[0], bitWidthVector_[1], 0 )
+			 << "\n";
 
-       for ( int i = numStages_; i < 2 * numStages_ ; ++i ) {
-          *outputStream_
-             << "      "
-             << createSharedPtr ( "CicDifferentiator", "differentiator",
-                   bitWidthVector_[i], bitWidthVector_[i+1], i, true )
-             << "\n";
-       }
+		 for ( int i = 1; i < numStages_; ++i ) {
+			 *outputStream_
+				 << "      "
+				 << createSharedPtr ( "CicIntegrator", "integrator",
+						 bitWidthVector_[i], bitWidthVector_[i+1], i )
+				 << "\n";
+		 }
 
-       *outputStream_ << "   };\n\n";
-    }
+		 for ( int i = numStages_; i < 2 * numStages_ ; ++i ) {
+			 *outputStream_
+				 << "      "
+				 << createSharedPtr ( "CicDifferentiator", "differentiator",
+						 bitWidthVector_[i], bitWidthVector_[i+1], i, true )
+				 << "\n";
+		 }
 
-    void writePorts () {
-       *outputStream_
-          << "   sc_in< cic::INPUT_TYPE > decimation;\n\n"
-          << "   clk_export_out div_clock;\n\n";
-    }
+		 *outputStream_ << "   };\n\n";
+	 }
 
-    void writeFinal () {
-       *outputStream_ << "};\n";
-    }
+	 void writePorts () {
+		 *outputStream_
+			 << "   sc_in< cic::INPUT_TYPE > decimation;\n\n"
+			 << "   clk_export_out div_clock;\n\n";
+	 }
+
+	 void writeFinal () {
+		 *outputStream_ << "};\n";
+	 }
 };
 
 #endif

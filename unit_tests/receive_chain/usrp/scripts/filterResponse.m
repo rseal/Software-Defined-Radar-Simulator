@@ -1,8 +1,8 @@
 function result = filterResponse( num_fft_points);
 
 % load data
-x = load("i_out.dat");
-y = load("q_out.dat");
+x = load("../build/i_out.dat");
+y = load("../build/q_out.dat");
 
 x_length = length(x);
 y_length = length(y);

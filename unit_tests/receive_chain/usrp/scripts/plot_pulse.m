@@ -1,5 +1,5 @@
-i = load('i_out.dat');
-q = load('q_out.dat');
+i = load('../build/i_out.dat');
+q = load('../build/q_out.dat');
 
 plot(i);
 hold on;

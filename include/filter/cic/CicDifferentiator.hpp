@@ -17,8 +17,9 @@
 #ifndef CIC_DIFFERENTIATOR_HPP
 #define CIC_DIFFERENTIATOR_HPP
 
-#include <sdr_simulator/SdrModule.hpp>
+#include <iostream>
 
+#include <sdr_simulator/SdrModule.hpp>
 #include <systemc.h>
 
 template< int INPUT_SIZE, int OUTPUT_SIZE > 
@@ -57,7 +58,11 @@ class CicDifferentiator:
 
    CicDifferentiator( const sc_module_name& nm ): 
       sdr_module::Module< sc_int<INPUT_SIZE>, sc_int<OUTPUT_SIZE> > ( nm ),
-      SHIFT( INPUT_SIZE - OUTPUT_SIZE ), memory_(0) { }
+      SHIFT( INPUT_SIZE - OUTPUT_SIZE ), memory_(0) 
+   {
+      std::cout << "OUTPUT_SIZE = " << OUTPUT_SIZE  << " INPUT_SIZE = " << INPUT_SIZE << std::endl;
+      std::cout << "MSB         = " << INPUT_SIZE-1 << " LSB        = " << SHIFT      << std::endl;
+   }
 };
 
 #endif
