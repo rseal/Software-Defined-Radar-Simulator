@@ -60,8 +60,6 @@ class CicDifferentiator:
       sdr_module::Module< sc_int<INPUT_SIZE>, sc_int<OUTPUT_SIZE> > ( nm ),
       SHIFT( INPUT_SIZE - OUTPUT_SIZE ), memory_(0) 
    {
-      std::cout << "OUTPUT_SIZE = " << OUTPUT_SIZE  << " INPUT_SIZE = " << INPUT_SIZE << std::endl;
-      std::cout << "MSB         = " << INPUT_SIZE-1 << " LSB        = " << SHIFT      << std::endl;
    }
 };
 
