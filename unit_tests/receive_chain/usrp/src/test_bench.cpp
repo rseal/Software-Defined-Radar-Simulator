@@ -64,18 +64,25 @@ int sc_main ( int argc, char* argv[] )
    // set decimation
    decimation_signal.write ( usrp::DECIMATION );
 
-   //double pulse_width = 200.0*1e-6;
-   //double ipp_width = 64e5;
-   double doppler_shift = 1e3;
+   double pulse_width = 77.0*1e-6;
+   double ipp_width = 1e-3;
+   double doppler_shift = 100e3;
    double rf_carrier = 49.8e6;
    double frequency = rf_carrier + doppler_shift;
    double normalized_frequency = frequency / accumulator::SAMPLE_RATE ;
 
-   //    PulseGenerator< usrp::OUTPUT_TYPE, usrp::RESET_TYPE> 
-   //       signal_generator( "pulse_gen", pulse_width, ipp_width, normalized_frequency , 16383*0.95);
-   //    signal_generator.output( i_in_signal );
-   //    signal_generator.reset( stimulus.reset );
-   //    signal_generator.clock( stimulus.clock );
+   PulseGenerator< usrp::OUTPUT_TYPE, usrp::RESET_TYPE> 
+   signal_generator( 
+         "pulse_gen", 
+         pulse_width, 
+         ipp_width, 
+         accumulator::SAMPLE_RATE, 
+         normalized_frequency , 
+         ADC_WIDTH,
+         0.95);
+   signal_generator.output( i_in_signal );
+   signal_generator.reset( stimulus.reset );
+   signal_generator.clock( stimulus.clock );
 
    //GaussianNoiseGenerator< usrp::OUTPUT_TYPE, usrp::RESET_TYPE> 
    //noise_generator( "noise_gen", 0.0, 1.0, 0.10);
@@ -84,11 +91,11 @@ int sc_main ( int argc, char* argv[] )
    //noise_generator.clock( stimulus.clock );
 
    // generate a sinusoid to feed into the x-input for testing.
-   SinusoidGenerator<usrp::INPUT_TYPE, usrp::RESET_TYPE >
-      iSigGen ( "i_signal_gen", normalized_frequency, ADC_WIDTH, 0.85 );
-   iSigGen.reset ( stimulus.reset );
-   iSigGen.clock ( stimulus.clock );
-   iSigGen.output ( i_in_signal );
+   //SinusoidGenerator<usrp::INPUT_TYPE, usrp::RESET_TYPE >
+      //iSigGen ( "i_signal_gen", normalized_frequency, ADC_WIDTH, 0.85 );
+   //iSigGen.reset ( stimulus.reset );
+   //iSigGen.clock ( stimulus.clock );
+   //iSigGen.output ( i_in_signal );
 
    usrp::ReceiveChannel dut ( "receive_channel" );
    dut.reset ( stimulus.reset );

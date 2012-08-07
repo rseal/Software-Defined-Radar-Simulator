@@ -32,6 +32,9 @@ class PulseGenerator : public SignalGenerator< DATA_TYPE, RESET_TYPE >
    const double PULSE_WIDTH;
    const double IPP_WIDTH;
    const double AMPLITUDE;
+   const double SAMPLE_RATE;
+   int samplesPerPri_;
+   int samplesPerPulse_;
    unsigned int index_;
    double theta_;
 
@@ -40,15 +43,15 @@ class PulseGenerator : public SignalGenerator< DATA_TYPE, RESET_TYPE >
    void Compute()
    {
 
-     if( index_ == IPP_WIDTH || this->reset.read() )
-     {
-        index_ = 0;
-        this->output = 0;
-     }
-     else
-     {
-        this->output = this->samples_[ index_++ ];  
-     }
+      if( index_ == samplesPerPri_ || this->reset.read() )
+      {
+         index_ = 0;
+         this->output = 0;
+      }
+      else
+      {
+         this->output = this->samples_[ index_++ ];  
+      }
 
    }
 
@@ -56,11 +59,11 @@ class PulseGenerator : public SignalGenerator< DATA_TYPE, RESET_TYPE >
    void GenerateSamples() {
 
       double phase = 0.0;
-     for( int i=0; i<PULSE_WIDTH; ++i )
-     {
-        phase = AMPLITUDE*std::tr1::sin( theta_*i ); 
-        this->samples_[i] = phase;
-     };
+      for( int i=0; i<samplesPerPulse_ ; ++i )
+      {
+         phase = AMPLITUDE*std::tr1::sin( theta_*i ); 
+         this->samples_[i] = phase;
+      };
 
    }
 
@@ -71,18 +74,22 @@ class PulseGenerator : public SignalGenerator< DATA_TYPE, RESET_TYPE >
    // CTOR: Set sampleSize to zero if overriding the Compute method.
    PulseGenerator( 
          const sc_module_name& nm, 
-         const int pulseWidth, 
+         const double pulseWidth, 
          const double ippWidth, 
+         const double sampleRate,
          const double normalizedFrequency,
+         const int adcWidth,
          const double amplitude
          ):
-      SignalGenerator<DATA_TYPE, RESET_TYPE>( nm,0 ), 
-      PULSE_WIDTH( pulseWidth ), IPP_WIDTH( ippWidth ), 
-      AMPLITUDE( amplitude ), index_(0)
+      SignalGenerator<DATA_TYPE, RESET_TYPE>( nm,0 ), PULSE_WIDTH( pulseWidth ), 
+      IPP_WIDTH( ippWidth ), SAMPLE_RATE( sampleRate ), AMPLITUDE( std::tr1::pow(2.0,1.0*adcWidth)*amplitude ), 
+      index_(0)
    {
-      this->samples_.resize( IPP_WIDTH );
-
+      samplesPerPri_ = static_cast<int>( IPP_WIDTH * SAMPLE_RATE );
+      samplesPerPulse_ = static_cast<int>( PULSE_WIDTH * SAMPLE_RATE );
+      this->samples_.resize( samplesPerPri_ );
       theta_ = 2.0*boost::math::constants::pi<double>()*normalizedFrequency;
+
       GenerateSamples();
    }
 
