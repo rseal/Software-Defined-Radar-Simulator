@@ -27,10 +27,10 @@ using namespace std;
 using namespace code_generator;
 using namespace boost;
 
-int main(void)
+int sc_main(int argc, char* argv[])
 {
-   const std::string CONFIG_FILE_NAME = "../../config/sdr_config.xml";
-   const std::string STIMULUS_FILE_NAME = "stimulus.xml";
+   const std::string CONFIG_FILE_NAME = argv[1];
+   const std::string STIMULUS_FILE_NAME = argv[2];
    const string HEADER_FILE_NAME = "test_bench.hpp";
 
    // open the configuration file for parsing
