@@ -15,16 +15,16 @@ def configure(ctx):
         ctx.check(
                   features     = 'cxx cxxprogram',
                   libpath      = ['/usr/lib/','/usr/local/lib'],
-                  lib          = ['tinyxmlcpp'],
+                  libs         = ['tinxmlcpp','yaml-cpp'],
                   cflags       = ['-std=gnu++0x','-Wall','-02'],
-                  defines      = ['TIXML_USE_TICPP'],
-                  uselib_store = 'M'
                  )
 
         ## define config file location
         ctx.env.CONFIG_FILE = ctx.path.abspath() + os.sep + 'config' + os.sep + 'sdr_config.xml'
 
 def build(ctx):
+
+   ctx(rule='cp ${SRC} ${TGT}', source='src/sdr.yml', target='sdr.yml')
 
    if ctx.options.gc:
 
@@ -58,12 +58,11 @@ def build(ctx):
       ctx(
          name     = 'test_bench',
          features = 'cxx cxxprogram',
-         cxxflags = ['-std=gnu++0x', '-Wall', '-W', '-DTIXML_USE_TICPP'],
+         cxxflags = ['-std=gnu++0x', '-Wall', '-W'],
          includes = ['.','src'],
          source   = 'src/test_bench.cpp',
          target   = 'test_rx_channel',
-         defines  = ['TIXML_USE_TICPP'],
-         lib      = ['tinyxmlcpp','systemc'],
+         lib      = ['yaml-cpp','systemc'],
          )
       )
 

@@ -20,27 +20,45 @@
 #include <sdr_simulator/util/GaussianNoiseGenerator.hpp>
 #include <sdr_simulator/util/FileRecorder.hpp>
 #include <sdr_simulator/util/PulseGenerator.hpp>
+#include <sdr_simulator/yaml/NodeParser.hpp>
+#include <sdr_simulator/yaml/TestBenchYaml.hpp>
+#include "PulseGeneratorYaml.hpp"
 
 #include "configuration.hpp"
+
+#include <fstream>
 
 using namespace usrp;
 
 int sc_main ( int argc, char* argv[] )
 {
-   // TODO: Move to header generator
-   const double TIME_RESOLUTION       = 100.0;
-   const double CLOCK_PERIOD          = 1.0e9 / accumulator::SAMPLE_RATE;
-   const int RESET_TIME               = 10;
-   const double TOTAL_SIMULATION_TIME = 1e5*CLOCK_PERIOD;
-   const int ADC_WIDTH                = 12;
+   // open configuration file and parse
+   std::ifstream fin("sdr.yml");
+   YAML::Parser parser(fin);
+   YAML::Node doc;
+   parser.GetNextDocument(doc);
 
-   const string I_DATA_FILE_NAME = "i_out.dat";
-   const string Q_DATA_FILE_NAME = "q_out.dat";
+   // parse nodes and populate structure
+   yaml::PulseGeneratorYaml pg_data;
+   yaml::TestBenchYaml tb_data;
+
+   try
+   {
+      const YAML::Node& pulse_gen_node = yaml::ParseNode( doc, "pulse_generator");
+      pulse_gen_node >> pg_data;
+      const YAML::Node& tb_node = yaml::ParseNode( doc, "test_bench");
+      tb_node >> tb_data;
+
+   }
+   catch ( YAML::ParserException& e )
+   {
+      std::cout << e.what();
+   }
 
    // set time parameters
-   sc_set_time_resolution ( TIME_RESOLUTION , SC_PS );
-   sc_time clock_time ( CLOCK_PERIOD, SC_NS );
-   sc_time simulation_time ( TOTAL_SIMULATION_TIME,SC_NS );
+   sc_set_time_resolution  ( tb_data.timeResolution , SC_PS ) ;
+   sc_time clock_time      ( tb_data.clockPeriod    , SC_NS ) ;
+   sc_time simulation_time ( tb_data.simulationTime , SC_NS ) ;
 
    // interface signals
    sc_signal<RESET_TYPE> reset_signal;
@@ -55,7 +73,7 @@ int sc_main ( int argc, char* argv[] )
 
    sc_signal< DECIMATION_TYPE > decimation_signal;
 
-   Stimulus< RESET_TYPE > stimulus ( "stimulus", clock_time, RESET_TIME );
+   Stimulus< RESET_TYPE > stimulus ( "stimulus", clock_time, tb_data.resetTime );
 
    // the y-input to the CORDIC is constant. This will
    // peform down-conversion and provide a complex output.
@@ -64,22 +82,18 @@ int sc_main ( int argc, char* argv[] )
    // set decimation
    decimation_signal.write ( usrp::DECIMATION );
 
-   double pulse_width = 77.0*1e-6;
-   double ipp_width = 1e-3;
-   double doppler_shift = 100e3;
-   double rf_carrier = 49.8e6;
-   double frequency = rf_carrier + doppler_shift;
+   double frequency = pg_data.rfFrequency + pg_data.doppler;
    double normalized_frequency = frequency / accumulator::SAMPLE_RATE ;
 
    PulseGenerator< usrp::OUTPUT_TYPE, usrp::RESET_TYPE> 
-   signal_generator( 
-         "pulse_gen", 
-         pulse_width, 
-         ipp_width, 
-         accumulator::SAMPLE_RATE, 
-         normalized_frequency , 
-         ADC_WIDTH,
-         0.95);
+      signal_generator( 
+            "pulse_gen",
+            pg_data.pulseWidth, 
+            pg_data.pri, 
+            accumulator::SAMPLE_RATE, 
+            normalized_frequency , 
+            pg_data.adc,
+            0.95);
    signal_generator.output( i_in_signal );
    signal_generator.reset( stimulus.reset );
    signal_generator.clock( stimulus.clock );
@@ -92,7 +106,7 @@ int sc_main ( int argc, char* argv[] )
 
    // generate a sinusoid to feed into the x-input for testing.
    //SinusoidGenerator<usrp::INPUT_TYPE, usrp::RESET_TYPE >
-      //iSigGen ( "i_signal_gen", normalized_frequency, ADC_WIDTH, 0.85 );
+   //iSigGen ( "i_signal_gen", normalized_frequency, ADC_WIDTH, 0.85 );
    //iSigGen.reset ( stimulus.reset );
    //iSigGen.clock ( stimulus.clock );
    //iSigGen.output ( i_in_signal );
@@ -143,14 +157,14 @@ int sc_main ( int argc, char* argv[] )
 
    // Store the x data output into a file.
    FileRecorder< OUTPUT_TYPE, RESET_TYPE >
-      iDataRecorder ( "i_data_recorder", I_DATA_FILE_NAME );
+      iDataRecorder ( "i_data_recorder", "i_out.dat" );
    iDataRecorder.clock ( dut.output_clock );
    iDataRecorder.reset ( stimulus.reset );
    iDataRecorder.input ( i_out_signal );
 
    // Store the y data output into a file.
    FileRecorder< OUTPUT_TYPE, RESET_TYPE >
-      qDataRecorder ( "q_data_recorder", Q_DATA_FILE_NAME );
+      qDataRecorder ( "q_data_recorder", "q_out.dat" );
    qDataRecorder.clock ( dut.output_clock );
    qDataRecorder.reset ( stimulus.reset );
    qDataRecorder.input ( q_out_signal );
