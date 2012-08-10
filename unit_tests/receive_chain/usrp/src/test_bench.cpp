@@ -33,7 +33,7 @@ using namespace usrp;
 int sc_main ( int argc, char* argv[] )
 {
    // open configuration file and parse
-   std::ifstream fin("sdr.yml");
+   std::ifstream fin(argv[1]);
    YAML::Parser parser(fin);
    YAML::Node doc;
    parser.GetNextDocument(doc);
