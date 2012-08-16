@@ -22,23 +22,20 @@
 #include<boost/math/constants/constants.hpp>
 #include<vector>
 
-namespace pulse_generator{
-   const static double TWO_PI = 2.0*boost::math::constants::pi<double>();
-};
-
-template<typename DATA_TYPE, typename RESET_TYPE>
-class PulseGenerator : public SignalGenerator< DATA_TYPE, RESET_TYPE > 
+template<typename RESET_TYPE>
+class PulseGenerator : public SignalGenerator< double, RESET_TYPE > 
 {
-   const double PULSE_WIDTH;
-   const double IPP_WIDTH;
-   const double AMPLITUDE;
-   const double SAMPLE_RATE;
+   const double pw_;
+   const double pri_;
+   const double voltage_;
+   const double fSample_;
+   const double fSignal_;
    int samplesPerPri_;
    int samplesPerPulse_;
    unsigned int index_;
    double theta_;
 
-   sc_signal< DATA_TYPE > null_input_signal_;
+   sc_signal< double > null_input_signal_;
 
    void Compute()
    {
@@ -46,7 +43,7 @@ class PulseGenerator : public SignalGenerator< DATA_TYPE, RESET_TYPE >
       if( index_ == samplesPerPri_ || this->reset.read() )
       {
          index_ = 0;
-         this->output = 0;
+         this->output = 0.0;
       }
       else
       {
@@ -61,7 +58,10 @@ class PulseGenerator : public SignalGenerator< DATA_TYPE, RESET_TYPE >
       double phase = 0.0;
       for( int i=0; i<samplesPerPulse_ ; ++i )
       {
-         phase = AMPLITUDE*std::tr1::sin( theta_*i ); 
+         phase = voltage_*std::tr1::sin( theta_*i ); 
+
+         //std::cout << "theta " << theta_ << std::endl;
+         //std::cout << "phase " << phase << std::endl;
          this->samples_[i] = phase;
       };
 
@@ -74,22 +74,19 @@ class PulseGenerator : public SignalGenerator< DATA_TYPE, RESET_TYPE >
    // CTOR: Set sampleSize to zero if overriding the Compute method.
    PulseGenerator( 
          const sc_module_name& nm, 
-         const double pulseWidth, 
-         const double ippWidth, 
-         const double sampleRate,
-         const double normalizedFrequency,
-         const int adcWidth,
-         const double amplitude
+         const double pw, 
+         const double pri, 
+         const double fSample,
+         const double fSignal,
+         const double voltage
          ):
-      SignalGenerator<DATA_TYPE, RESET_TYPE>( nm,0 ), PULSE_WIDTH( pulseWidth ), 
-      IPP_WIDTH( ippWidth ), SAMPLE_RATE( sampleRate ), AMPLITUDE( std::tr1::pow(2.0,1.0*adcWidth)*amplitude ), 
-      index_(0)
+      SignalGenerator<double, RESET_TYPE>( nm,0 ), pw_( pw ), pri_( pri ), 
+      fSample_( fSample ), fSignal_(fSignal), voltage_( voltage ), index_(0)
    {
-      samplesPerPri_ = static_cast<int>( IPP_WIDTH * SAMPLE_RATE );
-      samplesPerPulse_ = static_cast<int>( PULSE_WIDTH * SAMPLE_RATE );
+      samplesPerPri_   = static_cast<int>( pri_ * fSample_ );
+      samplesPerPulse_ = static_cast<int>( pw_ * fSample_ );
       this->samples_.resize( samplesPerPri_ );
-      theta_ = 2.0*boost::math::constants::pi<double>()*normalizedFrequency;
-
+      theta_ = 2.0*boost::math::constants::pi<double>()*fSignal/fSample;
       GenerateSamples();
    }
 

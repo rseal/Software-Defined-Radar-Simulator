@@ -32,7 +32,7 @@ class SignalGenerator : public sdr_module::Module< DATA_TYPE, DATA_TYPE >
    virtual void Compute()
    {
      if( index_ == SAMPLE_SIZE || this->reset.read() ) index_ = 0;
-     this->output = ++index_;
+     this->output = DATA_TYPE( ++index_ );
    }
 
    // Optional method for providing a fixed number of random samples

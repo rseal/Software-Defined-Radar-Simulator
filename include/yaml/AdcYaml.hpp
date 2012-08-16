@@ -11,11 +11,17 @@ namespace yaml
       std::string moduleName;
       std::string model;
       int bitWidth;
+		double vfs;
+		double snr;
+		double bw;
 
       friend std::ostream& operator << ( std::ostream& os, const AdcYaml& obj)
       {
          os << "name      : " << obj.moduleName << "\n"
             << "model     : " << obj.model      << "\n"
+            << "snr       : " << obj.snr        << "\n"
+            << "vfs       : " << obj.vfs        << "\n"
+            << "bw        : " << obj.bw         << "\n"
             << "bit_width : " << obj.bitWidth   << "\n";
 
          return os;
@@ -27,6 +33,9 @@ namespace yaml
    {
       node["module_name"] >> obj.moduleName;
       node["model"]       >> obj.model;
+		node["snr"]         >> obj.snr;
+		node["vfs"]         >> obj.vfs;
+		node["bw"]          >> obj.bw;
       node["bit_width"]   >> obj.bitWidth;
    }
 

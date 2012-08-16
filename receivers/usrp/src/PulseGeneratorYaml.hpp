@@ -9,23 +9,25 @@ namespace yaml
 	struct PulseGeneratorYaml
 	{
 		std::string moduleName;
-		int adc;
 		double pulseWidth;
 		double pri;
+		double rfFrequency;
+		double doppler;
+		double voltage;
+
+		// TODO: Implement phase coding.
 		std::string codeType;
 		std::string codeName;
 		int codeLength;
 		std::vector<int> code;
-		double rfFrequency;
-		double doppler;
 
 		friend std::ostream& operator << ( std::ostream& os, const PulseGeneratorYaml& obj)
 		{
 			os 
 				<< "module_name  : " << obj.moduleName  << "\n"
-				<< "adc          : " << obj.adc         << "\n"
 				<< "pulse_width  : " << obj.pulseWidth  << "\n"
 				<< "pri          : " << obj.pri         << "\n"
+				<< "voltage      : " << obj.voltage     << "\n"
 				<< "code_type    : " << obj.codeType    << "\n"
 				<< "code_name    : " << obj.codeName    << "\n"
 				<< "rf_frequency : " << obj.rfFrequency << "\n"
@@ -39,9 +41,9 @@ namespace yaml
 	void operator >> ( const YAML::Node& node, PulseGeneratorYaml& obj )
 	{
 		node["module_name"]  >> obj.moduleName;
-		node["adc"]          >> obj.adc;
 		node["pulse_width"]  >> obj.pulseWidth;
 		node["pri"]          >> obj.pri;
+		node["voltage"]      >> obj.voltage;
 		node["code_type"]    >> obj.codeType;
 		node["code_name"]    >> obj.codeName;
 		node["rf_frequency"] >> obj.rfFrequency;
