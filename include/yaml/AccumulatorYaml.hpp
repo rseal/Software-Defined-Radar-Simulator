@@ -2,35 +2,41 @@
 #define ACCUMULATOR_YAML_HPP
 
 #include <iostream>
-#include <yaml-cpp/yaml.h>
+#include <sdr_simulator/yaml/ConfigNode.hpp>
 
 namespace yaml
 {
-   struct AccumulatorYaml
+   class AccumulatorYaml : public ConfigNode
    {
-      std::string moduleName;
+      public:
+
       int bitWidth;
-      double sampleRate;
+		double sampleRate;
 
-      friend std::ostream& operator << ( std::ostream& os, const AccumulatorYaml& obj)
+      AccumulatorYaml(): ConfigNode("accumulator") {}
+
+      YAML::Node Encode()
       {
-         os << "name             : " << obj.moduleName      << "\n"
-            << "bitwidth         : " << obj.bitWidth        << "\n"
-            << "samplerate       : " << obj.sampleRate      << "\n";
-
-         return os;
+         YAML::Node node;
+			node["module_name"] = moduleName;
+         node["bit_width"]   = bitWidth;
+         node["sample_rate"] = sampleRate;
+         return node;
       }
 
-   };
+      void Decode( const YAML::Node& node)
+      {
+         bitWidth   = node["bit_width"].as<int>();
+         sampleRate = node["sample_rate"].as<double>();
+      }
 
-   void operator >> ( const YAML::Node& node, AccumulatorYaml& obj )
-   {
-      node["module_name"]      >> obj.moduleName;
-      node["bit_width"]        >> obj.bitWidth;
-      node["sample_rate"]      >> obj.sampleRate;
-   }
-
-
+      void Print(std::ostream& os)
+      {
+         os << "module_name    : " << moduleName << "\n"
+            << "bit_width      : " << bitWidth   << "\n"
+            << "sample_rate    : " << sampleRate << "\n";
+      }
+	};
 };
 
 #endif

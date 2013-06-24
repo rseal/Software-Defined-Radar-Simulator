@@ -2,44 +2,55 @@
 #define ADC_YAML_HPP
 
 #include <iostream>
-#include <yaml-cpp/yaml.h>
+#include <sdr_simulator/yaml/ConfigNode.hpp>
 
 namespace yaml
 {
-   struct AdcYaml
+   class AdcYaml : public ConfigNode
    {
-      std::string moduleName;
+      public:
+
       std::string model;
       int bitWidth;
 		double vfs;
 		double snr;
 		double bw;
 
-      friend std::ostream& operator << ( std::ostream& os, const AdcYaml& obj)
-      {
-         os << "name      : " << obj.moduleName << "\n"
-            << "model     : " << obj.model      << "\n"
-            << "snr       : " << obj.snr        << "\n"
-            << "vfs       : " << obj.vfs        << "\n"
-            << "bw        : " << obj.bw         << "\n"
-            << "bit_width : " << obj.bitWidth   << "\n";
 
-         return os;
+      AdcYaml(): ConfigNode("adc") {}
+
+      YAML::Node Encode()
+      {
+         YAML::Node node;
+         node["module_name"] = moduleName;
+         node["model"]       = model;
+         node["snr"]         = snr;
+         node["vfs"]         = vfs;
+         node["bw"]          = bw;
+         node["bit_width"]   = bitWidth;
+         return node;
+      }
+
+      void Decode( const YAML::Node& node)
+      {
+         model      = node["model"].as<std::string>();
+         bitWidth   = node["bit_width"].as<int>();
+         snr        = node["snr"].as<double>();
+         vfs        = node["vfs"].as<double>();
+         bw         = node["bw"].as<double>();
+      }
+
+      void Print(std::ostream& os)
+      {
+         os << "module_name    : " << moduleName << "\n"
+            << "model          : " << model      << "\n"
+            << "bitwidth       : " << bitWidth   << "\n"
+            << "snr            : " << snr        << "\n"
+            << "vfs            : " << vfs        << "\n"
+            << "bw             : " << bw         << "\n";
       }
 
    };
-
-   void operator >> ( const YAML::Node& node, AdcYaml& obj )
-   {
-      node["module_name"] >> obj.moduleName;
-      node["model"]       >> obj.model;
-		node["snr"]         >> obj.snr;
-		node["vfs"]         >> obj.vfs;
-		node["bw"]          >> obj.bw;
-      node["bit_width"]   >> obj.bitWidth;
-   }
-
-
 };
 
 #endif

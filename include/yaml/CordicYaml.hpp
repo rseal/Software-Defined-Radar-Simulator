@@ -2,41 +2,53 @@
 #define CORDIC_YAML_HPP 
 
 #include <iostream>
-#include <yaml-cpp/yaml.h>
+#include <sdr_simulator/yaml/ConfigNode.hpp>
 
 namespace yaml
 {
-   struct CordicYaml
+   class CordicYaml : public ConfigNode
    {
-      std::string moduleName;
+      public:
+
       std::string model;
       int xyWidth;
       int zWidth;
       double sampleRate;
       double tuningFrequency;
 
-      friend std::ostream& operator << ( std::ostream& os, const CordicYaml& obj)
+      CordicYaml(): ConfigNode("down_converter") {}
+
+      YAML::Node Encode()
       {
-         os << "name             : " << obj.moduleName      << "\n"
-            << "model            : " << obj.model           << "\n"
-            << "xy_width         : " << obj.xyWidth         << "\n"
-            << "z_width          : " << obj.zWidth          << "\n"
-            << "samplerate       : " << obj.sampleRate      << "\n"
-            << "tuning_frequency : " << obj.tuningFrequency << "\n";
-
-         return os;
+         YAML::Node node;
+			node["module_name"]      = moduleName;
+			node["model"]            = model;
+			node["xy_width"]         = xyWidth;
+			node["z_width"]          = zWidth;
+			node["sample_rate"]      = sampleRate;
+			node["tuning_frequency"] = tuningFrequency;
+         return node;
       }
-   };
 
-   void operator >> ( const YAML::Node& node, CordicYaml& obj )
-   {
-      node["module_name"]      >> obj.moduleName;
-      node["model"]            >> obj.model;
-      node["xy_width"]         >> obj.xyWidth;
-      node["z_width"]          >> obj.zWidth;
-      node["sample_rate"]      >> obj.sampleRate;
-      node["tuning_frequency"] >> obj.tuningFrequency;
-   }
+      void Decode( const YAML::Node& node)
+      {
+         model           = node["model"].as<std::string>();
+         xyWidth         = node["xy_width"].as<int>();
+         zWidth          = node["z_width"].as<int>();
+         sampleRate      = node["sample_rate"].as<double>();
+         tuningFrequency = node["tuning_frequency"].as<double>();
+      }
+
+      void Print(std::ostream& os)
+      {
+         os << "module_name      : " << moduleName      << "\n"
+            << "model            : " << model           << "\n"
+            << "xy_width         : " << xyWidth         << "\n"
+            << "z_width          : " << zWidth          << "\n"
+            << "samplerate       : " << sampleRate      << "\n"
+            << "tuning_frequency : " << tuningFrequency << "\n";
+      }
+	};
 };
 
 #endif

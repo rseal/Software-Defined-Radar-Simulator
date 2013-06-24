@@ -2,38 +2,47 @@
 #define HALFBAND_YAML_HPP
 
 #include <iostream>
-#include <yaml-cpp/yaml.h>
+#include <sdr_simulator/yaml/ConfigNode.hpp>
 
 namespace yaml
 {
-   struct HalfBandYaml
+   class HalfBandYaml : public ConfigNode
    {
+      public:
+
       std::string moduleName;
 		std::string model;
 		int inputWidth;
 		int outputWidth;
 
-      friend std::ostream& operator << ( std::ostream& os, const HalfBandYaml& obj)
+      HalfBandYaml(): ConfigNode("half_band_filter") {}
+
+      YAML::Node Encode()
       {
-         os << "name         : " << obj.moduleName  << "\n"
-				<< "model        : " << obj.model       << "\n"
-				<< "input_width  : " << obj.inputWidth  << "\n"
-				<< "output_width : " << obj.outputWidth << "\n";
+			YAML::Node node;
+			node["module_name"]  = moduleName;
+			node["model"]        = model;
+			node["input_width"]  = inputWidth;
+			node["output_width"] = outputWidth;
+			return node;
+		}
 
-         return os;
-      }
+		void Decode( const YAML::Node& node)
+		{
+			moduleName  = node["module_name"].as<std::string>();
+			model       = node["model"].as<std::string>();
+			inputWidth  = node["input_width"].as<int>();
+			outputWidth = node["output_width"].as<int>();
+		}
 
-   };
-
-   void operator >> ( const YAML::Node& node, HalfBandYaml& obj )
-   {
-      node["module_name"]  >> obj.moduleName;
-      node["model"]        >> obj.model;
-      node["input_width"]  >> obj.inputWidth;
-      node["output_width"] >> obj.outputWidth;
-   }
-
-
+		void Print(std::ostream& os)
+		{
+			os << "name         : " << moduleName  << "\n"
+				<< "model        : " << model       << "\n"
+				<< "input_width  : " << inputWidth  << "\n"
+				<< "output_width : " << outputWidth << "\n";
+		}
+	};
 };
 
 #endif

@@ -2,13 +2,14 @@
 #define CIC_YAML_HPP
 
 #include <iostream>
-#include <yaml-cpp/yaml.h>
+#include <sdr_simulator/yaml/ConfigNode.hpp>
 
 namespace yaml
 {
-	struct CicYaml
-	{
-		std::string moduleName;
+   class CicYaml : public ConfigNode
+   {
+      public:
+
 		int inputWidth;
 		int outputWidth;
 		int minDecimation;
@@ -17,32 +18,45 @@ namespace yaml
 		int numStages;
 		bool useBitPruning;
 
-		friend std::ostream& operator << ( std::ostream& os, const CicYaml& obj)
-		{
-			os  << "name               : " << obj.moduleName        << "\n"
-				<< "input_width        : " << obj.inputWidth        << "\n"
-				<< "output_width       : " << obj.outputWidth       << "\n"
-				<< "min_decimation     : " << obj.minDecimation     << "\n"
-				<< "max_decimation     : " << obj.maxDecimation     << "\n"
-				<< "differential_delay : " << obj.differentialDelay << "\n"
-				<< "num_stages         : " << obj.numStages         << "\n"
-				<< "use_bit_pruning    : " << obj.useBitPruning     << "\n";
+      CicYaml(): ConfigNode("cic_filter") {}
 
-			return os;
+      YAML::Node Encode()
+      {
+			YAML::Node node;
+			node["module_name"]        = moduleName;
+			node["input_width"]        = inputWidth;
+			node["output_width"]       = outputWidth;
+			node["min_decimation"]     = minDecimation;
+			node["max_decimation"]     = maxDecimation;
+			node["differential_delay"] = differentialDelay;
+			node["num_stages"]         = numStages;
+			node["use_bit_pruning"]    = useBitPruning;
+			return node;
+		}
+
+		void Decode( const YAML::Node& node)
+		{
+			inputWidth        = node["input_width"].as<int>();
+			outputWidth       = node["output_width"].as<int>();
+			minDecimation     = node["min_decimation"].as<int>();
+			maxDecimation     = node["max_decimation"].as<int>();
+			differentialDelay = node["differential_delay"].as<int>();
+			numStages         = node["num_stages"].as<int>();
+			useBitPruning     = node["use_bit_pruning"].as<bool>();
+		}
+
+		void Print(std::ostream& os)
+		{
+			os << "module_name        : " << moduleName        << "\n"
+				<< "input_width        : " << inputWidth        << "\n"
+				<< "output_width       : " << outputWidth       << "\n"
+				<< "min_decimation     : " << minDecimation     << "\n"
+				<< "max_decimation     : " << maxDecimation     << "\n"
+				<< "differential_delay : " << differentialDelay << "\n"
+				<< "num_stages         : " << numStages         << "\n"
+				<< "use_bit_pruning    : " << useBitPruning     << "\n";
 		}
 	};
-
-	void operator >> ( const YAML::Node& node, CicYaml& obj )
-	{
-		node["module_name"]        >> obj.moduleName;
-		node["input_width"]        >> obj.inputWidth;
-		node["output_width"]       >> obj.outputWidth;
-		node["min_decimation"]     >> obj.minDecimation;
-		node["max_decimation"]     >> obj.maxDecimation;
-		node["differential_delay"] >> obj.differentialDelay;
-		node["num_stages"]         >> obj.numStages;
-		node["use_bit_pruning"]    >> obj.useBitPruning;
-	}
 };
 
 #endif
