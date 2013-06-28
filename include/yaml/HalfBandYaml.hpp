@@ -2,10 +2,14 @@
 #define HALFBAND_YAML_HPP
 
 #include <iostream>
+#include <boost/shared_ptr.hpp>
 #include <sdr_simulator/yaml/ConfigNode.hpp>
 
 namespace yaml
 {
+   class HalfBandYaml;
+   typedef boost::shared_ptr<HalfBandYaml> HalfBandYamlPtr;
+
    class HalfBandYaml : public ConfigNode
    {
       public:
@@ -17,31 +21,10 @@ namespace yaml
 
       HalfBandYaml(): ConfigNode("half_band_filter") {}
 
-      YAML::Node Encode()
-      {
-			YAML::Node node;
-			node["module_name"]  = moduleName;
-			node["model"]        = model;
-			node["input_width"]  = inputWidth;
-			node["output_width"] = outputWidth;
-			return node;
-		}
+		YAML::Node Encode();
+		void Decode( const YAML::Node& node);
+		void Print(std::ostream& os);
 
-		void Decode( const YAML::Node& node)
-		{
-			moduleName  = node["module_name"].as<std::string>();
-			model       = node["model"].as<std::string>();
-			inputWidth  = node["input_width"].as<int>();
-			outputWidth = node["output_width"].as<int>();
-		}
-
-		void Print(std::ostream& os)
-		{
-			os << "name         : " << moduleName  << "\n"
-				<< "model        : " << model       << "\n"
-				<< "input_width  : " << inputWidth  << "\n"
-				<< "output_width : " << outputWidth << "\n";
-		}
 	};
 };
 

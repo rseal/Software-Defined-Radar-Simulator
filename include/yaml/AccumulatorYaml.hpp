@@ -6,6 +6,9 @@
 
 namespace yaml
 {
+   class AccumulatorYaml;
+   typedef boost::shared_ptr<AccumulatorYaml> AccumulatorYamlPtr;
+
    class AccumulatorYaml : public ConfigNode
    {
       public:
@@ -15,27 +18,10 @@ namespace yaml
 
       AccumulatorYaml(): ConfigNode("accumulator") {}
 
-      YAML::Node Encode()
-      {
-         YAML::Node node;
-			node["module_name"] = moduleName;
-         node["bit_width"]   = bitWidth;
-         node["sample_rate"] = sampleRate;
-         return node;
-      }
+		YAML::Node Encode();
+		void Decode( const YAML::Node& node);
+		void Print(std::ostream& os);
 
-      void Decode( const YAML::Node& node)
-      {
-         bitWidth   = node["bit_width"].as<int>();
-         sampleRate = node["sample_rate"].as<double>();
-      }
-
-      void Print(std::ostream& os)
-      {
-         os << "module_name    : " << moduleName << "\n"
-            << "bit_width      : " << bitWidth   << "\n"
-            << "sample_rate    : " << sampleRate << "\n";
-      }
 	};
 };
 

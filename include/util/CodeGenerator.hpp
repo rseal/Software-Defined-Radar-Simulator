@@ -104,6 +104,22 @@ namespace code_generator{
          codeList_.push_back( result );
       }
 
+      void OpenNamespace( const std::string& name )
+      {
+         std::string result;
+         result = "namespace " + name + "{";
+
+         codeList_.push_back( result );
+      }
+
+      void CloseNamespace( const std::string& name)
+      {
+         std::string result;
+         result = "}";
+
+         codeList_.push_back( result );
+      }
+
       void AddInclude( const std::string& name, const bool systemFile=true )
       {
 

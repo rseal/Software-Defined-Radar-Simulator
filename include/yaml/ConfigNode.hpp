@@ -3,8 +3,12 @@
 
 #include <yaml-cpp/yaml.h>
 
+
 namespace yaml
 {
+   class ConfigNode;
+   typedef boost::shared_ptr<yaml::ConfigNode> ConfigNodePtr;
+
 	class ConfigNode
 	{
 		protected:

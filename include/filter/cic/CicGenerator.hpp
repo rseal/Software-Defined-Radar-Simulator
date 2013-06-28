@@ -45,11 +45,7 @@ public:
     CicGenerator( const std::string& configFileName ) {
 
        // open configuration file and parse
-       std::ifstream fin(configFileName);
-       YAML::Parser parser(fin);
-       YAML::Node doc;
-       parser.GetNextDocument(doc);
-
+		 YAML::Node root = YAML::Load(configFileName);
 
        try
        {

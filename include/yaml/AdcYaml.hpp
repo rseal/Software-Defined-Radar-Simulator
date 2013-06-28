@@ -2,10 +2,14 @@
 #define ADC_YAML_HPP
 
 #include <iostream>
+#include <boost/shared_ptr.hpp>
 #include <sdr_simulator/yaml/ConfigNode.hpp>
 
 namespace yaml
 {
+   class AdcYaml;
+   typedef boost::shared_ptr<AdcYaml> AdcYamlPtr;
+
    class AdcYaml : public ConfigNode
    {
       public:
@@ -16,41 +20,14 @@ namespace yaml
 		double snr;
 		double bw;
 
+      AdcYaml(): ConfigNode("adc") {};
 
-      AdcYaml(): ConfigNode("adc") {}
-
-      YAML::Node Encode()
-      {
-         YAML::Node node;
-         node["module_name"] = moduleName;
-         node["model"]       = model;
-         node["snr"]         = snr;
-         node["vfs"]         = vfs;
-         node["bw"]          = bw;
-         node["bit_width"]   = bitWidth;
-         return node;
-      }
-
-      void Decode( const YAML::Node& node)
-      {
-         model      = node["model"].as<std::string>();
-         bitWidth   = node["bit_width"].as<int>();
-         snr        = node["snr"].as<double>();
-         vfs        = node["vfs"].as<double>();
-         bw         = node["bw"].as<double>();
-      }
-
-      void Print(std::ostream& os)
-      {
-         os << "module_name    : " << moduleName << "\n"
-            << "model          : " << model      << "\n"
-            << "bitwidth       : " << bitWidth   << "\n"
-            << "snr            : " << snr        << "\n"
-            << "vfs            : " << vfs        << "\n"
-            << "bw             : " << bw         << "\n";
-      }
+      YAML::Node Encode();
+	   void Decode( const YAML::Node& node);
+      void Print(std::ostream& os);
 
    };
+
 };
 
 #endif

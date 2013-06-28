@@ -19,20 +19,17 @@
 
 #include <sdr_simulator/SdrModule.hpp>
 
-// locally-generated constants file
-#include "configuration.hpp"
+template<typename DATA_TYPE>
+class PhaseAccumulator: public sdr_module::Module<DATA_TYPE,DATA_TYPE>{
 
-class PhaseAccumulator:
-   public sdr_module::Module<accumulator::DATA_TYPE, accumulator::DATA_TYPE>  {
+   DATA_TYPE theta;
+   double stepSize_;
 
-   const double STEP_SIZE;
-   accumulator::DATA_TYPE theta;
-
-   sc_signal< accumulator::DATA_TYPE > null_input_signal_;
+   sc_signal< DATA_TYPE > null_input_signal_;
 
    virtual void Compute() 
    { 
-      theta = this->reset.read() ? 0 : rint( theta + STEP_SIZE ); 
+      theta = this->reset.read() ? 0 : rint( theta + stepSize_ ); 
       this->output.write( theta );
    }
 
@@ -41,12 +38,18 @@ class PhaseAccumulator:
    SC_HAS_PROCESS(PhaseAccumulator);
 
    // Constructor 
-   PhaseAccumulator( const sc_module_name& name ):
-      sdr_module::Module<accumulator::DATA_TYPE,accumulator::DATA_TYPE>(name), 
-      STEP_SIZE( accumulator::StepSize() )
+   PhaseAccumulator(const sc_module_name& name): 
+      sdr_module::Module<DATA_TYPE,DATA_TYPE>(name), 
+      stepSize_(-1.0)
    {
       this->input( null_input_signal_ );
    }
+
+   void StepSize( const double stepSize)
+   {
+      stepSize_ = stepSize;
+   }
+
 };
 
 #endif

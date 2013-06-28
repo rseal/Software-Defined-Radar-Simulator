@@ -30,6 +30,7 @@
 using namespace std;
 using namespace boost::math;
 using namespace boost;
+using namespace accumulator;
 
 int sc_main(int argc, char* argv[]){
 
@@ -41,12 +42,12 @@ int sc_main(int argc, char* argv[]){
    const string TRUNC_RECORDER_FILE_NAME = "accumulator_trunc_output.dat";
    const double CLOCK_PERIOD = 15.68; //NS
 
-   sc_signal< data_output_type > output_signal;
+   sc_signal< data_type > output_signal;
 
    // define system clock 
    sc_time time( CLOCK_PERIOD, SC_NS );
 
-   const double STEP_SIZE = tr1::pow(2.0, BIT_WIDTH*1.0 )*TUNING_FREQUENCY/SAMPLE_RATE;
+   //const double STEP_SIZE = tr1::pow(2.0, BIT_WIDTH*1.0 )*TUNING_FREQUENCY/SAMPLE_RATE;
    // determine phase step size from desired frequency
 
    // display settings
@@ -61,13 +62,14 @@ int sc_main(int argc, char* argv[]){
    Stimulus< reset_type > stimulus( "stimulus", time, RESET_HOLD_TIME );
 
    // DUT
-   PhaseAccumulator accumulator("accumulator");
+   PhaseAccumulator<data_type> accumulator("accumulator");
+   accumulator.StepSize(STEP_SIZE);
    accumulator.clock( stimulus.clock );
    accumulator.output(output_signal);
    accumulator.reset( stimulus.reset );
 
    // record output
-   FileRecorder< data_output_type, reset_type > record( "recorder", RECORDER_FILE_NAME );
+   FileRecorder< data_type, reset_type > record( "recorder", RECORDER_FILE_NAME );
    record.clock( stimulus.clock );
    record.reset( stimulus.reset );
    record.input( output_signal );

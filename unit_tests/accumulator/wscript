@@ -2,16 +2,6 @@ import os
 import sys
 import shutil
 
-#target_name = 'accumulator_unit_test'
-#source_files = 'test_bench.cpp'
-#code_gen = env.Program( target='code_generator', source='generate_header.cpp')
-#env.Depends( code_gen, config_dir + '/' + config_file )
-
-#generate_header = env.Command('test_bench.hpp', code_gen, './code_generator')
-#prog1 = env.Program( target=install_dir+'/'+target_name , source=source_files )
-#env.Depends( prog1, generate_header )
-
-
 def options(opt):
         opt.load('compiler_c compiler_cxx')
 
@@ -20,38 +10,41 @@ def configure(cnf):
         cnf.check(
                   features     = 'cxx cxxprogram',
                   libpath      = ['/usr/lib/','/usr/local/lib'],
-                  lib          = ['tinyxmlcpp'],
+                  lib          = ['yaml-cpp'],
                   cflags       = ['-std=gnu++0x','-Wall','-W','-02'],
-                  defines      = ['TIXML_USE_TICPP'],
                   uselib_store = 'M'
                  )
 
         ## define config file location
-        cnf.env.CONFIG_FILE = cnf.path.abspath() + os.sep + 'config' + os.sep + 'sdr_config.xml'
+        cnf.env.CONFIG_FILE = cnf.path.abspath() + '/build/sdr.yml'
         
 
 def build(bld):
 
+      # copy over sdr configuration file
+      bld.exec_command('cp sdr.yml build/sdr.yml')
+
+      # copy over shared library
+      bld(rule='cp ${SRC} ${TGT}', source='../../build/libsdr-yaml.so', target='libsdr-yaml.so'),
 
       ## build code generator
       bld.add_group(
          bld(
             name     = 'code_generator',
             features = 'cxx cxxprogram',
-            #cxxflags = ['-std=gnu++0x','-Wall', '-W', '-DTIXML_USE_TICPP'],
-            includes = '/usr/local/include',
-            source   = 'src/generate_header.cpp',
+            cxxflags = ['-std=gnu++0x','-Wall', '-W'],
+            source   = 'generate_header.cpp',
             target   = 'code_generator',
-            defines  = ['TIXML_USE_TICPP'],
-            lib      = ['tinyxmlcpp'],
+            lib      = ['yaml-cpp','sdr-yaml'],
+            libpath  = ['.']
             )
-      )
+         )
 
       ## generate code
       bld.add_group(
          bld(
             name     = 'generate_header',
-            rule     = bld.path.abspath() + os.sep + 'build' + os.sep + 'code_generator ${CONFIG_FILE}',
+            rule     = bld.path.abspath() + '/build/code_generator sdr.yml',
             source   = ['code_generator'],
          )
       )
@@ -61,12 +54,11 @@ def build(bld):
          bld(
             name     = 'test_bench',
             features = 'cxx cxxprogram',
-            cxxflags = ['-std=gnu++0x','-Wall', '-W', '-DTIXML_USE_TICPP'],
-            includes = ['.','src'],
-            source   = 'src/test_bench.cpp',
+            cxxflags = ['-std=gnu++0x','-Wall', '-W'],
+            includes = '.',
+            source   = 'test_bench.cpp',
             target   = 'accumulator_test',
-            #defines  = ['TIXML_USE_TICPP'],
-            lib      = ['tinyxmlcpp','systemc'],
+            lib      = ['yaml-cpp','systemc'],
          )
       )
 
