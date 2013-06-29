@@ -38,19 +38,20 @@ class CicGenerator
     typedef std::vector<int> BitWidthVector;
     FileOutputStream outputStream_;
     BitWidthVector bitWidthVector_;
-    yaml::CicYaml cicData_;
+    yaml::CicYamlPtr cicNode_;
 
 public:
 
     CicGenerator( const std::string& configFileName ) {
 
+		 const std::string CIC_MODULE = "cic_filter";
+
        // open configuration file and parse
-		 YAML::Node root = YAML::Load(configFileName);
+		 YAML::Node config = YAML::LoadFile(configFileName);
 
        try
        {
-          const YAML::Node& cic_node = yaml::ParseNode( doc, "cic");
-          cic_node >> cicData_;
+			 cicNode_ = yaml::NodeParser::ParseNode<yaml::CicYaml>( config, CIC_MODULE);
        }
        catch ( YAML::ParserException& e )
        {
@@ -61,16 +62,16 @@ public:
        //inputWidth_        = boost::lexical_cast<int>( config_map["input_width"] );
        //outputWidth_       = boost::lexical_cast<int>( config_map["output_width"] );
        //maxDecimation_     = boost::lexical_cast<int>( config_map["max_decimation"] );
-       //cicData_.numStages         = boost::lexical_cast<int>( config_map["num_stages"] );
+       //cicNode_->numStages         = boost::lexical_cast<int>( config_map["num_stages"] );
        //differentialDelay_ = boost::lexical_cast<int>( config_map["differential_delay"] );
        //useBitPruning_     = config_map["bit_pruning"] == "false" ? false : true;
 
        std::cout
-            << "input width    = " << cicData_.inputWidth    << "\n"
-            << "output width   = " << cicData_.outputWidth   << "\n"
-            << "max decimation = " << cicData_.maxDecimation << "\n"
-            << "num stages     = " << cicData_.numStages     << "\n"
-            << "bit pruning    = " << cicData_.useBitPruning << "\n"
+            << "input width    = " << cicNode_->inputWidth    << "\n"
+            << "output width   = " << cicNode_->outputWidth   << "\n"
+            << "max decimation = " << cicNode_->maxDecimation << "\n"
+            << "num stages     = " << cicNode_->numStages     << "\n"
+            << "bit pruning    = " << cicNode_->useBitPruning << "\n"
             << std::endl;
 
        outputStream_ = FileOutputStream(
@@ -80,23 +81,23 @@ public:
        CicErrorAnalysis cicErrorAnalysis;
 
        bitWidthVector_ = cicErrorAnalysis.ComputeBitWidths (
-             cicData_.numStages,
-             cicData_.minDecimation,
-             cicData_.differentialDelay,
-             cicData_.inputWidth,
-             cicData_.outputWidth
+             cicNode_->numStages,
+             cicNode_->minDecimation,
+             cicNode_->differentialDelay,
+             cicNode_->inputWidth,
+             cicNode_->outputWidth
              );
 
        int size = bitWidthVector_.size();
 
        // If bit pruning is not used, set bitwidth to the maximum size for 
        // every stage in the filter. 
-       if( !cicData_.useBitPruning )
+       if( !cicNode_->useBitPruning )
        {
           for( int i=0; i<size; ++i )
           {
-             bitWidthVector_[i] = cicData_.inputWidth + 
-                std::tr1::ceil( cicData_.numStages*std::tr1::log2( cicData_.maxDecimation ) );
+             bitWidthVector_[i] = cicNode_->inputWidth + 
+                std::tr1::ceil( cicNode_->numStages*std::tr1::log2( cicNode_->maxDecimation ) );
           }
        }
 
@@ -131,8 +132,9 @@ public:
           << "#include<sdr_simulator/filter/cic/CicIntegrator.hpp>\n"
           << "#include<sdr_simulator/filter/cic/CicDifferentiator.hpp>\n"
           << "#include<sdr_simulator/SdrModule.hpp>\n"
-          << "#include \"configuration.hpp\"\n\n"
-          << "class Cic : public sdr_module::Module< cic::INPUT_TYPE,cic::OUTPUT_TYPE > {\n\n"
+          << "#include<tr1/math.h>\n\n"
+          << "template< typename INPUT_TYPE, typename OUTPUT_TYPE >\n"
+          << "class Cic : public sdr_module::Module< INPUT_TYPE, OUTPUT_TYPE > {\n\n"
           << "   typedef sc_export< sc_signal_inout_if<bool> > clk_export_out;\n"
           << "   sc_signal< bool > div_clock_;\n"
           << "   int idx_;\n\n";
@@ -172,14 +174,14 @@ public:
     }
 
     void writeComputeInput() {
-       if(cicData_.useBitPruning)
+       if(cicNode_->useBitPruning)
        {
-          const int b = bitWidthVector_[0]-cicData_.inputWidth+1;
-          const double Rmax = std::tr1::pow(2.0,1.0*b/cicData_.numStages)/cicData_.differentialDelay;
+          const int b = bitWidthVector_[0]-cicNode_->inputWidth+1;
+          const double Rmax = std::tr1::pow(2.0,1.0*b/cicNode_->numStages)/cicNode_->differentialDelay;
           *outputStream_
              << "   virtual void Compute(){\n"
              << "      const double r = " << Rmax << "/decimation.read();\n"
-             << "      const int bit_gain = std::tr1::ceil(" << cicData_.numStages << "*std::tr1::log2(r));\n"
+             << "      const int bit_gain = std::tr1::ceil(" << cicNode_->numStages << "*std::tr1::log2(r));\n"
              << "      sc_int< " << bitWidthVector_[0] << "> buffer = this->input.read() << bit_gain;\n"
              << "      sig_0_.write( buffer );\n"
              << "}\n\n";
@@ -198,24 +200,24 @@ public:
 
        const int SIZE        = bitWidthVector_.size();
        int LAST_STAGE_MSB    = bitWidthVector_[ SIZE - 1 ] - 1;
-       int OUTPUT_STAGE_MSB  = cicData_.outputWidth-1;
-       int LAST_STAGE_NUMBER = 2*cicData_.numStages;
+       int OUTPUT_STAGE_MSB  = cicNode_->outputWidth-1;
+       int LAST_STAGE_NUMBER = 2*cicNode_->numStages;
 
        int msb = LAST_STAGE_MSB;
-       int lsb = msb - cicData_.outputWidth + 1;
+       int lsb = msb - cicNode_->outputWidth + 1;
 
-       if( !cicData_.useBitPruning )
+       if( !cicNode_->useBitPruning )
        {
           *outputStream_
              << " void ComputeOutput(){\n"
              << " int user_decimation = decimation.read();\n"
              << " int bit_gain = std::tr1::ceil( "
-             << cicData_.numStages
+             << cicNode_->numStages
              << "*std::tr1::log2( user_decimation ));\n"
-             << " int msb = " << cicData_.outputWidth << " + bit_gain -1;\n"
-             << " int lsb = msb - " << cicData_.outputWidth<< ";\n"
-             << " sc_bv< " << cicData_.outputWidth << " > output = sc_bv< "
-             << cicData_.outputWidth << ">( sig_" << LAST_STAGE_NUMBER
+             << " int msb = " << cicNode_->outputWidth << " + bit_gain -1;\n"
+             << " int lsb = msb - " << cicNode_->outputWidth<< ";\n"
+             << " sc_bv< " << cicNode_->outputWidth << " > output = sc_bv< "
+             << cicNode_->outputWidth << ">( sig_" << LAST_STAGE_NUMBER
              << "_.read().range( msb , lsb ));\n"
              << " this->output = output.to_int();\n"
              << "}\n\n";
@@ -227,8 +229,8 @@ public:
              << "      int user_decimation = decimation.read();\n"
              << "      int msb = " << msb << ";\n"
              << "      int lsb = " << lsb << ";\n"
-             << "      sc_bv< " << cicData_.outputWidth << " > output = sc_bv< " 
-             << cicData_.outputWidth << ">( sig_" << LAST_STAGE_NUMBER 
+             << "      sc_bv< " << cicNode_->outputWidth << " > output = sc_bv< " 
+             << cicNode_->outputWidth << ">( sig_" << LAST_STAGE_NUMBER 
              << "_.read().range( msb , lsb ));\n"
              << "      this->output = output.to_int();\n"
              << "}\n\n";
@@ -239,7 +241,7 @@ public:
 
        const int SIZE        = bitWidthVector_.size();
        const int WIDTH       = bitWidthVector_[ SIZE - 2 ];
-       const int NUM_MODULES = 2*cicData_.numStages;
+       const int NUM_MODULES = 2*cicNode_->numStages;
 
        *outputStream_
           << "   void DivClock(){\n"
@@ -252,14 +254,14 @@ public:
 
     void writeStages() {
 
-       for ( int i = 0; i < cicData_.numStages; ++i ) {
+       for ( int i = 0; i < cicNode_->numStages; ++i ) {
           *outputStream_
              << createTemplateName ( "   CicIntegrator", "integrator",
                    bitWidthVector_[i], bitWidthVector_[i+1], i )
              << ";\n";
        }
 
-       for ( int i = cicData_.numStages; i < 2 * cicData_.numStages; ++i ) {
+       for ( int i = cicNode_->numStages; i < 2 * cicNode_->numStages; ++i ) {
           *outputStream_
              << createTemplateName ( "   CicDifferentiator", "differentiator",
                    bitWidthVector_[i], bitWidthVector_[i+1], i )
@@ -332,7 +334,7 @@ public:
           << "   public:\n\n"
           << "      SC_HAS_PROCESS( Cic );\n\n"
           << "      Cic( const sc_module_name& nm) :\n"
-          << "      sdr_module::Module< cic::INPUT_TYPE, cic::OUTPUT_TYPE>(nm){\n\n"
+          << "      sdr_module::Module< INPUT_TYPE, OUTPUT_TYPE>(nm){\n\n"
           << "      SC_METHOD( ComputeOutput );\n"
           << "      this->sensitive << div_clock_.posedge_event();\n\n"
           << "      SC_METHOD( DivClock );\n"
@@ -343,7 +345,7 @@ public:
                 bitWidthVector_[0], bitWidthVector_[1], 0 )
           << "\n";
 
-       for ( int i = 1; i < cicData_.numStages; ++i ) {
+       for ( int i = 1; i < cicNode_->numStages; ++i ) {
           *outputStream_
              << "      "
              << createSharedPtr ( "CicIntegrator", "integrator",
@@ -351,7 +353,7 @@ public:
              << "\n";
        }
 
-       for ( int i = cicData_.numStages; i < 2 * cicData_.numStages ; ++i ) {
+       for ( int i = cicNode_->numStages; i < 2 * cicNode_->numStages ; ++i ) {
           *outputStream_
              << "      "
              << createSharedPtr ( "CicDifferentiator", "differentiator",
@@ -364,7 +366,7 @@ public:
 
     void writePorts () {
        *outputStream_
-          << "   sc_in< cic::INPUT_TYPE > decimation;\n\n"
+          << "   sc_in< INPUT_TYPE > decimation;\n\n"
           << "   clk_export_out div_clock;\n\n";
     }
 

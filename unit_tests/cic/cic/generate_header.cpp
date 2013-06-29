@@ -18,58 +18,41 @@
 #include <tr1/math.h>
 
 #include <sdr_simulator/filter/cic/CicGenerator.hpp>
-#include <sdr_simulator/xml/CicXmlParser.hpp>
 #include <sdr_simulator/util/CodeGenerator.hpp>
-
-#include "StimulusXmlParser.hpp"
+#include <sdr_simulator/yaml/CicYaml.hpp>
+#include <sdr_simulator/yaml/NodeParser.hpp>
 
 using namespace std;
 using namespace code_generator;
 using namespace boost;
+using namespace yaml;
 
 int main(int argc, char* argv[])
 {
-   const std::string CONFIGURATION_FILE_NAME = argv[1];
-   const std::string STIMULUS_FILE_NAME = "stimulus.xml";
-   const string HEADER_FILE_NAME = "test_bench.hpp";
-   const string CIC_FILE_NAME = "Cic.hpp";
+   const std::string CONFIGURATION_FILE_NAME = "sdr.yml";
+   const string HEADER_FILE_NAME             = "test_bench.hpp";
+   const string CIC_FILE_NAME                = "Cic.hpp";
+   const std::string CIC_MODULE              = "cic_filter";
 
-   // open the configuration file for parsing
-   ticpp::Document doc( CONFIGURATION_FILE_NAME );
+   YAML::Node config = YAML::LoadFile(CONFIGURATION_FILE_NAME);
 
-   // Create a parser object
-   CicXmlParser cic_parser;
-
-   // Parse the xml file.
-   doc.LoadFile();
-
-   // Use the root node for reference.
-   ticpp::Node* root = doc.FirstChild();
-
-   // find the first module node in the xml file
-   ticpp::Node* node = root->FirstChildElement( cic_parser.Name() );
-
-   // Retrieve a map containing accumulator keywords
-   xml::NodeMap config_map = cic_parser.Parse( node ); 
-
-   // create constants that were read in from the xml file.
-   const int INPUT_WIDTH = lexical_cast<int>( config_map["input_width"] );
-   const int OUTPUT_WIDTH = lexical_cast<int>( config_map["output_width"] );
+   CicYamlPtr cic_node = NodeParser::ParseNode<CicYaml>( config, CIC_MODULE);
 
    // create a CodeGenerator object. This is required to generate the
    // header file. 
    code_generator::CodeGenerator code_generator;
 
+   code_generator.OpenNamespace("cic");
    // generate data input type
    code_generator.AddTypeDef(
          "INPUT_TYPE",
-         "sc_int<" + lexical_cast< string >( INPUT_WIDTH ) + ">"
+         "sc_int<" + lexical_cast< string >( cic_node->inputWidth ) + ">"
          );
 
    // generate data output type
    code_generator.AddTypeDef(
          "OUTPUT_TYPE",
-         "sc_int<" + lexical_cast< string >( OUTPUT_WIDTH ) + ">"
+         "sc_int<" + lexical_cast< string >( cic_node->outputWidth ) + ">"
          );
 
    code_generator.AddTypeDef(
@@ -79,13 +62,15 @@ int main(int argc, char* argv[])
 
    code_generator.AddConstant<int>(
          "INPUT_WIDTH",
-         INPUT_WIDTH
+         cic_node->inputWidth
          );
 
    code_generator.AddConstant<int>(
          "OUTPUT_WIDTH",
-         OUTPUT_WIDTH
+         cic_node->outputWidth
          );
+
+   code_generator.CloseNamespace("cic");
 
    code_generator.AddInclude( "systemc", true );
 

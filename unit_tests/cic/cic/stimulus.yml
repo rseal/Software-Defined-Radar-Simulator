@@ -1,0 +1,10 @@
+stimulus:
+   clock_rate: 64e6
+   time_resolution: 100
+   simulation_time: 5e5
+   reset_time: 20
+   mean: 0.0
+   variance: 1.0
+   amplitude: 1.0
+   output_file_name: output.dat
+   decimation: 8

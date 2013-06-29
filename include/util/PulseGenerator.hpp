@@ -22,8 +22,8 @@
 #include<boost/math/constants/constants.hpp>
 #include<vector>
 
-template<typename RESET_TYPE>
-class PulseGenerator : public SignalGenerator< double, RESET_TYPE > 
+template<typename OUTPUT_TYPE, typename RESET_TYPE>
+class PulseGenerator : public SignalGenerator< OUTPUT_TYPE, RESET_TYPE > 
 {
    const double pw_;
    const double pri_;
@@ -43,11 +43,11 @@ class PulseGenerator : public SignalGenerator< double, RESET_TYPE >
       if( index_ == samplesPerPri_ || this->reset.read() )
       {
          index_ = 0;
-         this->output = 0.0;
+         this->output = OUTPUT_TYPE(0.0);
       }
       else
       {
-         this->output = this->samples_[ index_++ ];  
+         this->output = OUTPUT_TYPE(this->samples_[ index_++ ]);  
       }
 
    }
@@ -60,9 +60,9 @@ class PulseGenerator : public SignalGenerator< double, RESET_TYPE >
       {
          phase = voltage_*std::tr1::sin( theta_*i ); 
 
-         //std::cout << "theta " << theta_ << std::endl;
-         //std::cout << "phase " << phase << std::endl;
-         this->samples_[i] = phase;
+         std::cout << "theta " << theta_ << std::endl;
+         std::cout << "phase " << phase << std::endl;
+         this->samples_[i] = OUTPUT_TYPE(phase);
       };
 
    }
@@ -80,11 +80,17 @@ class PulseGenerator : public SignalGenerator< double, RESET_TYPE >
          const double fSignal,
          const double voltage
          ):
-      SignalGenerator<double, RESET_TYPE>( nm,0 ), pw_( pw ), pri_( pri ), 
+      SignalGenerator<OUTPUT_TYPE, RESET_TYPE>( nm,0 ), pw_( pw ), pri_( pri ), 
       fSample_( fSample ), fSignal_(fSignal), voltage_( voltage ), index_(0)
    {
       samplesPerPri_   = static_cast<int>( pri_ * fSample_ );
       samplesPerPulse_ = static_cast<int>( pw_ * fSample_ );
+
+      std::cout << "PRI             : " << pri << std::endl;
+      std::cout << "fSample         : " << fSample << std::endl;
+      std::cout << "fSignal         : " << fSignal << std::endl;
+      std::cout << "samples per PRI : " << samplesPerPri_ << std::endl;
+      std::cout << "voltage         : " << voltage << std::endl;
       this->samples_.resize( samplesPerPri_ );
       theta_ = 2.0*boost::math::constants::pi<double>()*fSignal/fSample;
       GenerateSamples();

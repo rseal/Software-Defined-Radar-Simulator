@@ -25,18 +25,24 @@
 
 using namespace std;
 
-int sc_main(int argc, char* argv[] )
+int sc_main(int argc, char* argv[])
 {
-   const double TIME_RESOLUTION = 100.0;
-   const double CLOCK_PERIOD = 15.600;
+   const double TIME_RESOLUTION       = 100.0;
+   const double CLOCK_PERIOD          = 15.600;
    const double TOTAL_SIMULATION_TIME = CLOCK_PERIOD*1e5;
-   const unsigned int RESET_TIME = 10;
+   const unsigned int RESET_TIME      = 10;
 
    const string RECORDER_FILE_NAME = "output.dat";
 
    sc_signal< cic::INPUT_TYPE > dut_input_signal;
    sc_signal< cic::OUTPUT_TYPE > dut_output_signal;
    sc_signal< cic::INPUT_TYPE > decimate_signal;
+
+   double pulse_width = 400.0e-6;
+   double ipp_width   = 40000.0e-6;
+   double fsignal     = 1e6;
+   double sample_rate = 64e6;
+
 
    int decimation = 16;
    decimate_signal = decimation;
@@ -55,20 +61,22 @@ int sc_main(int argc, char* argv[] )
    //gaussianNoiseGen.reset( stimulus.reset );
    //gaussianNoiseGen.clock( stimulus.clock );
 
-   double pulse_width = 400.0;
-   double ipp_width = 400.0*100;
-   double frequency = 1e6;
-   double sample_rate = 64e6;
-   double normalized_frequency = frequency / sample_rate ;
-
    //NoisySinusoidGenerator< cic::OUTPUT_TYPE, cic::RESET_TYPE> 
    //signal_generator( "sig_gen", normalized_frequency, 12, 0.0, 1.0, 1.0, 0.0000001 );
    //signal_generator.output( dut_input_signal );
    //signal_generator.reset( stimulus.reset );
    //signal_generator.clock( stimulus.clock );
 
+   //PulseGenerator( 
+         //const sc_module_name& nm, 
+         //const double pw, 
+         //const double pri, 
+         //const double fSample,
+         //const double fSignal,
+         //const double voltage
+         //):
    PulseGenerator< cic::OUTPUT_TYPE, cic::RESET_TYPE> 
-   signal_generator( "pulse_gen", pulse_width, ipp_width, normalized_frequency , 0.95*4095);
+   signal_generator( "pulse_gen", pulse_width, ipp_width, sample_rate, fsignal , 0.95*4095);
    signal_generator.output( dut_input_signal );
    signal_generator.reset( stimulus.reset );
    signal_generator.clock( stimulus.clock );
@@ -80,7 +88,7 @@ int sc_main(int argc, char* argv[] )
    //signal_generator.clock( stimulus.clock );
 
    // DUT
-   Cic cic( "cic" );
+   Cic<cic::INPUT_TYPE,cic::OUTPUT_TYPE> cic( "cic" );
    cic.clock( stimulus.clock );
    cic.reset( stimulus.reset );
    cic.input( dut_input_signal );
