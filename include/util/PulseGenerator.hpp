@@ -59,9 +59,6 @@ class PulseGenerator : public SignalGenerator< OUTPUT_TYPE, RESET_TYPE >
       for( int i=0; i<samplesPerPulse_ ; ++i )
       {
          phase = voltage_*std::tr1::sin( theta_*i ); 
-
-         std::cout << "theta " << theta_ << std::endl;
-         std::cout << "phase " << phase << std::endl;
          this->samples_[i] = OUTPUT_TYPE(phase);
       };
 

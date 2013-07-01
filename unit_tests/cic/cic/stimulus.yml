@@ -1,10 +1,14 @@
 stimulus:
-   clock_rate: 64e6
-   time_resolution: 100
-   simulation_time: 5e5
-   reset_time: 20
-   mean: 0.0
-   variance: 1.0
-   amplitude: 1.0
-   output_file_name: output.dat
-   decimation: 8
+   sample_rate      : 64e6
+   time_resolution  : 100.0
+   simulation_time  : 5.0e5
+   reset_time       : 10
+   mean             : 0.0
+   variance         : 1.0
+   amplitude        : 1.0
+   output_file_name : "output.dat"
+   input_file_name  : "input.dat"
+   decimation       : 8
+   pulse_width      : 400.0e-6
+   ipp_width        : 10.0e-3
+   signal_frequency : 1.0e6
