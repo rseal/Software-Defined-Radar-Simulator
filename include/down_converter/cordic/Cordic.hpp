@@ -29,23 +29,50 @@
 #include <sdr_simulator/down_converter/cordic/CordicStage.hpp>
 #include <sdr_simulator/down_converter/cordic/CordicThetaMap.hpp>
 
-// locally-generated constants file.
-#include "configuration.hpp"
-
+template<
+   typename INPUT_TYPE, 
+   typename OUTPUT_TYPE, 
+   typename PHASE_TYPE,
+   typename RESET_TYPE, 
+   const unsigned int DATA_WIDTH, 
+   const unsigned int PHASE_WIDTH
+   >
 class Cordic: 
-   public sdr_module::ComplexModule< cordic::INPUT_TYPE, cordic::OUTPUT_TYPE>
+   public sdr_module::ComplexModule< INPUT_TYPE, OUTPUT_TYPE>
 {
 
-    typedef sc_signal< cordic::OUTPUT_TYPE > DebugOutputSignal;
-    DebugOutputSignal real_output_debug_signal;
-    DebugOutputSignal imag_output_debug_signal;
+public:
 
-    typedef sc_int<cordic::DATA_WIDTH> data_type;
-    typedef sc_int<cordic::PHASE_WIDTH> z_type;
+    //typedef sc_signal< OUTPUT_TYPE > DebugOutputSignal;
+    //typedef sc_export< DebugOutputSignal > sc_export_cordic_output;
 
-    typedef sc_int < cordic::DATA_WIDTH + 2 > int_data_type;
-    typedef sc_int < cordic::PHASE_WIDTH - 1 > int_z_type;
-    typedef sc_uint<cordic::PHASE_WIDTH> theta_input_type;
+    //required by systemc when not using CTOR macros
+    SC_HAS_PROCESS ( Cordic );
+
+    //CTOR
+    Cordic ( sc_module_name nm ) :
+        sdr_module::ComplexModule< INPUT_TYPE, OUTPUT_TYPE> ( nm ),
+        numStages_(0) {}
+
+    void NumStages(const int numStages) { numStages_ = numStages;}
+
+    void Run()
+    {
+       InitializeModules();
+       Compute();
+    }
+
+    sc_in< PHASE_TYPE >  phase_input;
+    sc_out< PHASE_TYPE > phase_output;
+
+private:
+
+    typedef sc_int<DATA_WIDTH> data_type;
+    typedef sc_int<PHASE_WIDTH> z_type;
+
+    typedef sc_int < DATA_WIDTH + 2 > int_data_type;
+    typedef sc_int < PHASE_WIDTH - 1 > int_z_type;
+    typedef sc_uint<PHASE_WIDTH> theta_input_type;
 
     // data signal definitions
     typedef sc_signal<data_type> data_signal;
@@ -55,7 +82,7 @@ class Cordic:
     typedef sc_signal< theta_input_type > ThetaInputSignal;
 
     // define shared_ptrs to manage module and signal containers
-    typedef CordicStage< int_data_type, int_z_type, cordic::RESET_TYPE > CordicStageModule;
+    typedef CordicStage< int_data_type, int_z_type, RESET_TYPE > CordicStageModule;
 
     typedef boost::shared_ptr< CordicStageModule > CordicStagePtr;
     typedef boost::shared_ptr<int_data_signal> DataSignalPtr;
@@ -69,8 +96,7 @@ class Cordic:
     vector<DataSignalPtr> ySignals_;
     vector<ZSignalPtr> zSignals_;
 
-    typedef CordicThetaMap < cordic::DATA_WIDTH, cordic::DATA_WIDTH + 2, 
-            cordic::PHASE_WIDTH, cordic::PHASE_WIDTH - 1 > theta_map;
+    typedef CordicThetaMap < DATA_WIDTH, DATA_WIDTH + 2, PHASE_WIDTH, PHASE_WIDTH - 1 > theta_map;
     typedef boost::shared_ptr<theta_map> ThetaMapPtr;
     ThetaMapPtr thetaMap_;
 
@@ -84,13 +110,15 @@ class Cordic:
     int_data_signal yout_buff;
     int_z_signal zout_buff;
 
+    int numStages_;
+
     // create internal shift adder modules
     void InitializeModules() {
 
         string stageNumber;
 
         // create N-1 stages and signals
-        for ( int i = 0; i < cordic::NUM_STAGES; ++i ) {
+        for ( int i = 0; i < numStages_; ++i ) {
             stageNumber = boost::lexical_cast<string> ( i );
 
             cordicStages_.push_back (
@@ -99,20 +127,20 @@ class Cordic:
             );
         }
 
-        for ( int i = 0; i < cordic::NUM_STAGES; ++i ) {
+        for ( int i = 0; i < numStages_; ++i ) {
             CordicStagePtr current_stage = cordicStages_[i];
             current_stage->reset ( this->reset );
             current_stage->clock ( this->clock );
         }
 
-        for ( int i = 0; i < cordic::NUM_STAGES - 1; ++i ) {
+        for ( int i = 0; i < numStages_ - 1; ++i ) {
             xSignals_.push_back ( DataSignalPtr ( new int_data_signal ) );
             ySignals_.push_back ( DataSignalPtr ( new int_data_signal ) );
             zSignals_.push_back ( ZSignalPtr ( new int_z_signal ) );
         }
 
         // create interconnect signals for Cordic_stages
-        for ( int i = 0; i < cordic::NUM_STAGES - 1; ++i ) {
+        for ( int i = 0; i < numStages_ - 1; ++i ) {
             CordicStagePtr output_stage = cordicStages_[i];
             CordicStagePtr input_stage = cordicStages_[i+1];
             DataSignalPtr x = xSignals_[i];
@@ -146,10 +174,11 @@ class Cordic:
         first_stage->zin ( z_theta );
 
         //// connect Cordic output ports to last Cordic_stage
-        CordicStagePtr last_stage = cordicStages_[cordic::NUM_STAGES-1];
+        CordicStagePtr last_stage = cordicStages_[numStages_-1];
         last_stage->xout ( xout_buff );
         last_stage->yout ( yout_buff );
         last_stage->zout ( zout_buff );
+
     }
 
     virtual void Compute() {
@@ -157,48 +186,26 @@ class Cordic:
         theta_input_signal.write ( theta_input_type ( phase_input.read() ) );
 
         this->real_output.write ( 
-              int_data_type ( xout_buff.read() ).range ( cordic::DATA_WIDTH , 1 ) 
+              int_data_type ( xout_buff.read() ).range ( DATA_WIDTH , 1 ) 
               );
 
         // TODO: Debug only 
-        real_output_debug_signal.write(
-              int_data_type ( xout_buff.read() ).range ( cordic::DATA_WIDTH , 1 ) 
-              );
+        //real_output_debug_signal.write(
+              //int_data_type ( xout_buff.read() ).range ( DATA_WIDTH , 1 ) 
+              //);
 
         this->imag_output.write ( 
-              int_data_type ( yout_buff.read() ).range ( cordic::DATA_WIDTH , 1 ) 
+              int_data_type ( yout_buff.read() ).range ( DATA_WIDTH , 1 ) 
               );
 
         // TODO: Debug only 
-        imag_output_debug_signal.write( 
-              int_data_type ( yout_buff.read() ).range ( cordic::DATA_WIDTH , 1 ) 
-              );
+        //imag_output_debug_signal.write( 
+              //int_data_type ( yout_buff.read() ).range ( DATA_WIDTH , 1 ) 
+              //);
 
-        phase_output.write (  cordic::PHASE_TYPE ( zout_buff.read() ) );
+        phase_output.write (  PHASE_TYPE ( zout_buff.read() ) );
     }
 
-public:
-
-    //required by systemc when not using CTOR macros
-    SC_HAS_PROCESS ( Cordic );
-
-    //CTOR
-    Cordic ( sc_module_name nm ) :
-        sdr_module::ComplexModule< cordic::INPUT_TYPE, cordic::OUTPUT_TYPE> ( nm )
-   {
-
-        // setup internal modules
-        InitializeModules();
-        debug_cordic_i_output( real_output_debug_signal );
-        debug_cordic_q_output( imag_output_debug_signal );
-    }
-
-    sc_in< cordic::PHASE_TYPE >  phase_input;
-    sc_out< cordic::PHASE_TYPE > phase_output;
-
-    // TODO: Debug only 
-    debug::sc_export_cordic_output debug_cordic_i_output;
-    debug::sc_export_cordic_output debug_cordic_q_output;
 };
 
 #endif

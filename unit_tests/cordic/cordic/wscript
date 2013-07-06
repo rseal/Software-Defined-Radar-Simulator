@@ -9,30 +9,35 @@ def configure(cnf):
         cnf.load('compiler_c compiler_cxx')
         cnf.check(
                   features     = 'cxx cxxprogram',
-                  libpath      = ['/usr/lib/','/usr/local/lib'],
-                  lib          = ['tinyxmlcpp'],
+                  libpath      = ['.','/usr/lib/','/usr/local/lib'],
                   cflags       = ['-std=gnu++0x','-Wall','-W','-02'],
-                  defines      = ['TIXML_USE_TICPP'],
-                  uselib_store = 'M'
                  )
 
         ## define config file location
-        cnf.env.CONFIG_FILE = cnf.path.abspath() + os.sep + 'config' + os.sep + 'sdr_config.xml'
-        cnf.env.STIMULUS_FILE = cnf.path.abspath() + os.sep + 'config' + os.sep + 'stimulus.xml'
+        #cnf.env.CONFIG_FILE   = cnf.path.abspath() + '/config/sdr.yml'
+        #cnf.env.STIMULUS_FILE = cnf.path.abspath() + '/config/stimulus.yml'
 
 def build(bld):
+
+      # copy over sdr configuration file
+      bld.exec_command('cp sdr.yml build/sdr.yml'),
+
+      # copy over sdr configuration file
+      bld.exec_command('cp stimulus.yml build/stimulus.yml'),
+
+      # copy over shared library
+      bld(rule='cp ${SRC} ${TGT}', source='../../../build/libsdr-yaml.so', target='libsdr-yaml.so'),
 
       ## build code generator
       bld.add_group(
          bld(
             name     = 'code_generator',
             features = 'cxx cxxprogram',
-            #cxxflags = ['-std=gnu++0x','-Wall', '-W', '-DTIXML_USE_TICPP'],
             includes = '/usr/local/include',
-            source   = 'src/generate_header.cpp',
+            source   = 'generate_header.cpp',
             target   = 'code_generator',
-            defines  = ['TIXML_USE_TICPP'],
-            lib      = ['tinyxmlcpp'],
+            lib      = ['sdr-yaml','yaml-cpp'],
+            libpath  = ['.']
             )
       )
 
@@ -40,7 +45,7 @@ def build(bld):
       bld.add_group(
          bld(
             name     = 'generate_header',
-            rule     = bld.path.abspath() + os.sep + 'build' + os.sep + 'code_generator ${CONFIG_FILE} ${STIMULUS_FILE}',
+            rule     = './code_generator',
             source   = ['code_generator'],
          )
       )
@@ -50,11 +55,11 @@ def build(bld):
          bld(
             name     = 'test_bench',
             features = 'cxx cxxprogram',
-            cxxflags = ['-std=gnu++0x','-Wall', '-W', '-DTIXML_USE_TICPP'],
+            cxxflags = ['-std=gnu++0x','-Wall', '-W'],
             includes = ['.','src'],
-            source   = 'src/test_bench.cpp',
+            source   = 'test_bench.cpp',
             target   = 'cordic_test',
-            lib      = ['systemc'],
+            lib      = ['yaml-cpp','systemc'],
          )
       )
 

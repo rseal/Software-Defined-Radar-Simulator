@@ -14,86 +14,67 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with SDRS.  If not, see <http://www.gnu.org/licenses/>.
+
 #include <iostream>
-
 #include <tr1/math.h>
+#include <yaml-cpp/yaml.h>
 
-#include <sdr_simulator/xml/DownConverterXmlParser.hpp>
 #include <sdr_simulator/util/CodeGenerator.hpp>
-
-#include "StimulusXmlParser.hpp"
+#include <sdr_simulator/yaml/CordicYaml.hpp>
+#include <sdr_simulator/yaml/NodeParser.hpp>
 
 using namespace std;
 using namespace code_generator;
 using namespace boost;
+using namespace yaml;
 
 int main(int argc, char* argv[])
 {
-   const std::string CONFIG_FILE_NAME = argv[1];
-   const std::string STIMULUS_FILE_NAME = argv[2];
-   const string HEADER_FILE_NAME = "test_bench.hpp";
+   const std::string STIMULUS_FILE_NAME = "stimulus.yml";
+   const string HEADER_FILE_NAME        = "test_bench.hpp";
+   const std::string CONFIG_FILE_NAME   = "sdr.yml";
 
-   // open the configuration file for parsing
-   ticpp::Document doc( CONFIG_FILE_NAME );
+   YAML::Node nodes = YAML::LoadFile(CONFIG_FILE_NAME);
 
-   // Create a parser object
-   DownConverterXmlParser ddc_parser;
+   CordicYamlPtr cordic_node = yaml::NodeParser::ParseNode<CordicYaml>(nodes,"down_converter");
 
-   // Parse the xml file.
-   doc.LoadFile();
-
-   // Use the root node for reference.
-   ticpp::Node* root = doc.FirstChild();
-
-   // find the first module node in the xml file
-   ticpp::Node* node = root->FirstChildElement( ddc_parser.Name() );
-
-   // Retrieve a map containing accumulator keywords
-   xml::NodeMap config_map = ddc_parser.Parse( node ); 
 
    // create constants that were read in from the xml file.
-   const int DATA_WIDTH = lexical_cast<int>( config_map["xy_width"] );
-   const int PHASE_WIDTH = lexical_cast<double>( config_map["z_width"] );
-   const int NUM_STAGES = lexical_cast<double>( config_map["num_stages"] );
+   const int DATA_WIDTH  = cordic_node->xyWidth;
+   const int PHASE_WIDTH = cordic_node->zWidth;
+   //const int NUM_STAGES  = cordic_node->numStages;
 
+   YAML::Node stim_node = YAML::LoadFile(STIMULUS_FILE_NAME)["stimulus"];
 
-   // Create a parser object
-   StimulusXmlParser stimulus_parser;
-
-   doc.LoadFile( STIMULUS_FILE_NAME );
-   root = doc.FirstChildElement( stimulus_parser.Name() );
-   xml::NodeMap stimulus_map = stimulus_parser.Parse( root );
-
-   const double SIGNAL_FREQUENCY = 
-      lexical_cast<double>( stimulus_map["signal_frequency"] );
-   const double DDC_FREQUENCY = 
-      lexical_cast<double>( stimulus_map["ddc_frequency"] );
-   const double SAMPLE_RATE = 
-      lexical_cast<double>( stimulus_map["sample_rate"] );
+   const double SIGNAL_FREQUENCY = stim_node["signal_frequency"].as<double>();
+   const double DDC_FREQUENCY    = stim_node["ddc_frequency"].as<double>();
+   const double SAMPLE_RATE      = stim_node["sample_rate"].as<double>();
 
    const double NORMALIZED_FREQUENCY = SIGNAL_FREQUENCY/SAMPLE_RATE;
-   const double SCALE = tr1::pow(2.0, PHASE_WIDTH);
-   const int ACCUMULATOR_STEP_SIZE = rint( SCALE*DDC_FREQUENCY/SAMPLE_RATE );
+   const double SCALE                = tr1::pow(2.0, PHASE_WIDTH);
+   const int ACCUMULATOR_STEP_SIZE   = rint( SCALE*DDC_FREQUENCY/SAMPLE_RATE );
 
    // create a CodeGenerator object. This is required to generate the
    // header file. 
    code_generator::CodeGenerator code_generator;
 
+   code_generator.OpenNamespace("cordic");
+
    // generate data input type
    code_generator.AddTypeDef(
-         "INPUT_DATA_TYPE",
+         "INPUT_TYPE",
          "sc_int<" + lexical_cast< string >( DATA_WIDTH ) + ">"
          );
 
    // generate data output type
    code_generator.AddTypeDef(
-         "OUTPUT_DATA_TYPE",
+         "OUTPUT_TYPE",
          "sc_int<" + lexical_cast< string >( DATA_WIDTH ) + ">"
          );
 
    // generate z data output type
    code_generator.AddTypeDef(
-         "PHASE_DATA_TYPE",
+         "PHASE_TYPE",
          "sc_int<" + lexical_cast< string >( PHASE_WIDTH ) + ">"
          );
 
@@ -118,10 +99,10 @@ int main(int argc, char* argv[])
          PHASE_WIDTH
          );
 
-   code_generator.AddConstant<int>(
-         "NUM_STAGES",
-         NUM_STAGES
-         );
+   //code_generator.AddConstant<int>(
+         //"NUM_STAGES",
+         //NUM_STAGES
+         //);
 
    code_generator.AddConstant<double>(
          "NORMALIZED_FREQUENCY",
@@ -141,6 +122,8 @@ int main(int argc, char* argv[])
          "ACCUMULATOR_STEP_SIZE",
          ACCUMULATOR_STEP_SIZE
          ); 
+
+   code_generator.CloseNamespace("cordic");
 
    code_generator.AddInclude( "systemc.h", true );
 
