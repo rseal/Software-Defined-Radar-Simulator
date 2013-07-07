@@ -1,0 +1,9 @@
+stimulus:
+   time_resolution : 1.0
+   simulation_time : 5.0e5
+   sample_rate     : 50.0e6
+   reset_time      : 10
+   output_file     : output.dat
+   mean            : 0.0
+   variance        : 1.0
+   amplitude       : 0.90

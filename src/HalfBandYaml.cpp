@@ -10,6 +10,7 @@ namespace yaml {
 		node["model"]        = model;
 		node["input_width"]  = inputWidth;
 		node["output_width"] = outputWidth;
+		node["coeff_width"] = coeffWidth;
 		return node;
 	}
 
@@ -19,6 +20,7 @@ namespace yaml {
 		model       = node["model"].as<std::string>();
 		inputWidth  = node["input_width"].as<int>();
 		outputWidth = node["output_width"].as<int>();
+		coeffWidth  = node["coeff_width"].as<int>();
 	}
 
 	void HalfBandYaml::Print(std::ostream& os)
@@ -26,7 +28,8 @@ namespace yaml {
 		os << "name         : " << moduleName  << "\n"
 			<< "model        : " << model       << "\n"
 			<< "input_width  : " << inputWidth  << "\n"
-			<< "output_width : " << outputWidth << "\n";
+			<< "output_width : " << outputWidth << "\n"
+			<< "coeff_width  : " << coeffWidth  << "\n";
 	}
 }
 

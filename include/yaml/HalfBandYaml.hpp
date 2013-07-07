@@ -18,6 +18,7 @@ namespace yaml
 		std::string model;
 		int inputWidth;
 		int outputWidth;
+		int coeffWidth;
 
       HalfBandYaml(): ConfigNode("half_band_filter") {}
 

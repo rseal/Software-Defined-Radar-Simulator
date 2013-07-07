@@ -17,11 +17,12 @@
 #include <iostream>
 
 #include <tr1/math.h>
+#include <yaml-cpp/yaml.h>
 
-#include <sdr_simulator/xml/DownConverterXmlParser.hpp>
+#include <sdr_simulator/yaml/AccumulatorYaml.hpp>
+#include <sdr_simulator/yaml/HalfBandYaml.hpp>
 #include <sdr_simulator/util/CodeGenerator.hpp>
-
-#include "StimulusXmlParser.hpp"
+#include <sdr_simulator/yaml/NodeParser.hpp>
 
 using namespace std;
 using namespace code_generator;
@@ -29,65 +30,22 @@ using namespace boost;
 
 int main(void)
 {
-   const std::string CONFIG_FILE_NAME = "../../../config/sdr_config.xml";
-   const std::string STIMULUS_FILE_NAME = "stimulus.xml";
-   const string HEADER_FILE_NAME = "test_bench.hpp";
+   const std::string CONFIG_FILE_NAME = "sdr.yml";
+   const string HEADER_FILE_NAME      = "test_bench.hpp";
 
-   // open the configuration file for parsing
-   ticpp::Document doc( CONFIG_FILE_NAME );
+	YAML::Node nodes = YAML::LoadFile( CONFIG_FILE_NAME );
 
-   // Create a parser object
-   DownConverterXmlParser ddc_parser;
+   yaml::AccumulatorYamlPtr acc_node = yaml::NodeParser::ParseNode<yaml::AccumulatorYaml>(nodes,"accumulator");
+   yaml::HalfBandYamlPtr hb_node = yaml::NodeParser::ParseNode<yaml::HalfBandYaml>(nodes,"half_band_filter");
 
-   // Parse the xml file.
-   doc.LoadFile();
-
-   // Use the root node for reference.
-   ticpp::Node* root = doc.FirstChild();
-
-   // find the first module node in the xml file
-   ticpp::Node* node = root->FirstChildElement( ddc_parser.Name() );
-
-   // Retrieve a map containing accumulator keywords
-   xml::NodeMap config_map = ddc_parser.Parse( node ); 
-
-   // Create a parser object
-   StimulusXmlParser stimulus_parser;
-
-   doc.LoadFile( STIMULUS_FILE_NAME );
-   root = doc.FirstChildElement( stimulus_parser.Name() );
-   xml::NodeMap stimulus_map = stimulus_parser.Parse( root );
-
-   const int INPUT_WIDTH = 
-      lexical_cast<int>( stimulus_map["input_width"] );
-   const double OUTPUT_WIDTH = 
-      lexical_cast<int>( stimulus_map["output_width"] );
-   const int COEFF_WIDTH = 
-      lexical_cast<int>( stimulus_map["coeff_width"] );
-   const int ACCUMULATOR_WIDTH = 
-      lexical_cast<int>( stimulus_map["accumulator_width"] );
-   const double MEAN = 
-      lexical_cast<double>( stimulus_map["mean"] );
-   const double VARIANCE = 
-      lexical_cast<double>( stimulus_map["variance"] );
-   const double AMPLITUDE = 
-      lexical_cast<double>( stimulus_map["amplitude"] );
+   const unsigned int ACCUMULATOR_WIDTH = acc_node->bitWidth;
+   const unsigned int COEFF_WIDTH       = hb_node->coeffWidth;
+   const unsigned int INPUT_WIDTH       = hb_node->inputWidth;
+   const unsigned int OUTPUT_WIDTH      = hb_node->outputWidth;
 
    // create a CodeGenerator object. This is required to generate the
    // header file. 
    code_generator::CodeGenerator code_generator;
-
-   // generate data input type
-   code_generator.AddTypeDef(
-         "data_input_type",
-         "sc_int<" + lexical_cast< string >( INPUT_WIDTH ) + ">"
-         );
-
-   // generate data output type
-   code_generator.AddTypeDef(
-         "data_output_type",
-         "sc_int<" + lexical_cast< string >( OUTPUT_WIDTH ) + ">"
-         );
 
    code_generator.AddTypeDef(
          "reset_type",
@@ -114,22 +72,11 @@ int main(void)
          OUTPUT_WIDTH
          );
 
-   code_generator.AddConstant<double>(
-         "MEAN",
-         MEAN
-         );
-   
-   code_generator.AddConstant<double>(
-         "VARIANCE",
-         VARIANCE
-         );
+   // generate data input type
+   code_generator.AddTypeDef( "data_input_type", "sc_int<INPUT_WIDTH>");
 
-   code_generator.AddConstant<double>(
-         "AMPLITUDE",
-         AMPLITUDE
-         );
-
-   //TODO: Remove and place in stimulus config
+   // generate data output type
+   code_generator.AddTypeDef( "data_output_type", "sc_int<OUTPUT_WIDTH>");
 
    code_generator.AddInclude( "systemc.h", true );
 

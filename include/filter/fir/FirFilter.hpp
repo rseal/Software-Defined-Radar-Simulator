@@ -23,81 +23,87 @@
 #include <deque>
 #include <stdexcept>
 
-#include "configuration.hpp"
-
-namespace
+template< 
+   typename INPUT_TYPE, 
+	typename OUTPUT_TYPE, 
+	const int COEFF_WIDTH, 
+	const int ACC_WIDTH
+	>
+	class FirFilter: public sdr_module::Module< INPUT_TYPE, OUTPUT_TYPE>
 {
-   const int MAX_OUTPUT_INDEX = filter::SUM_WIDTH-1;
-   const int MIN_OUTPUT_INDEX = filter::SUM_WIDTH - filter::DATA_WIDTH;
-}
+	public:
 
-class FirFilter: 
-   public sdr_module::Module< filter::INPUT_TYPE, filter::OUTPUT_TYPE>
-{
-  bool initialized_;
+		SC_HAS_PROCESS( FirFilter );
 
-  std::deque< filter::coeff_list::value_type > queue_;
-  filter::coeff_list coeff_;
-  filter::coeff_list::iterator coeff_iter_;
-  sc_int< filter::SUM_WIDTH> sum_;
+      const int MAX_OUTPUT_INDEX;
+      const int MIN_OUTPUT_INDEX;
 
-  int data_output_width_;
+		typedef sc_int< COEFF_WIDTH > CoeffType;
+		typedef std::vector<CoeffType> CoeffVector;
 
-  // default implementation
-  virtual void Compute()
-  {
+		// CTOR
+      FirFilter( const sc_module_name& nm ):
+			sdr_module::Module<INPUT_TYPE, OUTPUT_TYPE>( nm ), initialized_( false ), 
+         MAX_OUTPUT_INDEX(ACC_WIDTH-1), MIN_OUTPUT_INDEX(ACC_WIDTH - OUTPUT_TYPE().length()){ 
+         }
 
-    if( !this->reset.read() && initialized_ )
+
+		void LoadCoefficients( const CoeffVector& coeff ) { 
+			coeff_ = coeff;
+			queue_.resize( coeff_.size() );
+			coeff_iter_ = coeff_.begin();
+			initialized_ = true;
+		}
+
+
+	private:
+
+
+		std::deque< CoeffType > queue_;
+		CoeffVector coeff_;
+		typename CoeffVector::iterator coeff_iter_;
+
+		sc_int< ACC_WIDTH> sum_;
+
+		bool initialized_;
+		int data_output_width_;
+
+		// default implementation
+		virtual void Compute()
       {
+         if( !this->reset.read() && initialized_ )
+         {
 
-        sum_ = 0;
+            sum_ = 0;
 
-        // delete the oldest sample
-        queue_.pop_front();
+            // delete the oldest sample
+            queue_.pop_front();
 
-        // add the latest sample
-        queue_.push_back( this->input.read() );
+            // add the latest sample
+            queue_.push_back( this->input.read() );
 
-        // compute convolution sum
-        coeff_iter_ = coeff_.end();
+            // compute convolution sum
+            coeff_iter_ = coeff_.end();
 
-        for( int i=0; i<queue_.size(); ++i)
-          {
-             sum_ += queue_[i]* *(--coeff_iter_);
-          }
+            for( int i=0; i<queue_.size(); ++i)
+            {
+               sum_ += queue_[i]* *(--coeff_iter_);
+            }
 
-        // trim the output to match the output width
-        this->output.write( sum_.range( MAX_OUTPUT_INDEX, MIN_OUTPUT_INDEX ).to_int() );
+            // trim the output to match the output width
+            this->output.write( sum_.range( MAX_OUTPUT_INDEX, MIN_OUTPUT_INDEX ).to_int() );
+         }
+         else
+         {
+            if( !initialized_ )
+            {
+               throw std::runtime_error("No coefficients found! Did you load them?\n");
+            }
+
+            sum_ = 0;
+            this->output.write( 0 );
+         }
       }
-    else
-    {
-       if( !initialized_ )
-       {
-          throw std::runtime_error("No coefficients found! Did you load them?\n");
-       }
-
-       sum_ = 0;
-       this->output.write( 0 );
-    }
-  }
-
-
-public:
-
-  SC_HAS_PROCESS( FirFilter );
-
-  // CTOR
-  FirFilter( const sc_module_name& nm ):
-     sdr_module::Module<filter::INPUT_TYPE,filter::OUTPUT_TYPE>( nm ), 
-     initialized_( false ) { }
-
-  void LoadCoefficients( const filter::coeff_list& coeff ) { 
-      coeff_ = coeff;
-      queue_.resize( coeff_.size() );
-      coeff_iter_ = coeff_.begin();
-      initialized_ = true;
-   }
-
 };
 
 #endif

@@ -17,6 +17,8 @@
 //#include <sdr_simulator/CicIntegrator.hpp>
 #include <list>
 
+#include<yaml-cpp/yaml.h>
+
 #include<sdr_simulator/filter/fir/FirFilter.hpp>
 #include<sdr_simulator/util/FileRecorder.hpp>
 #include<sdr_simulator/util/GaussianNoiseGenerator.hpp>
@@ -26,21 +28,53 @@
 
 using namespace std;
 
-int main()
+int sc_main(int argc, char* argv[])
 {
-   // define constants
-   const double TIME_RESOLUTION = 1.0;
-   const double TOTAL_SIMULATION_TIME = 500000.0;
-   const double CLOCK_PERIOD = 2.0;
-   const unsigned int RESET_TIME = 10;
-   const string OUTPUT_FILE_NAME = "output.dat";
+   const string STIM_FILE_NAME   = "stimulus.yml";
 
-   // Create a set of filter coefficients for testing DUT
-   // NOTE: this test is far from optimal, but only used 
-   // to for initial development at this point.
-   typedef sc_int< COEFF_WIDTH > coeff_type;
-   typedef std::list< coeff_type > CoefficientList;
-   CoefficientList coeff;
+   YAML::Node stim_node   = YAML::LoadFile( STIM_FILE_NAME )["stimulus"];
+
+   // define constants
+   const double TIME_RESOLUTION       = stim_node["time_resolution"].as<double>();
+   const double TOTAL_SIMULATION_TIME = stim_node["simulation_time"].as<double>();
+   const double SAMPLE_RATE           = stim_node["sample_rate"].as<double>();
+   const double CLOCK_PERIOD          = 1.0e9 / SAMPLE_RATE;
+   const unsigned int RESET_TIME      = stim_node["reset_time"].as<unsigned int>();
+   const string OUTPUT_FILE_NAME      = stim_node["output_file"].as<string>();
+   const double MEAN                  = stim_node["mean"].as<double>();
+   const double VARIANCE              = stim_node["variance"].as<double>();
+   const double AMPLITUDE             = stim_node["amplitude"].as<double>();
+
+   // define signals
+   sc_signal<data_input_type> input_signal;
+   sc_signal<data_output_type> output_signal;
+
+   // set time parameters
+   sc_set_time_resolution( TIME_RESOLUTION , SC_NS );
+   sc_time simulation_time(TOTAL_SIMULATION_TIME,SC_NS);
+   sc_time clock_time(CLOCK_PERIOD,SC_NS);
+
+   // Create a stimulus to generate clock and reset signals
+   Stimulus<reset_type> stimulus("stimulus", clock_time, RESET_TIME );
+
+   // Create a gaussian noise generator
+   GaussianNoiseGenerator< data_input_type, reset_type>
+      noiseGenerator_( "noise_generator", MEAN, VARIANCE, AMPLITUDE );
+   noiseGenerator_.clock( stimulus.clock );
+   noiseGenerator_.reset( stimulus.reset );
+   noiseGenerator_.output( input_signal );
+
+   // record output test data to file
+   FileRecorder< data_output_type, reset_type > 
+      record( "record", OUTPUT_FILE_NAME );
+   record.input( output_signal );
+   record.clock( stimulus.clock );
+   record.reset( stimulus.reset );
+
+   // Create a FirFilter object and generate coefficients
+   typedef FirFilter< data_input_type, data_output_type, COEFF_WIDTH, ACCUMULATOR_WIDTH> FilterType;
+   FilterType filter( "fir" );
+   FilterType::CoeffVector coeff;
 
    // inefficient half-band filter implementation
    coeff.push_back(-49);
@@ -75,42 +109,15 @@ int main()
    coeff.push_back(0);
    coeff.push_back(-49);
    
-
-   // define signals
-   sc_signal< data_input_type > input_signal;
-   sc_signal< data_output_type > output_signal;
-
-   // set time parameters
-   sc_set_time_resolution( TIME_RESOLUTION , SC_NS );
-   sc_time simulation_time(TOTAL_SIMULATION_TIME,SC_NS);
-   sc_time clock_time(CLOCK_PERIOD,SC_NS);
-
-   // Create a stimulus to generate clock and reset signals
-   Stimulus<reset_type> stimulus("stimulus", clock_time, RESET_TIME );
-
-   // Create a gaussian noise generator
-   GaussianNoiseGenerator< data_input_type, reset_type>
-      noiseGenerator_( "noise_generator", MEAN, VARIANCE, AMPLITUDE );
-   noiseGenerator_.clock( stimulus.clock );
-   noiseGenerator_.reset( stimulus.reset );
-   noiseGenerator_.output( input_signal );
-
    // DUT
-   FirFilter< data_input_type, data_output_type, CoefficientList, ACCUMULATOR_WIDTH > 
-      filter( "fir" );
    filter.clock( stimulus.clock );
    filter.reset( stimulus.reset );
    filter.input( input_signal );
    filter.output( output_signal );
    filter.LoadCoefficients( coeff );
 
-   // record output test data to file
-   FileRecorder< data_output_type, reset_type > 
-      record( "record", OUTPUT_FILE_NAME );
-   record.input( output_signal );
-   record.clock( stimulus.clock );
-   record.reset( stimulus.reset );
-
    // begin simulation
    sc_start( simulation_time );
+
+   return EXIT_SUCCESS;
 }
