@@ -24,6 +24,8 @@
 #include <boost/math/constants/constants.hpp>
 #include <boost/lexical_cast.hpp>
 
+#include<yaml-cpp/yaml.h>
+
 // this file is auto-generated
 #include "test_bench.hpp"
 
@@ -34,48 +36,48 @@ using namespace accumulator;
 
 int sc_main(int argc, char* argv[]){
 
-   //TODO: Create a local xml file to read these and add 
-   // to the existing header generator code.
-   const double RESET_HOLD_TIME = 5;
-   const double SIMULATION_TIME = 5e4;
-   const string RECORDER_FILE_NAME = "accumulator_output.dat";
-   const string TRUNC_RECORDER_FILE_NAME = "accumulator_trunc_output.dat";
-   const double CLOCK_PERIOD = 15.68; //NS
+   YAML::Node stim_node = YAML::LoadFile("stimulus.yml")["stimulus"];
 
-   sc_signal< data_type > output_signal;
+   const int RESET_TIME            = stim_node["reset_time"].as<double>();
+   const double SIMULATION_TIME    = stim_node["simulation_time"].as<double>();
+   const double TIME_RESOLUTION    = stim_node["time_resolution"].as<double>();
+   const string RECORDER_FILE_NAME = stim_node["output_file_name"].as<string>();
+   const double SAMPLE_RATE        = stim_node["sample_rate"].as<double>();
+   const unsigned int STEP_SIZE    = stim_node["step_size"].as<unsigned int>();
+   const double CLOCK_PERIOD       = 1/SAMPLE_RATE*1e9;
 
-   // define system clock 
+   sc_signal< OUTPUT_TYPE > output_signal;
+
+   // set time parameters
+   sc_set_time_resolution ( TIME_RESOLUTION , SC_PS );
    sc_time time( CLOCK_PERIOD, SC_NS );
-
-   //const double STEP_SIZE = tr1::pow(2.0, BIT_WIDTH*1.0 )*TUNING_FREQUENCY/SAMPLE_RATE;
-   // determine phase step size from desired frequency
+   sc_time simulation_time ( SIMULATION_TIME,SC_NS );
 
    // display settings
    cout 
-      << "\nsample rate = " << SAMPLE_RATE 
-      << "\nfrequency   = " << TUNING_FREQUENCY 
-      << "\nbit width   = " << BIT_WIDTH 
-      << "\nstep size   = " << STEP_SIZE
+      << "\ninput width  = " << INPUT_WIDTH
+      << "\noutput width = " << OUTPUT_WIDTH
+      << "\nstep size    = " << STEP_SIZE
       << "\n\n";
 
    // define testbench stimulus
-   Stimulus< reset_type > stimulus( "stimulus", time, RESET_HOLD_TIME );
+   Stimulus< reset_type > stimulus( "stimulus", time, RESET_TIME );
 
    // DUT
-   PhaseAccumulator<data_type> accumulator("accumulator");
+   PhaseAccumulator<INPUT_TYPE,OUTPUT_TYPE> accumulator("accumulator");
    accumulator.StepSize(STEP_SIZE);
    accumulator.clock( stimulus.clock );
    accumulator.output(output_signal);
    accumulator.reset( stimulus.reset );
 
    // record output
-   FileRecorder< data_type, reset_type > record( "recorder", RECORDER_FILE_NAME );
+   FileRecorder< OUTPUT_TYPE, reset_type > record( "recorder", RECORDER_FILE_NAME );
    record.clock( stimulus.clock );
    record.reset( stimulus.reset );
    record.input( output_signal );
 
    //run simulations for 22 nsec
-   sc_start( sc_time( SIMULATION_TIME, SC_NS) );
+   sc_start ( simulation_time );
 
    return EXIT_SUCCESS;
 }

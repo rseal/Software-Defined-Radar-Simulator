@@ -48,14 +48,24 @@ int main(void)
       code_generator.OpenNamespace("accumulator");
 
       code_generator.AddConstant<int>(
-            "BIT_WIDTH",
-            acc_node->bitWidth
+            "INPUT_WIDTH",
+            acc_node->inputWidth
+            );
+
+      code_generator.AddConstant<int>(
+            "OUTPUT_WIDTH",
+            acc_node->outputWidth
             );
 
       // generate data output type
       code_generator.AddTypeDef(
-            "data_type",
-            "sc_int<BIT_WIDTH>"
+            "INPUT_TYPE",
+            "sc_uint<INPUT_WIDTH>"
+            );
+
+      code_generator.AddTypeDef(
+            "OUTPUT_TYPE",
+            "sc_uint<OUTPUT_WIDTH>"
             );
 
       code_generator.AddTypeDef(
@@ -75,7 +85,7 @@ int main(void)
 
       code_generator.AddConstant<double>(
             "STEP_SIZE",
-            rint( std::tr1::pow(2.0,acc_node->bitWidth) * cordic_node->tuningFrequency / acc_node->sampleRate )
+            rint( std::tr1::pow(2.0,acc_node->inputWidth) * cordic_node->tuningFrequency / acc_node->sampleRate )
             );
 
       code_generator.CloseNamespace("accumulator");

@@ -17,20 +17,23 @@
 #ifndef PHASE_ACC_HPP
 #define PHASE_ACC_HPP
 
+#include <exception>
 #include <sdr_simulator/SdrModule.hpp>
 
-template<typename DATA_TYPE>
-class PhaseAccumulator: public sdr_module::Module<DATA_TYPE,DATA_TYPE>{
+template<typename INPUT_TYPE, typename OUTPUT_TYPE>
+class PhaseAccumulator: public sdr_module::Module<INPUT_TYPE,OUTPUT_TYPE>{
 
-   DATA_TYPE theta;
+   INPUT_TYPE theta;
    double stepSize_;
+   const int LSB;
+   const int MSB;
 
-   sc_signal< DATA_TYPE > null_input_signal_;
+   sc_signal< INPUT_TYPE > null_input_signal_;
 
    virtual void Compute() 
    { 
       theta = this->reset.read() ? 0 : rint( theta + stepSize_ ); 
-      this->output.write( theta );
+      this->output.write(theta.range( MSB, LSB));
    }
 
    public: 
@@ -39,9 +42,15 @@ class PhaseAccumulator: public sdr_module::Module<DATA_TYPE,DATA_TYPE>{
 
    // Constructor 
    PhaseAccumulator(const sc_module_name& name): 
-      sdr_module::Module<DATA_TYPE,DATA_TYPE>(name), 
-      stepSize_(-1.0)
+      sdr_module::Module<INPUT_TYPE,OUTPUT_TYPE>(name), 
+      stepSize_(-1.0), MSB( INPUT_TYPE().length()-1), 
+      LSB(INPUT_TYPE().length() - OUTPUT_TYPE().length()) 
    {
+      if( LSB < 0)
+      {
+         throw new std::runtime_error("ERROR: PhaseAccumulator - LSB < 0");
+      }
+
       this->input( null_input_signal_ );
    }
 

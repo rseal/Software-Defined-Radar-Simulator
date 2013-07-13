@@ -13,7 +13,8 @@ namespace yaml
    {
       public:
 
-      int bitWidth;
+      int inputWidth;
+      int outputWidth;
 		double sampleRate;
 
       AccumulatorYaml(): ConfigNode("accumulator") {}

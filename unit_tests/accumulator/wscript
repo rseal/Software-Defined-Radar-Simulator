@@ -24,6 +24,9 @@ def build(bld):
       # copy over sdr configuration file
       bld.exec_command('cp sdr.yml build/sdr.yml')
 
+      # copy over sdr configuration file
+      bld.exec_command('cp stimulus.yml build/stimulus.yml')
+
       # copy over shared library
       bld(rule='cp ${SRC} ${TGT}', source='../../build/libsdr-yaml.so', target='libsdr-yaml.so'),
 
