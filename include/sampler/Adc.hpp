@@ -17,17 +17,19 @@
 #ifndef ADC_HPP
 #define ADC_HPP
 
+#include <tr1/math.h>
 #include <boost/math/constants/constants.hpp>
 #include <boost/random.hpp>
 #include <boost/random/normal_distribution.hpp>
-#include <tr1/math.h>
 #include <ctime>
+
 #include <systemc.h>
+
 #include <sdr_simulator/SdrModule.hpp>
 
 /////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////
-template< typename OUTPUT_TYPE, int BIT_WIDTH >
+template< typename OUTPUT_TYPE>
 class Adc : public sdr_module::Module< double, OUTPUT_TYPE >
 {
 
@@ -54,10 +56,19 @@ class Adc : public sdr_module::Module< double, OUTPUT_TYPE >
 		if ( !this->reset.read() )
 		{
 			// add gaussian noise based on SNR
-			double buffer = (this->input.read() + noise_*randomNumber_())/stepSize_;
+         double noise = noise_*randomNumber_();
+			double buffer = (this->input.read() + noise)/stepSize_;
 
 			// clip if above limit
-			if(buffer > vfs_) buffer=vfs_;
+			if(buffer > vfs_/stepSize_)
+         {
+            buffer=vfs_/stepSize_;
+         }
+         else if(buffer < -1.0*vfs_/stepSize_) 
+         {
+            buffer=-1.0*vfs_/stepSize_;
+         } 
+
 
 			this->output = OUTPUT_TYPE ( buffer );
 		}
@@ -68,8 +79,8 @@ class Adc : public sdr_module::Module< double, OUTPUT_TYPE >
 	void ComputeNoise()
 	{
 		double process_gain = fs_/(2.0*bw_);
-		double vfs_rms = vfs_/tr1::sqrt(2.0);
-		noise_ = vfs_rms * tr1::pow(10.0,-snr_/20.0)/process_gain;
+		//double vfs_rms = vfs_/std::tr1::sqrt(2.0);
+		noise_ = vfs_ * std::tr1::pow(10.0,-snr_/20.0)/process_gain;
 	}
 
 	public:
@@ -84,13 +95,15 @@ class Adc : public sdr_module::Module< double, OUTPUT_TYPE >
 			const double vfs, 
 			const double fs,
 			const double snr, 
-			const double bw
+			const double bw,
+         const int bit_width
 		): 
       sdr_module::Module<double, OUTPUT_TYPE>( nm ), vfs_(vfs), fs_(fs), 
 		snr_(snr), bw_(bw), rng_(std::time(0)), 
-		randomNumber_( rng_, Distribution(0.0,1.0) ),
-		stepSize_(vfs/(std::tr1::pow(2.0,1.0*BIT_WIDTH)-1.0))
+		randomNumber_( rng_, Distribution(0.0,1.0) )
 	{
+		stepSize_ = vfs/(std::tr1::pow(2.0,1.0*bit_width)-1.0);
+
 		// compute noise value based on input parameters.
 		this->ComputeNoise();
 	}

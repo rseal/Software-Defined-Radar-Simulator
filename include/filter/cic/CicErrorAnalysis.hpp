@@ -157,7 +157,6 @@ class CicErrorAnalysis
 
       std::vector<int> discard(2*numStages+1,0);
 
-      //integrator
       for( int i=0; i<2*numStages; ++i)
       {
          discard[i] = static_cast<int>(-0.5*std::tr1::log2(var[i]) + std::tr1::log2(total_std) + 

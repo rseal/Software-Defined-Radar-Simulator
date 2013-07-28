@@ -19,14 +19,25 @@
 
 #include <sdr_simulator/filter/cic/CicGenerator.hpp>
 #include <sdr_simulator/util/CodeGenerator.hpp>
+#include <sdr_simulator/yaml/CicYaml.hpp>
+#include <sdr_simulator/yaml/NodeParser.hpp>
 
 using namespace std;
 using namespace code_generator;
 using namespace boost;
+using namespace yaml;
 
 int main(int argc, char* argv[])
 {
-   const std::string CONFIGURATION_FILE_NAME = argv[1];
+   const std::string CONFIGURATION_FILE_NAME = "sdr.yml";
+   const string CIC_FILE_NAME                = "Cic.hpp";
+   const std::string CIC_MODULE              = "cic_filter";
+
+   YAML::Node config = YAML::LoadFile(CONFIGURATION_FILE_NAME);
+
+   CicYamlPtr cic_node = NodeParser::ParseNode<CicYaml>( config, CIC_MODULE);
+   code_generator::CodeGenerator code_generator;
    CicGenerator cicGenerator( CONFIGURATION_FILE_NAME );
+
    return EXIT_SUCCESS;
 }

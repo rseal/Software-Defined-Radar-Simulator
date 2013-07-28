@@ -17,10 +17,11 @@ namespace yaml
       std::string model;
       int xyWidth;
       int zWidth;
+      int numStages;
       double sampleRate;
       double tuningFrequency;
 
-      CordicYaml(): ConfigNode("down_converter") {}
+      CordicYaml(): ConfigNode("ddc") {}
 
 		YAML::Node Encode();
 		void Decode( const YAML::Node& node);

@@ -17,7 +17,7 @@
 #ifndef PULSE_GENERATOR_HPP
 #define PULSE_GENERATOR_HPP
 
-#include <sdr_simulator/util/SignalGenerator.hpp>
+#include <sdr_simulator/input/SignalGenerator.hpp>
 #include<tr1/math.h>
 #include<boost/math/constants/constants.hpp>
 #include<vector>

@@ -12,6 +12,7 @@ namespace yaml{
       node["z_width"]          = zWidth;
       node["sample_rate"]      = sampleRate;
       node["tuning_frequency"] = tuningFrequency;
+      node["num_stages"]       = numStages;
       return node;
    }
 
@@ -22,6 +23,7 @@ namespace yaml{
       zWidth          = node["z_width"].as<int>();
       sampleRate      = node["sample_rate"].as<double>();
       tuningFrequency = node["tuning_frequency"].as<double>();
+      numStages       = node["num_stages"].as<double>();
    }
 
    void CordicYaml::Print(std::ostream& os)
@@ -31,11 +33,12 @@ namespace yaml{
          << "xy_width         : " << xyWidth         << "\n"
          << "z_width          : " << zWidth          << "\n"
          << "samplerate       : " << sampleRate      << "\n"
-         << "tuning_frequency : " << tuningFrequency << "\n";
+         << "tuning_frequency : " << tuningFrequency << "\n"
+         << "num_stages       : " << numStages       << "\n";
    }
 }
 
 namespace{
    yaml::ConfigNodePtr Callback() { return yaml::ConfigNodePtr( new yaml::CordicYaml() );}
-   bool registered = yaml::NodeFactory::Instance().Register("down_converter",Callback);
+   bool registered = yaml::NodeFactory::Instance().Register("ddc",Callback);
 }

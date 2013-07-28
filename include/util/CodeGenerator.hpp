@@ -29,19 +29,18 @@ namespace code_generator{
 
    enum { SC_INT, SC_BIG_INT, INT, DOUBLE };
 
-
-   const static std::string OPEN_TEMPLATE = "<";
-   const static std::string CLOSED_TEMPLATE = ">";
-   const static std::string SPACE = " ";
-   const static std::string TYPEDEF = "typedef";
-   const static std::string NEW_LINE = "\n";
-   const static std::string CPP_DELIM = ";";
-   const static std::string CONST = "const";
-   const static std::string STATIC = "static";
-   const static std::string EQUALS = "=";
-   const static std::string PERIOD = ".";
-   const static std::string UNDER_SCORE = "_";
-   const static std::string QUOTE = "\"";
+   const std::string OPEN_TEMPLATE = "<";
+   const std::string CLOSED_TEMPLATE = ">";
+   const std::string SPACE = " ";
+   const std::string TYPEDEF = "typedef";
+   const std::string NEW_LINE = "\n";
+   const std::string CPP_DELIM = ";";
+   const std::string CONST = "const";
+   const std::string STATIC = "static";
+   const std::string EQUALS = "=";
+   const std::string PERIOD = ".";
+   const std::string UNDER_SCORE = "_";
+   const std::string QUOTE = "\"";
 
    class CodeGenerator
    {
@@ -70,7 +69,7 @@ namespace code_generator{
             const std::string data_type = iter->second;
 
             result = 
-               CONST + SPACE + STATIC + SPACE + data_type + SPACE + 
+               CONST + SPACE + SPACE + data_type + SPACE + 
                name + SPACE + EQUALS + SPACE + 
                boost::lexical_cast<std::string>( value ) + CPP_DELIM;
 
@@ -112,12 +111,9 @@ namespace code_generator{
          codeList_.push_back( result );
       }
 
-      void CloseNamespace( const std::string& name)
+      void CloseNamespace() 
       {
-         std::string result;
-         result = "}";
-
-         codeList_.push_back( result );
+         codeList_.push_back("};");
       }
 
       void AddInclude( const std::string& name, const bool systemFile=true )

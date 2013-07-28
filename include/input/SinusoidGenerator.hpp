@@ -17,7 +17,7 @@
 #ifndef SINUSOID_GENERATOR_HPP
 #define SINUSOID_GENERATOR_HPP
 
-#include<sdr_simulator/util/SignalGenerator.hpp>
+#include<sdr_simulator/input/SignalGenerator.hpp>
 #include<boost/math/constants/constants.hpp>
 #include<tr1/math.h>
 

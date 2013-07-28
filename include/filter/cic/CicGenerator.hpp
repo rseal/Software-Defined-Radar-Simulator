@@ -82,7 +82,7 @@ public:
 
        bitWidthVector_ = cicErrorAnalysis.ComputeBitWidths (
              cicNode_->numStages,
-             cicNode_->minDecimation,
+             cicNode_->maxDecimation,
              cicNode_->differentialDelay,
              cicNode_->inputWidth,
              cicNode_->outputWidth
@@ -226,7 +226,6 @@ public:
        {
           *outputStream_
              << "   void ComputeOutput(){\n"
-             << "      int user_decimation = decimation.read();\n"
              << "      int msb = " << msb << ";\n"
              << "      int lsb = " << lsb << ";\n"
              << "      sc_bv< " << cicNode_->outputWidth << " > output = sc_bv< " 

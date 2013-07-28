@@ -1,0 +1,39 @@
+---
+- module_name: receiver
+  model: usrp-v1
+  decimation: 8
+  adc_width: 12
+  sample_rate: 64e6
+  tuning_frequency: -14.2e6
+  
+- module_name: adc
+  bit_width: 12
+  model: gaussian
+  vfs: 2
+  snr: 64.1
+  bw : 9e6
+
+- module_name: accumulator
+  bit_width: 16
+  sample_rate: 64e6
+
+- module_name: down_converter
+  model: cordic
+  xy_width: 16
+  z_width: 16
+  sample_rate: 64e6
+  tuning_frequency: -14.2e6
+  
+- module_name: cic_filter
+  input_width: 16
+  output_width: 16
+  min_decimation: 4
+  max_decimation: 128
+  differential_delay: 1
+  num_stages: 5
+  use_bit_pruning: true
+
+- module_name: half_band_filter
+  model: halfband
+  input_width: 16
+  output_width: 16

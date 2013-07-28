@@ -33,178 +33,166 @@ template<
    typename INPUT_TYPE, 
    typename OUTPUT_TYPE, 
    typename PHASE_TYPE,
-   typename RESET_TYPE, 
+   typename RESET_TYPE,
    const unsigned int DATA_WIDTH, 
-   const unsigned int PHASE_WIDTH
+   const unsigned int PHASE_WIDTH,
+   const unsigned int NUM_STAGES
    >
-class Cordic: 
-   public sdr_module::ComplexModule< INPUT_TYPE, OUTPUT_TYPE>
+class Cordic: public sdr_module::ComplexModule< INPUT_TYPE, OUTPUT_TYPE>
 {
 
-public:
+   public:
 
-    //typedef sc_signal< OUTPUT_TYPE > DebugOutputSignal;
-    //typedef sc_export< DebugOutputSignal > sc_export_cordic_output;
+   //required by systemc when not using CTOR macros
+   SC_HAS_PROCESS ( Cordic );
 
-    //required by systemc when not using CTOR macros
-    SC_HAS_PROCESS ( Cordic );
+   //CTOR
+   Cordic ( sc_module_name nm ) : sdr_module::ComplexModule< INPUT_TYPE, OUTPUT_TYPE> ( nm )
+   { 
+      InitializeModules(); 
+   }
 
-    //CTOR
-    Cordic ( sc_module_name nm ) :
-        sdr_module::ComplexModule< INPUT_TYPE, OUTPUT_TYPE> ( nm ),
-        numStages_(0) {}
+   sc_in< PHASE_TYPE >  phase_input;
+   sc_out< PHASE_TYPE > phase_output;
 
-    void NumStages(const int numStages) { numStages_ = numStages;}
+   private:
 
-    void Run()
-    {
-       InitializeModules();
-       Compute();
-    }
+   typedef sc_int<DATA_WIDTH> data_type;
+   typedef sc_int<PHASE_WIDTH> z_type;
 
-    sc_in< PHASE_TYPE >  phase_input;
-    sc_out< PHASE_TYPE > phase_output;
+   typedef sc_int < DATA_WIDTH + 2 > int_data_type;
+   typedef sc_int < PHASE_WIDTH - 1 > int_z_type;
+   typedef sc_uint<PHASE_WIDTH> theta_input_type;
 
-private:
+   // data signal definitions
+   typedef sc_signal<data_type> data_signal;
+   typedef sc_signal<z_type> z_signal;
+   typedef sc_signal<int_data_type> int_data_signal;
+   typedef sc_signal<int_z_type> int_z_signal;
+   typedef sc_signal< theta_input_type > ThetaInputSignal;
 
-    typedef sc_int<DATA_WIDTH> data_type;
-    typedef sc_int<PHASE_WIDTH> z_type;
+   // define shared_ptrs to manage module and signal containers
+   typedef CordicStage< int_data_type, int_z_type, RESET_TYPE > CordicStageModule;
 
-    typedef sc_int < DATA_WIDTH + 2 > int_data_type;
-    typedef sc_int < PHASE_WIDTH - 1 > int_z_type;
-    typedef sc_uint<PHASE_WIDTH> theta_input_type;
+   typedef boost::shared_ptr< CordicStageModule > CordicStagePtr;
+   typedef boost::shared_ptr<int_data_signal> DataSignalPtr;
+   typedef boost::shared_ptr<int_z_signal> ZSignalPtr;
 
-    // data signal definitions
-    typedef sc_signal<data_type> data_signal;
-    typedef sc_signal<z_type> z_signal;
-    typedef sc_signal<int_data_type> int_data_signal;
-    typedef sc_signal<int_z_type> int_z_signal;
-    typedef sc_signal< theta_input_type > ThetaInputSignal;
+   // define internal modules
+   vector<CordicStagePtr> cordicStages_;
 
-    // define shared_ptrs to manage module and signal containers
-    typedef CordicStage< int_data_type, int_z_type, RESET_TYPE > CordicStageModule;
+   // define internal signals
+   vector<DataSignalPtr> xSignals_;
+   vector<DataSignalPtr> ySignals_;
+   vector<ZSignalPtr> zSignals_;
 
-    typedef boost::shared_ptr< CordicStageModule > CordicStagePtr;
-    typedef boost::shared_ptr<int_data_signal> DataSignalPtr;
-    typedef boost::shared_ptr<int_z_signal> ZSignalPtr;
+   typedef CordicThetaMap < DATA_WIDTH, DATA_WIDTH + 2, PHASE_WIDTH, PHASE_WIDTH - 1 > theta_map;
+   typedef boost::shared_ptr<theta_map> ThetaMapPtr;
+   ThetaMapPtr thetaMap_;
 
-    // define internal modules
-    vector<CordicStagePtr> cordicStages_;
+   ThetaInputSignal theta_input_signal;
 
-    // define internal signals
-    vector<DataSignalPtr> xSignals_;
-    vector<DataSignalPtr> ySignals_;
-    vector<ZSignalPtr> zSignals_;
+   int_data_signal x_theta;
+   int_data_signal y_theta;
+   int_z_signal z_theta;
 
-    typedef CordicThetaMap < DATA_WIDTH, DATA_WIDTH + 2, PHASE_WIDTH, PHASE_WIDTH - 1 > theta_map;
-    typedef boost::shared_ptr<theta_map> ThetaMapPtr;
-    ThetaMapPtr thetaMap_;
+   int_data_signal xout_buff;
+   int_data_signal yout_buff;
+   int_z_signal zout_buff;
 
-    ThetaInputSignal theta_input_signal;
+   // create internal shift adder modules
+   void InitializeModules() {
 
-    int_data_signal x_theta;
-    int_data_signal y_theta;
-    int_z_signal z_theta;
+      string stageNumber;
 
-    int_data_signal xout_buff;
-    int_data_signal yout_buff;
-    int_z_signal zout_buff;
+      // create N-1 stages and signals
+      for ( int i = 0; i < NUM_STAGES; ++i ) {
+         stageNumber = boost::lexical_cast<string> ( i );
 
-    int numStages_;
+         cordicStages_.push_back (
+               // add 2 bits to data width and reduce z width by 1 bit
+               CordicStagePtr ( new CordicStageModule ( stageNumber.c_str(), i ) )
+               );
+      }
 
-    // create internal shift adder modules
-    void InitializeModules() {
+      for ( int i = 0; i < NUM_STAGES; ++i ) {
+         CordicStagePtr current_stage = cordicStages_[i];
+         current_stage->reset ( this->reset );
+         current_stage->clock ( this->clock );
+      }
 
-        string stageNumber;
+      for ( int i = 0; i < NUM_STAGES - 1; ++i ) {
+         xSignals_.push_back ( DataSignalPtr ( new int_data_signal ) );
+         ySignals_.push_back ( DataSignalPtr ( new int_data_signal ) );
+         zSignals_.push_back ( ZSignalPtr ( new int_z_signal ) );
+      }
 
-        // create N-1 stages and signals
-        for ( int i = 0; i < numStages_; ++i ) {
-            stageNumber = boost::lexical_cast<string> ( i );
+      // create interconnect signals for Cordic_stages
+      for ( int i = 0; i < NUM_STAGES - 1; ++i ) {
+         CordicStagePtr output_stage = cordicStages_[i];
+         CordicStagePtr input_stage = cordicStages_[i+1];
+         DataSignalPtr x = xSignals_[i];
+         DataSignalPtr y = ySignals_[i];
+         ZSignalPtr z = zSignals_[i];
 
-            cordicStages_.push_back (
-                // add 2 bits to data width and reduce z width by 1 bit
-                CordicStagePtr ( new CordicStageModule ( stageNumber.c_str(), i ) )
+         // connect signal to outputs of stage i
+         output_stage->xout ( *x );
+         output_stage->yout ( *y );
+         output_stage->zout ( *z );
+
+         // connect signal to inputs of stage i+1
+         input_stage->xin ( *x );
+         input_stage->yin ( *y );
+         input_stage->zin ( *z );
+      }
+
+      thetaMap_ = ThetaMapPtr ( new theta_map ( "theta_map" ) );
+      thetaMap_->xin ( this->real_input );
+      thetaMap_->yin ( this->imag_input );
+      thetaMap_->zin ( theta_input_signal );
+      thetaMap_->xout ( x_theta );
+      thetaMap_->yout ( y_theta );
+      thetaMap_->zout ( z_theta );
+      thetaMap_->clock ( this->clock );
+
+      //// connect Cordic input ports to first Cordic_stage
+      CordicStagePtr first_stage = cordicStages_[0];
+      first_stage->xin ( x_theta );
+      first_stage->yin ( y_theta );
+      first_stage->zin ( z_theta );
+
+      //// connect Cordic output ports to last Cordic_stage
+      CordicStagePtr last_stage = cordicStages_[NUM_STAGES-1];
+      last_stage->xout ( xout_buff );
+      last_stage->yout ( yout_buff );
+      last_stage->zout ( zout_buff );
+
+   }
+
+   virtual void Compute() {
+
+      theta_input_signal.write ( theta_input_type ( phase_input.read() ) );
+
+      this->real_output.write ( 
+            int_data_type ( xout_buff.read() ).range ( DATA_WIDTH , 1 ) 
             );
-        }
 
-        for ( int i = 0; i < numStages_; ++i ) {
-            CordicStagePtr current_stage = cordicStages_[i];
-            current_stage->reset ( this->reset );
-            current_stage->clock ( this->clock );
-        }
+      // TODO: Debug only 
+      //real_output_debug_signal.write(
+      //int_data_type ( xout_buff.read() ).range ( DATA_WIDTH , 1 ) 
+      //);
 
-        for ( int i = 0; i < numStages_ - 1; ++i ) {
-            xSignals_.push_back ( DataSignalPtr ( new int_data_signal ) );
-            ySignals_.push_back ( DataSignalPtr ( new int_data_signal ) );
-            zSignals_.push_back ( ZSignalPtr ( new int_z_signal ) );
-        }
+      this->imag_output.write ( 
+            int_data_type ( yout_buff.read() ).range ( DATA_WIDTH , 1 ) 
+            );
 
-        // create interconnect signals for Cordic_stages
-        for ( int i = 0; i < numStages_ - 1; ++i ) {
-            CordicStagePtr output_stage = cordicStages_[i];
-            CordicStagePtr input_stage = cordicStages_[i+1];
-            DataSignalPtr x = xSignals_[i];
-            DataSignalPtr y = ySignals_[i];
-            ZSignalPtr z = zSignals_[i];
+      // TODO: Debug only 
+      //imag_output_debug_signal.write( 
+      //int_data_type ( yout_buff.read() ).range ( DATA_WIDTH , 1 ) 
+      //);
 
-            // connect signal to outputs of stage i
-            output_stage->xout ( *x );
-            output_stage->yout ( *y );
-            output_stage->zout ( *z );
-
-            // connect signal to inputs of stage i+1
-            input_stage->xin ( *x );
-            input_stage->yin ( *y );
-            input_stage->zin ( *z );
-        }
-
-        thetaMap_ = ThetaMapPtr ( new theta_map ( "theta_map" ) );
-        thetaMap_->xin ( this->real_input );
-        thetaMap_->yin ( this->imag_input );
-        thetaMap_->zin ( theta_input_signal );
-        thetaMap_->xout ( x_theta );
-        thetaMap_->yout ( y_theta );
-        thetaMap_->zout ( z_theta );
-        thetaMap_->clock ( this->clock );
-
-        //// connect Cordic input ports to first Cordic_stage
-        CordicStagePtr first_stage = cordicStages_[0];
-        first_stage->xin ( x_theta );
-        first_stage->yin ( y_theta );
-        first_stage->zin ( z_theta );
-
-        //// connect Cordic output ports to last Cordic_stage
-        CordicStagePtr last_stage = cordicStages_[numStages_-1];
-        last_stage->xout ( xout_buff );
-        last_stage->yout ( yout_buff );
-        last_stage->zout ( zout_buff );
-
-    }
-
-    virtual void Compute() {
-
-        theta_input_signal.write ( theta_input_type ( phase_input.read() ) );
-
-        this->real_output.write ( 
-              int_data_type ( xout_buff.read() ).range ( DATA_WIDTH , 1 ) 
-              );
-
-        // TODO: Debug only 
-        //real_output_debug_signal.write(
-              //int_data_type ( xout_buff.read() ).range ( DATA_WIDTH , 1 ) 
-              //);
-
-        this->imag_output.write ( 
-              int_data_type ( yout_buff.read() ).range ( DATA_WIDTH , 1 ) 
-              );
-
-        // TODO: Debug only 
-        //imag_output_debug_signal.write( 
-              //int_data_type ( yout_buff.read() ).range ( DATA_WIDTH , 1 ) 
-              //);
-
-        phase_output.write (  PHASE_TYPE ( zout_buff.read() ) );
-    }
+      phase_output.write (  PHASE_TYPE ( zout_buff.read() ) );
+   }
 
 };
 

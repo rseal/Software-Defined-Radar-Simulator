@@ -21,7 +21,7 @@
 #include<boost/random/normal_distribution.hpp>
 #include<boost/random/variate_generator.hpp>
 
-#include<sdr_simulator/util/SignalGenerator.hpp>
+#include<sdr_simulator/input/SignalGenerator.hpp>
 #include<tr1/math.h>
 #include<ctime>
 
@@ -46,10 +46,7 @@ class GaussianNoiseGenerator: public SignalGenerator< DATA_TYPE, RESET_TYPE>
    // compute a new sample on each clock cycle
    virtual void Compute()
    {
-      if ( !this->reset.read() )
-         {
-            this->output = DATA_TYPE ( randomNumber_() * SCALE * AMPLITUDE );
-         }
+      this->output = this->reset.read() ? DATA_TYPE(0) : DATA_TYPE ( AMPLITUDE * randomNumber_() * SCALE);
    }
 
 public:
@@ -59,18 +56,14 @@ public:
    // CTOR
    GaussianNoiseGenerator (
       const sc_module_name& nm,
-      const float mean = 0.0,
-      const float variance = 1.0,
-      const float amplitude = 1.0
-   ) :
-      SignalGenerator<DATA_TYPE,RESET_TYPE> ( nm , 0 ),
-      MEAN ( mean ), VARIANCE ( variance ),
-      AMPLITUDE ( amplitude ), rng(std::time(0)), 
-      randomNumber_( rng, Distribution(mean,variance) )
+      const double mean = 0.0,
+      const double variance = 1.0,
+      const double amplitude = 1.0
+   ) : SignalGenerator<DATA_TYPE,RESET_TYPE> ( nm , 0 ),
+   MEAN ( mean ), VARIANCE ( variance ), AMPLITUDE( amplitude ),
+   rng(std::time(0)), randomNumber_( rng, Distribution(mean,variance))
    { 
-      DATA_TYPE buffer;
-      SCALE = std::tr1::pow( 2.0, buffer.length()-1 ) -1;
-
+      SCALE = std::tr1::pow( 2.0, DATA_TYPE().length()-1 ) -1;
    }
 
    void Seed ( const int seed )

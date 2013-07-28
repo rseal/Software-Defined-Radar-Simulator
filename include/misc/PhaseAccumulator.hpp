@@ -20,15 +20,15 @@
 #include <exception>
 #include <sdr_simulator/SdrModule.hpp>
 
-template<typename INPUT_TYPE, typename OUTPUT_TYPE>
-class PhaseAccumulator: public sdr_module::Module<INPUT_TYPE,OUTPUT_TYPE>{
+template<typename ACC_TYPE, typename OUTPUT_TYPE>
+class PhaseAccumulator: public sdr_module::Module<ACC_TYPE,OUTPUT_TYPE>{
 
-   INPUT_TYPE theta;
+   ACC_TYPE theta;
    double stepSize_;
    const int LSB;
    const int MSB;
 
-   sc_signal< INPUT_TYPE > null_input_signal_;
+   sc_signal< ACC_TYPE > null_input_signal_;
 
    virtual void Compute() 
    { 
@@ -42,9 +42,9 @@ class PhaseAccumulator: public sdr_module::Module<INPUT_TYPE,OUTPUT_TYPE>{
 
    // Constructor 
    PhaseAccumulator(const sc_module_name& name): 
-      sdr_module::Module<INPUT_TYPE,OUTPUT_TYPE>(name), 
-      stepSize_(-1.0), MSB( INPUT_TYPE().length()-1), 
-      LSB(INPUT_TYPE().length() - OUTPUT_TYPE().length()) 
+      sdr_module::Module<ACC_TYPE,OUTPUT_TYPE>(name), 
+      stepSize_(-1.0), MSB( ACC_TYPE().length()-1), 
+      LSB(ACC_TYPE().length() - OUTPUT_TYPE().length()) 
    {
       if( LSB < 0)
       {

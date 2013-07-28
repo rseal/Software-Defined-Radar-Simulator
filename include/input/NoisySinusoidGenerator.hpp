@@ -39,14 +39,7 @@ class NoisySinusoidGenerator : public sdr_module::Module< DATA_TYPE, DATA_TYPE >
 
    virtual void Compute()
    {
-      if( !this->reset.read() )
-      {
-         this->output.write( sinusoid_signal_.read() + noise_signal_.read() );
-      }
-      else
-      {
-         this->output.write( 0 );
-      }
+      this->output.write( this->reset.read() ? 0 : sinusoid_signal_.read() + noise_signal_.read() );
    }
 
    public:
@@ -60,23 +53,27 @@ class NoisySinusoidGenerator : public sdr_module::Module< DATA_TYPE, DATA_TYPE >
          const int sampleWidth, 
          const double mean = 0.0, 
          const double variance = 1.0, 
-         const double signalAmplitude = 1.0, 
-         const double noiseAmplitude = 0.05 
+         const double amplitude= 1.0 
          ): sdr_module::Module<DATA_TYPE, DATA_TYPE>( nm )
    {
       //int sampleWidth = std::tr1::pow( 2.0, DATA_TYPE().length()-1.0);
 
       noise_ = NoiseGenerator( 
-            new GaussianNoiseGenerator< DATA_TYPE, RESET_TYPE >(
-               "noise", mean, variance, noiseAmplitude ) 
-            );
+            new GaussianNoiseGenerator< DATA_TYPE, RESET_TYPE >( 
+               "noise", 
+               mean, 
+               variance, 
+               amplitude) );
       noise_->clock( this->clock );
       noise_->reset( this->reset );
       noise_->output( noise_signal_ );
 
       sinusoid_ = SineGenerator( 
             new SinusoidGenerator< DATA_TYPE, RESET_TYPE > (
-               "sig_gen", normalizedFrequency, sampleWidth, signalAmplitude )
+               "sig_gen", 
+               normalizedFrequency, 
+               sampleWidth, 
+               amplitude )
             );
       sinusoid_->clock( this->clock );
       sinusoid_->reset( this->reset );

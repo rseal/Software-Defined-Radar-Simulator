@@ -20,7 +20,7 @@
 #include <systemc.h>
 #include <fstream>
 #include <boost/shared_ptr.hpp>
-#include <sdr_simulator/util/Recorder.hpp>
+#include <sdr_simulator/output/Recorder.hpp>
 
 template < typename DATA_TYPE, typename RESET_TYPE >
 class FileRecorder: public Recorder<DATA_TYPE, RESET_TYPE>
