@@ -1,5 +1,5 @@
 Software Defined Radar Simulator Notes
-Date:    July 28, 2012
+Date:    July 28, 2013
 Version: 0.99
 Author:  Ryan Seal
 
@@ -11,27 +11,29 @@ include:
 
 1. Phase Accumulator
 2. CORDIC down-converter
-3. CIC Filter
+3. CIC Filter (includes optional bit-pruning)
 4. FIR Filter
 5. Stimulus class to assist in test bench development
 6. Signal Generator classes to assist in testing.
 7. Recorder class to collect test output data.
 
 Dependencies:
-1. The latest version of the systemc software.
-2. Latest version of Gnu Compiler Collection (GCC) software.
+1. SystemC version 2.3 software.
+2. Latest version of GCC.
 3. Latest version of Boost libraries ( www.boost.org ).
 4. Waf build tool.
-5. Latest version of yaml-cpp library.
+5. Yaml-cpp version 0.5.1 software. 
 
 Installation Notes:
 
-At this point, the SDRS software is for development use only. Two steps are
-involved to build:
-1. As the root user, run "waf install_headers" script in the scripts folder.
-2. From the project root, run "git submodule init" to pull in the tinyxml dependency ( see deps folder ).
-2. As a standard user, run "waf config build" in subdirectories containing a wscript file.
-
-Code submission pre-commit:
-1. Run the cleanup.sh script in the script folder to perform proper clean-up.
+1. At the root folder, build the sdr library by executing : "waf configure build"
+2. Go to the <project>/receivers/usrp_v1 folder.
+   a. The CIC filter parameters can be modified in sdr.yml (see cic section).
+   b. Prepare the waf build script with "waf configure"
+   c. Generate the CIC filter with "waf build --gc".
+   d. Build the receiver with "waf build". 
+   e. Go to the build folder and execute "test_rx_channel" to run sample data through the receiver.
+   f. Output data will be captured as ASCII data in "*.dat" files. 
+   g. Runtime parameters can be edited in stimulus.yml
+   h. The input stimulus can be replaced in test_bench.cpp (see include/input/xxx for list of inputs).
 
