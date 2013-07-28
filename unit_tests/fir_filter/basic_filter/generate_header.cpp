@@ -38,7 +38,7 @@ int main(void)
    yaml::AccumulatorYamlPtr acc_node = yaml::NodeParser::ParseNode<yaml::AccumulatorYaml>(nodes,"accumulator");
    yaml::HalfBandYamlPtr hb_node = yaml::NodeParser::ParseNode<yaml::HalfBandYaml>(nodes,"half_band_filter");
 
-   const unsigned int ACCUMULATOR_WIDTH = acc_node->bitWidth;
+   const unsigned int ACCUMULATOR_WIDTH = acc_node->inputWidth;
    const unsigned int COEFF_WIDTH       = hb_node->coeffWidth;
    const unsigned int INPUT_WIDTH       = hb_node->inputWidth;
    const unsigned int OUTPUT_WIDTH      = hb_node->outputWidth;

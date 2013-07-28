@@ -7,7 +7,8 @@
   bw : 9e6
 
 - module_name: accumulator
-  bit_width: 16
+  input_width: 16
+  output_width: 16
   sample_rate: 64e6
 
 - module_name: down_converter
@@ -16,6 +17,7 @@
   z_width: 16
   sample_rate: 64e6
   tuning_frequency: -14.2e6
+  num_stages: 12
   
 - module_name: cic_filter
   input_width: 16

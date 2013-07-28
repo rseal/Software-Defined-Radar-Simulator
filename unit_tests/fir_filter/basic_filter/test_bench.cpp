@@ -20,9 +20,9 @@
 #include<yaml-cpp/yaml.h>
 
 #include<sdr_simulator/filter/fir/FirFilter.hpp>
-#include<sdr_simulator/util/FileRecorder.hpp>
-#include<sdr_simulator/util/GaussianNoiseGenerator.hpp>
-#include<sdr_simulator/util/Stimulus.hpp>
+#include<sdr_simulator/output/FileRecorder.hpp>
+#include<sdr_simulator/input/GaussianNoiseGenerator.hpp>
+#include<sdr_simulator/input/Stimulus.hpp>
 
 #include "test_bench.hpp"
 
