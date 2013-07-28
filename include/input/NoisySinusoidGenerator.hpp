@@ -20,8 +20,8 @@
 #include <tr1/math.h>
 
 #include <sdr_simulator/SdrModule.hpp>
-#include <sdr_simulator/util/SinusoidGenerator.hpp>
-#include <sdr_simulator/util/GaussianNoiseGenerator.hpp>
+#include <sdr_simulator/input/SinusoidGenerator.hpp>
+#include <sdr_simulator/input/GaussianNoiseGenerator.hpp>
 
 template<typename DATA_TYPE, typename RESET_TYPE>
 class NoisySinusoidGenerator : public sdr_module::Module< DATA_TYPE, DATA_TYPE >

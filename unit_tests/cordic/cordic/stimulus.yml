@@ -1,15 +1,15 @@
 stimulus:
    sample_rate      : 64e6
    time_resolution  : 100.0
-   simulation_time  : 5.0e3
+   simulation_time  : 10.0e5
    reset_time       : 10
    mean             : 0.0
-   variance         : 1.0
-   amplitude        : 1.0
+   variance         : 1.6754e-3
+   amplitude        : 1.98
    output_file_name : "output.dat"
    input_file_name  : "input.dat"
-   signal_frequency : 1.0e6
-   ddc_frequency    : -19.609375e6
-   adc_width        : 16
-   num_stages       : 5
+   signal_frequency : 11.0e6
+   ddc_frequency    : -10.218750e6
+   adc_width        : 12
+   num_stages       : 12
 

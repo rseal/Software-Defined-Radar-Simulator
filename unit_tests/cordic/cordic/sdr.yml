@@ -1,4 +1,7 @@
 ---
+#- module_name: system
+  #sample_rate: 64e6
+
 - module_name: adc
   bit_width: 12
   model: gaussian
@@ -7,13 +10,15 @@
   bw : 9e6
 
 - module_name: accumulator
-  bit_width: 16
+  input_width: 32
+  output_width: 16
   sample_rate: 64e6
 
-- module_name: down_converter
+- module_name: ddc
   model: cordic
   xy_width: 16
   z_width: 16
+  num_stages: 12
   sample_rate: 64e6
   tuning_frequency: -14.2e6
   

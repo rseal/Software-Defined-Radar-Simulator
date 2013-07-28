@@ -3,24 +3,26 @@ y = load( "yout.dat" );
 %x = cic(x,4,1,16,1);
 %y = cic(y,4,1,16,1);
 
+Fs = 64e6;
+N = 4*1024;
+
 offset = 20 % garbage samples from reset etc..
 
 z = x(offset:end) + j*y(offset:end);
-%z = conv(z,hamming(2*63));
-fs = 64e6;
-num_fft_points = 8*1024;
-num_ffts = floor( length(z)/num_fft_points )
 
-result = zeros(1,num_fft_points);
-data = zeros(1,num_fft_points);
+%z = conv(z,hamming(2*63));
+
+num_ffts = floor( length(z)/N )
+result = zeros(1,N);
+data = zeros(1,N);
 
 for idx=1:num_ffts
-   start_idx = (idx-1)*num_fft_points + 1;
-   end_idx = idx*num_fft_points;
+   start_idx = (idx-1)*N + 1;
+   end_idx = idx*N;
 
    data = z(start_idx : end_idx );
-   data = fft(data,num_fft_points);
-   data = (data .* conj(data))/num_fft_points;
+   data = fft(data,N);
+   data = (data .* conj(data))/N;
 
    result = result + transpose(data);
 end
@@ -35,7 +37,7 @@ result = fftshift( transpose( result ) );
 result = 10*log10(result);
 
 %create x scale
-x_scale = -fs/2:fs/num_fft_points:fs/2-1;
+x_scale = -Fs/2:Fs/N:Fs/2-1;
 
 %plot power spectrum
 plot(x_scale,result);
@@ -45,7 +47,8 @@ print -deps "results.eps";
 ylabel("Power (dB)");
 xlabel("Frequency (Hz)");
 text(-37e6,-10,"ADC Resolution: 12 bits");
-text(-37e6,-15,"Sample Rate: 64 MSPS");
-text(-37e6,-20,"DDC rate: 19.609375 MHz");
-text(-37e6,-25,"FFT size: 8192 points");
+text(-37e6,-13,"Sample Rate: 64 MSPS");
+text(-37e6,-16,"DDC rate: 6.0398 MHz");
+text(-37e6,-19,"FFT size: 8192 points");
+text(-37e6,-22,"Integration Size: ");
 %save "freq.dat" ppx;
