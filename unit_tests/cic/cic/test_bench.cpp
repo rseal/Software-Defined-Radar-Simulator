@@ -17,15 +17,15 @@
 
 #include <yaml-cpp/yaml.h>
 
-#include <sdr_simulator/util/Stimulus.hpp>
-#include <sdr_simulator/util/FileRecorder.hpp>
-#include <sdr_simulator/util/GaussianNoiseGenerator.hpp>
-#include <sdr_simulator/util/SinusoidGenerator.hpp>
-#include <sdr_simulator/util/PulseGenerator.hpp>
-#include <sdr_simulator/util/NoisySinusoidGenerator.hpp>
+#include <sdr_simulator/input/Stimulus.hpp>
+#include <sdr_simulator/output/FileRecorder.hpp>
+#include <sdr_simulator/input/GaussianNoiseGenerator.hpp>
+#include <sdr_simulator/input/SinusoidGenerator.hpp>
+#include <sdr_simulator/input/PulseGenerator.hpp>
+#include <sdr_simulator/input/NoisySinusoidGenerator.hpp>
 
 #include "Cic.hpp"
-#include "test_bench.hpp"
+#include "configuration.hpp"
 
 using namespace std;
 
@@ -41,8 +41,7 @@ int sc_main(int argc, char* argv[])
       const double CLOCK_PERIOD          = 1.0e9/SAMPLE_RATE;
       const double TOTAL_SIMULATION_TIME = root["simulation_time"].as<double>();
       const unsigned int RESET_TIME      = root["reset_time"].as<unsigned int>();
-
-      const int DECIMATION = root["decimation"].as<int>();
+      const int DECIMATION               = root["decimation"].as<int>();
 
       cout 
          << "TIME_RESOLUTION       : " << TIME_RESOLUTION << "\n"
@@ -52,12 +51,9 @@ int sc_main(int argc, char* argv[])
          << "RESET_TIME            : " << RESET_TIME << "\n"
          << endl;
 
-      const double PULSE_WIDTH = root["pulse_width"].as<double>();
-      const double IPP_WIDTH   = root["ipp_width"].as<double>();
-      const double SIGNAL_FREQ = root["signal_frequency"].as<double>();
-
-      std::cout << "here3" << endl;
-
+      const double PULSE_WIDTH      = root["pulse_width"].as<double>();
+      const double IPP_WIDTH        = root["ipp_width"].as<double>();
+      const double SIGNAL_FREQ      = root["signal_frequency"].as<double>();
       const string OUTPUT_DATA_FILE = root["output_file_name"].as<string>();
       const string INPUT_DATA_FILE  = root["input_file_name"].as<string>();
 
@@ -66,23 +62,23 @@ int sc_main(int argc, char* argv[])
       sc_signal< cic::INPUT_TYPE > decimate_signal;
 
       // assign decimation value
-      decimate_signal = DECIMATION;
+      decimate_signal = cic::INPUT_TYPE(DECIMATION);
 
       // set time parameters
       sc_set_time_resolution( TIME_RESOLUTION, SC_PS );
       sc_time simulation_time( TOTAL_SIMULATION_TIME,SC_NS );
       sc_time clock_time(CLOCK_PERIOD,SC_NS);
 
-      Stimulus< cic::RESET_TYPE > stimulus("stimulus", clock_time, RESET_TIME );
+      Stimulus< sdr::RESET_TYPE > stimulus("stimulus", clock_time, RESET_TIME );
 
       // gaussian noise source
-      //GaussianNoiseGenerator< cic::OUTPUT_TYPE, cic::RESET_TYPE > 
+      //GaussianNoiseGenerator< cic::OUTPUT_TYPE, sdr::RESET_TYPE > 
       // gaussianNoiseGen( "noise_gen", 0.0, 1.0, 0.25);
       //gaussianNoiseGen.output( dut_input_signal );
       //gaussianNoiseGen.reset( stimulus.reset );
       //gaussianNoiseGen.clock( stimulus.clock );
 
-      //NoisySinusoidGenerator< cic::OUTPUT_TYPE, cic::RESET_TYPE> 
+      //NoisySinusoidGenerator< cic::OUTPUT_TYPE, sdr::RESET_TYPE> 
       //signal_generator( "sig_gen", normalized_frequency, 12, 0.0, 1.0, 1.0, 0.0000001 );
       //signal_generator.output( dut_input_signal );
       //signal_generator.reset( stimulus.reset );
@@ -96,13 +92,13 @@ int sc_main(int argc, char* argv[])
       //const double fSignal,
       //const double voltage
       //):
-      PulseGenerator< cic::OUTPUT_TYPE, cic::RESET_TYPE> 
+      PulseGenerator< cic::OUTPUT_TYPE, sdr::RESET_TYPE> 
          signal_generator( "pulse_gen", PULSE_WIDTH, IPP_WIDTH, SAMPLE_RATE, SIGNAL_FREQ , 0.95*4095);
       signal_generator.output( dut_input_signal );
       signal_generator.reset( stimulus.reset );
       signal_generator.clock( stimulus.clock );
 
-      //SinusoidGenerator< cic::OUTPUT_TYPE, cic::RESET_TYPE> 
+      //SinusoidGenerator< cic::OUTPUT_TYPE, sdr::RESET_TYPE> 
       //signal_generator( "sig_gen", normalized_frequency , 12, 0.95);
       //signal_generator.output( dut_input_signal );
       //signal_generator.reset( stimulus.reset );
@@ -117,13 +113,13 @@ int sc_main(int argc, char* argv[])
       cic.decimation( decimate_signal );
 
       // record output to file
-      FileRecorder< cic::OUTPUT_TYPE, cic::RESET_TYPE> record( "record", OUTPUT_DATA_FILE );
+      FileRecorder< cic::OUTPUT_TYPE, sdr::RESET_TYPE> record( "record", OUTPUT_DATA_FILE );
       record.input( dut_output_signal );
       record.reset( stimulus.reset );
       record.clock( cic.div_clock);
 
       // record output to file
-      FileRecorder< cic::OUTPUT_TYPE, cic::RESET_TYPE> inputRecord( "input", INPUT_DATA_FILE);
+      FileRecorder< cic::OUTPUT_TYPE, sdr::RESET_TYPE> inputRecord( "input", INPUT_DATA_FILE);
       inputRecord.input( dut_input_signal );
       inputRecord.reset( stimulus.reset );
       inputRecord.clock( stimulus.clock );

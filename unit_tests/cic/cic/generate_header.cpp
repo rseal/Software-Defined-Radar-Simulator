@@ -30,7 +30,7 @@ using namespace yaml;
 int main(int argc, char* argv[])
 {
    const std::string CONFIGURATION_FILE_NAME = "sdr.yml";
-   const string HEADER_FILE_NAME             = "test_bench.hpp";
+   const string HEADER_FILE_NAME             = "configuration.hpp";
    const string CIC_FILE_NAME                = "Cic.hpp";
    const std::string CIC_MODULE              = "cic_filter";
 
@@ -42,7 +42,12 @@ int main(int argc, char* argv[])
    // header file. 
    code_generator::CodeGenerator code_generator;
 
+   code_generator.OpenNamespace("sdr");
+   code_generator.AddTypeDef( "RESET_TYPE", "bool");
+   code_generator.CloseNamespace();
+
    code_generator.OpenNamespace("cic");
+
    // generate data input type
    code_generator.AddTypeDef(
          "INPUT_TYPE",
@@ -55,22 +60,11 @@ int main(int argc, char* argv[])
          "sc_int<" + lexical_cast< string >( cic_node->outputWidth ) + ">"
          );
 
-   code_generator.AddTypeDef(
-         "RESET_TYPE",
-         "bool"
-         );
 
-   code_generator.AddConstant<int>(
-         "INPUT_WIDTH",
-         cic_node->inputWidth
-         );
+   code_generator.AddConstant<int>( "INPUT_WIDTH", cic_node->inputWidth);
+   code_generator.AddConstant<int>( "OUTPUT_WIDTH", cic_node->outputWidth);
 
-   code_generator.AddConstant<int>(
-         "OUTPUT_WIDTH",
-         cic_node->outputWidth
-         );
-
-   code_generator.CloseNamespace("cic");
+   code_generator.CloseNamespace();
 
    code_generator.AddInclude( "systemc", true );
 
