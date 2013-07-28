@@ -1,8 +1,8 @@
 stimulus:
    sample_rate      : 64e6
+   ddc_rate         : -14.2e6
    time_resolution  : 100.0
-   simulation_time  : 5.0e6
+   simulation_time  : 5.0e4
    reset_time       : 10
-   step_size        : 24000
    output_file_name : "output.dat"
 

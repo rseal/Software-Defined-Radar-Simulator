@@ -15,10 +15,10 @@
 // You should have received a copy of the GNU General Public License
 // along with SDRS.  If not, see <http://www.gnu.org/licenses/>.
 
-#include <tr1/math.h>
+#include <cmath>
 #include <sdr_simulator/misc/PhaseAccumulator.hpp>
-#include <sdr_simulator/util/FileRecorder.hpp>
-#include <sdr_simulator/util/Stimulus.hpp>
+#include <sdr_simulator/output/FileRecorder.hpp>
+#include <sdr_simulator/input/Stimulus.hpp>
 
 #include <iostream>
 #include <boost/math/constants/constants.hpp>
@@ -27,26 +27,28 @@
 #include<yaml-cpp/yaml.h>
 
 // this file is auto-generated
-#include "test_bench.hpp"
+#include "configuration.hpp"
 
 using namespace std;
 using namespace boost::math;
 using namespace boost;
-using namespace accumulator;
 
 int sc_main(int argc, char* argv[]){
 
    YAML::Node stim_node = YAML::LoadFile("stimulus.yml")["stimulus"];
 
+   // assign dynamic parameters
    const int RESET_TIME            = stim_node["reset_time"].as<double>();
    const double SIMULATION_TIME    = stim_node["simulation_time"].as<double>();
    const double TIME_RESOLUTION    = stim_node["time_resolution"].as<double>();
    const string RECORDER_FILE_NAME = stim_node["output_file_name"].as<string>();
    const double SAMPLE_RATE        = stim_node["sample_rate"].as<double>();
-   const unsigned int STEP_SIZE    = stim_node["step_size"].as<unsigned int>();
+   const double DDC_RATE           = stim_node["ddc_rate"].as<double>();
+   const double STEP_SIZE          = pow(2.0,accumulator::INPUT_WIDTH) * DDC_RATE/ SAMPLE_RATE;
    const double CLOCK_PERIOD       = 1/SAMPLE_RATE*1e9;
 
-   sc_signal< OUTPUT_TYPE > output_signal;
+   // generate signals
+   sc_signal< accumulator::OUTPUT_TYPE > output_signal;
 
    // set time parameters
    sc_set_time_resolution ( TIME_RESOLUTION , SC_PS );
@@ -55,23 +57,30 @@ int sc_main(int argc, char* argv[]){
 
    // display settings
    cout 
-      << "\ninput width  = " << INPUT_WIDTH
-      << "\noutput width = " << OUTPUT_WIDTH
-      << "\nstep size    = " << STEP_SIZE
+      << "\nsample rate      = " << SAMPLE_RATE
+      << "\nclock period     = " << CLOCK_PERIOD
+      << "\ninput width      = " << accumulator::INPUT_WIDTH
+      << "\noutput width     = " << accumulator::OUTPUT_WIDTH
+      << "\nreset time       = " << RESET_TIME
+      << "\nsimulation time  = " << SIMULATION_TIME
+      << "\ntime resolution  = " << TIME_RESOLUTION
+      << "\noutput file name = " << RECORDER_FILE_NAME
+      << "\nddc rate         = " << DDC_RATE
+      << "\nstep size        = " << STEP_SIZE
       << "\n\n";
 
    // define testbench stimulus
-   Stimulus< reset_type > stimulus( "stimulus", time, RESET_TIME );
+   Stimulus< sdr::reset_type > stimulus( "stimulus", time, RESET_TIME );
 
    // DUT
-   PhaseAccumulator<INPUT_TYPE,OUTPUT_TYPE> accumulator("accumulator");
+   PhaseAccumulator<accumulator::INPUT_TYPE,accumulator::OUTPUT_TYPE> accumulator("accumulator");
    accumulator.StepSize(STEP_SIZE);
    accumulator.clock( stimulus.clock );
    accumulator.output(output_signal);
    accumulator.reset( stimulus.reset );
 
    // record output
-   FileRecorder< OUTPUT_TYPE, reset_type > record( "recorder", RECORDER_FILE_NAME );
+   FileRecorder< accumulator::OUTPUT_TYPE, sdr::reset_type > record( "recorder", RECORDER_FILE_NAME );
    record.clock( stimulus.clock );
    record.reset( stimulus.reset );
    record.input( output_signal );

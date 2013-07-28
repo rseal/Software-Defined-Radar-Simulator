@@ -11,7 +11,7 @@
   output_width: 16
   sample_rate: 64e6
 
-- module_name: down_converter
+- module_name: ddc
   model: cordic
   xy_width: 16
   z_width: 16
