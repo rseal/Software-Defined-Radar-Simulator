@@ -21,7 +21,7 @@
 #include<boost/random/normal_distribution.hpp>
 #include<boost/random/variate_generator.hpp>
 
-#include<sdr_simulator/util/SignalGenerator.hpp>
+#include<sdr_simulator/input/SignalGenerator.hpp>
 #include<iostream>
 #include<tr1/math.h>
 

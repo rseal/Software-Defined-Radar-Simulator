@@ -17,8 +17,8 @@
 //#include <sdr_simulator/CicIntegrator.hpp>
 #include <boost/lexical_cast.hpp>
 #include <vector>
-#include <sdr_simulator/util/FileRecorder.hpp>
-#include <sdr_simulator/util/Stimulus.hpp>
+#include <sdr_simulator/output/FileRecorder.hpp>
+#include <sdr_simulator/input/Stimulus.hpp>
 
 #include "TestSignalGenerator.hpp"
 #include "test_bench.hpp"
