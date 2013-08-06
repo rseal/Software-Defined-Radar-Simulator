@@ -1,0 +1,10 @@
+stimulus:
+   sample_rate      : 64e6
+   time_resolution  : 10.0
+   simulation_time  : 5.0e5
+   reset_time       : 1
+   mean             : 0.0
+   variance         : 1.0
+   amplitude        : 1.0
+   decimation       : 8
+   output_base_name : "out"

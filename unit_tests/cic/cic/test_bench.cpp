@@ -84,6 +84,8 @@ int sc_main(int argc, char* argv[])
       //signal_generator.reset( stimulus.reset );
       //signal_generator.clock( stimulus.clock );
 
+      dut_input_signal.write( 16000 );
+
       //PulseGenerator( 
       //const sc_module_name& nm, 
       //const double pw, 
@@ -92,11 +94,11 @@ int sc_main(int argc, char* argv[])
       //const double fSignal,
       //const double voltage
       //):
-      PulseGenerator< cic::OUTPUT_TYPE, sdr::RESET_TYPE> 
-         signal_generator( "pulse_gen", PULSE_WIDTH, IPP_WIDTH, SAMPLE_RATE, SIGNAL_FREQ , 0.95*4095);
-      signal_generator.output( dut_input_signal );
-      signal_generator.reset( stimulus.reset );
-      signal_generator.clock( stimulus.clock );
+      //PulseGenerator< cic::OUTPUT_TYPE, sdr::RESET_TYPE> 
+         //signal_generator( "pulse_gen", PULSE_WIDTH, IPP_WIDTH, SAMPLE_RATE, SIGNAL_FREQ , 0.95*4095);
+      //signal_generator.output( dut_input_signal );
+      //signal_generator.reset( stimulus.reset );
+      //signal_generator.clock( stimulus.clock );
 
       //SinusoidGenerator< cic::OUTPUT_TYPE, sdr::RESET_TYPE> 
       //signal_generator( "sig_gen", normalized_frequency , 12, 0.95);

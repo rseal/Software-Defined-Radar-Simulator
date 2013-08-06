@@ -79,7 +79,6 @@ class Adc : public sdr_module::Module< double, OUTPUT_TYPE >
 	void ComputeNoise()
 	{
 		double process_gain = fs_/(2.0*bw_);
-		//double vfs_rms = vfs_/std::tr1::sqrt(2.0);
 		noise_ = vfs_ * std::tr1::pow(10.0,-snr_/20.0)/process_gain;
 	}
 

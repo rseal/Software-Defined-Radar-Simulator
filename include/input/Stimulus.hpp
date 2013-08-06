@@ -56,9 +56,15 @@ class Stimulus: public sc_module
       reset( reset_ );
    }
 
-   // define port IO
-   clk_out_export clock;
-   sc_out< RESET_TYPE > reset;
+	inline friend void sc_trace(sc_trace_file* tf, const Stimulus& stim, const std::string& name ) 
+	{
+		sc_trace(tf,stim.clock_, name + ".clock");
+		sc_trace(tf,stim.reset, name + ".reset");
+	}
+
+	// define port IO
+	clk_out_export clock;
+	sc_out< RESET_TYPE > reset;
 };
 
 #endif

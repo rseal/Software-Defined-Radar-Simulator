@@ -21,56 +21,39 @@
 
 #include <list>
 #include <deque>
-#include <numeric>
 #include <stdexcept>
 
-template< 
-   typename INPUT_TYPE, 
-	typename OUTPUT_TYPE, 
-	const int COEFF_WIDTH, 
-	const int ACC_WIDTH
-	>
-	class FirFilter: public sdr_module::Module< INPUT_TYPE, OUTPUT_TYPE>
+template< typename INPUT_TYPE, typename OUTPUT_TYPE >
+	class AnalogFirFilter: public sdr_module::Module< INPUT_TYPE, OUTPUT_TYPE>
 {
 	public:
 
-		SC_HAS_PROCESS( FirFilter );
+		SC_HAS_PROCESS( AnalogFirFilter);
 
-      const int MAX_OUTPUT_INDEX;
-      const int MIN_OUTPUT_INDEX;
 
-      double gain_;
-
-		typedef sc_int< COEFF_WIDTH > CoeffType;
-		typedef std::vector<CoeffType> CoeffVector;
+		typedef std::vector<double> CoeffVector;
 
 		// CTOR
-      FirFilter( const sc_module_name& nm ):
-			sdr_module::Module<INPUT_TYPE, OUTPUT_TYPE>( nm ), initialized_( false ), 
-         MAX_OUTPUT_INDEX(ACC_WIDTH-1), MIN_OUTPUT_INDEX(ACC_WIDTH - OUTPUT_TYPE().length()){ 
-         }
+      AnalogFirFilter( const sc_module_name& nm ):
+			sdr_module::Module<INPUT_TYPE, OUTPUT_TYPE>( nm ), initialized_( false ) { }
 
 
 		void LoadCoefficients( const CoeffVector& coeff ) { 
 			coeff_ = coeff;
 			queue_.resize( coeff_.size() );
 			coeff_iter_ = coeff_.begin();
-         gain_ = std::accumulate(coeff_.begin(), coeff_.end(), 0);
 			initialized_ = true;
 		}
 
 
 	private:
 
-
-		std::deque< CoeffType > queue_;
+		std::deque< double > queue_;
 		CoeffVector coeff_;
 		typename CoeffVector::iterator coeff_iter_;
 
-		sc_int< ACC_WIDTH> sum_;
-
+		double sum_;
 		bool initialized_;
-		int data_output_width_;
 
 		// default implementation
 		virtual void Compute()
@@ -91,13 +74,11 @@ template<
 
             for( int i=0; i<queue_.size(); ++i)
             {
-               sum_ += queue_[i]* *(--coeff_iter_)/gain_;
+               sum_ += queue_[i]* *(--coeff_iter_);
             }
 
-            std::cout << sum_ <<  " , " << gain_ << std::endl;
-
             // trim the output to match the output width
-            this->output.write( sum_.to_int() );
+            this->output.write( OUTPUT_TYPE(sum_) );
          }
          else
          {

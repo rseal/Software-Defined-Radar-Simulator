@@ -24,34 +24,21 @@
 template < int INPUT_SIZE, int OUTPUT_SIZE > 
 class CicIntegrator : public sdr_module::Module< sc_int<INPUT_SIZE>, sc_int<OUTPUT_SIZE> >
 {
-   //input size is used here since bit pruning can reduce 
-   //the output width.
-   sc_int<INPUT_SIZE> memory_;
-   sc_int<OUTPUT_SIZE> output_;
    const int SHIFT;
+	sc_int<INPUT_SIZE> memory_;
 
    virtual void Compute(){
 
       if( !this->reset.read() )
       {
-         // The output is stored in a register. Using the signal's input width
-         // since it's the output width can be trimmed.
-         memory_ = sc_int<INPUT_SIZE>( this->input.read() + memory_ );
+         // untrimmed output y[n] = x[n] + y[n-1]
+         sc_int<INPUT_SIZE> out = this->input.read() + memory_;
 
-         // Use a conversion to double in case output width is > a 32-bit integer.
-         output_ = sc_int<OUTPUT_SIZE>( memory_.range(INPUT_SIZE-1 , SHIFT ).to_double() );
+         // write trimmed output y[n]
+         this->output.write( out.range(INPUT_SIZE-1, SHIFT).to_double() );
 
-         // Write to the output signal.
-         this->output.write( output_ );
-         
-         //std::cout << "\ninput width = " << buffer.length() << std::endl;
-         //std::cout << "output width  = " << output.length() << std::endl;
-         //std::cout << "msb           = " << buffer.length()-1 << std::endl;
-         //std::cout << "lsb           = " << SHIFT << std::endl << std::endl;
-         //std::cout << "shift         = " << SHIFT << std::endl;
-         //std::cout << "memory        = " << memory_ << std::endl;
-         //std::cout << "buffer        = " << buffer << std::endl;
-         //std::cout << "output        = " << output_ << " at " << sc_time_stamp() << endl;
+			// store y[n]
+			memory_ = out;
       }
       else
       {

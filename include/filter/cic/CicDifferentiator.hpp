@@ -22,45 +22,44 @@
 #include <sdr_simulator/SdrModule.hpp>
 #include <systemc.h>
 
-template< int INPUT_SIZE, int OUTPUT_SIZE > 
-class CicDifferentiator: 
-   public sdr_module::Module< sc_int<INPUT_SIZE>, sc_int<OUTPUT_SIZE> > 
+template< int INPUT_SIZE, int OUTPUT_SIZE > class CicDifferentiator: 
+	public sdr_module::Module< sc_int<INPUT_SIZE>, sc_int<OUTPUT_SIZE> > 
 {
-   const int SHIFT;
-   sc_int<INPUT_SIZE> memory_;
+	const int SHIFT;
+	sc_int<INPUT_SIZE> memory_;
 
-   virtual void Compute()
-   {
-      if( !this->reset.read() )
-      {
-         // Read the input signal.
-         sc_int<INPUT_SIZE> buffer = this->input.read();
+	virtual void Compute()
+	{
+		if( !this->reset.read() )
+		{
+			// Read the input signal.
+			sc_int<INPUT_SIZE> buffer = this->input.read();
 
-         // Subtract the memory register from the buffer.
-         sc_int<INPUT_SIZE> out = sc_int<OUTPUT_SIZE>( buffer - memory_ );
+			// Subtract the memory register from the buffer.
+			sc_int<INPUT_SIZE> out = sc_int<INPUT_SIZE>( buffer - memory_ );
 
-         // Update the memory register with the input signal.
-         memory_ = buffer;
+			// Update the memory register with the input signal.
+			memory_ = buffer;
 
-         // Write to the output signal. Convert to double to avoid bit-width issues.
-         this->output.write( out.range(INPUT_SIZE-1,SHIFT).to_double() );
-      }
-      else
-      {
-         this->output.write( 0 );
-         memory_ = 0;
-      }
-   }
+			// Write to the output signal. Convert to double to avoid bit-width issues.
+			this->output.write( out.range(INPUT_SIZE-1,SHIFT).to_double() );
+		}
+		else
+		{
+			this->output = 0;
+			memory_ = 0;
+		}
+	}
 
-   public:
+	public:
 
-   SC_HAS_PROCESS( CicDifferentiator );
+	SC_HAS_PROCESS( CicDifferentiator );
 
-   CicDifferentiator( const sc_module_name& nm ): 
-      sdr_module::Module< sc_int<INPUT_SIZE>, sc_int<OUTPUT_SIZE> > ( nm ),
-      SHIFT( INPUT_SIZE - OUTPUT_SIZE ), memory_(0) 
-   {
-   }
+	CicDifferentiator( const sc_module_name& nm ): 
+		sdr_module::Module< sc_int<INPUT_SIZE>, sc_int<OUTPUT_SIZE> > ( nm ),
+		SHIFT( INPUT_SIZE - OUTPUT_SIZE ), memory_(0) 
+	{
+	}
 };
 
 #endif

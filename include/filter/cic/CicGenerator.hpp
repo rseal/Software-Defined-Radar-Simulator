@@ -182,7 +182,7 @@ public:
              << "   virtual void Compute(){\n"
              << "      const double r = " << Rmax << "/decimation.read();\n"
              << "      const int bit_gain = std::tr1::ceil(" << cicNode_->numStages << "*std::tr1::log2(r));\n"
-             << "      sc_int< " << bitWidthVector_[0] << "> buffer = this->input.read() << bit_gain;\n"
+             << "      sc_int< " << bitWidthVector_[0] << "> buffer = this->input.read() << bit_gain-1;\n"
              << "      sig_0_.write( buffer );\n"
              << "}\n\n";
        }

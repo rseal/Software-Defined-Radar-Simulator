@@ -14,40 +14,33 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with SDRS.  If not, see <http://www.gnu.org/licenses/>.
-#ifndef STIMULUS_XML_PARSER_HPP
-#define STIMULUS_XML_PARSER_HPP
+#ifndef IMPULSE_GENERATOR_HPP
+#define IMPULSE_GENERATOR_HPP
 
-#include <sdr_simulator/xml/IXmlParser.hpp>
+#include<sdr_simulator/input/SignalGenerator.hpp>
+#include<boost/math/constants/constants.hpp>
+#include<tr1/math.h>
 
-class StimulusXmlParser : public xml::IXmlParser
+// Gaussian noise generator with adjustable mean, variance, and amplitude
+template<typename DATA_TYPE, typename RESET_TYPE>
+class ImpulseGenerator: public SignalGenerator<DATA_TYPE,RESET_TYPE>
 {
-   std::string name_;
-   xml::NodeMap map_;
+   // define constants
+   const double AMPLITUDE;
 
-   void Insert( ticpp::Node* node, const std::string& value )
-   {
-      map_.insert
-         ( 
-          std::pair< std::string, std::string >( 
-             value,
-             node->FirstChildElement( value )->GetText() 
-             )
-         );
-   }
-
+	virtual void GenerateSamples()
+	{
+		this->samples_[0] = AMPLITUDE;
+	}
+	
    public:
 
-   StimulusXmlParser(): name_("stimulus") {}
+   SC_HAS_PROCESS( ImpulseGenerator );
 
-   const xml::NodeMap Parse( ticpp::Node* node )
-   {
-      Insert( node, "input_width" );
-      Insert( node, "output_width" );
-
-      return map_;
-   }
-
-   const std::string& Name() { return name_; }
+   // CTOR
+   ImpulseGenerator( const sc_module_name& nm, const int numSamples, const double amplitude = 1.0):
+      SignalGenerator< DATA_TYPE,RESET_TYPE>( nm , numSamples), AMPLITUDE( amplitude ) { this->Init(); }
 };
+
 
 #endif

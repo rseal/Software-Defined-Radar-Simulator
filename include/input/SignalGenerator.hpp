@@ -31,8 +31,17 @@ class SignalGenerator : public sdr_module::Module< DATA_TYPE, DATA_TYPE >
    // by implementing GenerateSamples.
    virtual void Compute()
    {
-     if( index_ == SAMPLE_SIZE || this->reset.read() ) index_ = 0;
-     this->output = DATA_TYPE( ++index_ );
+		if( this->reset.read() || index_ == SAMPLE_SIZE )
+		{
+			index_=0;
+			this->output = 0;
+		}
+		else
+		{
+			this->output = samples_[index_];
+			++index_;
+		}
+		std::cout << this->output;
    }
 
    // Optional method for providing a fixed number of random samples
@@ -51,7 +60,7 @@ class SignalGenerator : public sdr_module::Module< DATA_TYPE, DATA_TYPE >
    // CTOR: Set sampleSize to zero if overriding the Compute method.
    SignalGenerator( const sc_module_name& nm, const int sampleSize):
       sdr_module::Module<DATA_TYPE, DATA_TYPE>( nm ), 
-      SAMPLE_SIZE( sampleSize ), samples_(sampleSize), index_(0)
+      SAMPLE_SIZE( sampleSize ), samples_(sampleSize, DATA_TYPE()), index_(0)
    {
       this->input( null_input_signal_ );
    }

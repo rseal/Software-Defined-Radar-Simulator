@@ -30,10 +30,8 @@ template< typename DATA_TYPE, typename RESET_TYPE >
 class GaussianNoiseGenerator: public SignalGenerator< DATA_TYPE, RESET_TYPE>
 {
    // define constants
-   int SCALE;
    const float MEAN;
    const float VARIANCE;
-   const float AMPLITUDE;
 
    typedef boost::mt19937 Engine;
    typedef boost::normal_distribution<> Distribution;
@@ -46,7 +44,7 @@ class GaussianNoiseGenerator: public SignalGenerator< DATA_TYPE, RESET_TYPE>
    // compute a new sample on each clock cycle
    virtual void Compute()
    {
-      this->output = this->reset.read() ? DATA_TYPE(0) : DATA_TYPE ( AMPLITUDE * randomNumber_() * SCALE);
+      this->output = this->reset.read() ? DATA_TYPE(0) : DATA_TYPE ( randomNumber_());
    }
 
 public:
@@ -60,11 +58,9 @@ public:
       const double variance = 1.0,
       const double amplitude = 1.0
    ) : SignalGenerator<DATA_TYPE,RESET_TYPE> ( nm , 0 ),
-   MEAN ( mean ), VARIANCE ( variance ), AMPLITUDE( amplitude ),
-   rng(std::time(0)), randomNumber_( rng, Distribution(mean,variance))
-   { 
-      SCALE = std::tr1::pow( 2.0, DATA_TYPE().length()-1 ) -1;
-   }
+   MEAN ( mean ), VARIANCE ( variance ), rng(std::time(0)), 
+	randomNumber_( rng, Distribution(mean,variance))
+   { }
 
    void Seed ( const int seed )
    {

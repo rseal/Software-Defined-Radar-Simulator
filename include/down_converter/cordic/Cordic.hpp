@@ -40,7 +40,6 @@ template<
    >
 class Cordic: public sdr_module::ComplexModule< INPUT_TYPE, OUTPUT_TYPE>
 {
-
    public:
 
    //required by systemc when not using CTOR macros
@@ -56,6 +55,7 @@ class Cordic: public sdr_module::ComplexModule< INPUT_TYPE, OUTPUT_TYPE>
    sc_out< PHASE_TYPE > phase_output;
 
    private:
+
 
    typedef sc_int<DATA_WIDTH> data_type;
    typedef sc_int<PHASE_WIDTH> z_type;
@@ -177,19 +177,9 @@ class Cordic: public sdr_module::ComplexModule< INPUT_TYPE, OUTPUT_TYPE>
             int_data_type ( xout_buff.read() ).range ( DATA_WIDTH , 1 ) 
             );
 
-      // TODO: Debug only 
-      //real_output_debug_signal.write(
-      //int_data_type ( xout_buff.read() ).range ( DATA_WIDTH , 1 ) 
-      //);
-
       this->imag_output.write ( 
             int_data_type ( yout_buff.read() ).range ( DATA_WIDTH , 1 ) 
             );
-
-      // TODO: Debug only 
-      //imag_output_debug_signal.write( 
-      //int_data_type ( yout_buff.read() ).range ( DATA_WIDTH , 1 ) 
-      //);
 
       phase_output.write (  PHASE_TYPE ( zout_buff.read() ) );
    }
