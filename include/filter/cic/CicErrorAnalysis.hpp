@@ -120,33 +120,42 @@ class CicErrorAnalysis
 	{
 
 		// Bit growth.
-		double max_gain = numStages * std::tr1::log2( maxDecimation*diffDelay );
-		double min_gain = numStages * std::tr1::log2( minDecimation*diffDelay );
+		double max_gain = std::tr1::ceil(numStages * std::tr1::log2( maxDecimation*diffDelay ));
+		double min_gain = std::tr1::ceil(numStages * std::tr1::log2( minDecimation*diffDelay ));
 
 		// MSB of maximum register width size.
-		long bit_max = std::tr1::ceil( numInputBits + max_gain - 1 );
-		long bit_min = std::tr1::ceil( numInputBits + min_gain - 1 );
-		long bit_rem = bit_max - bit_min;
+		long bit_max = numInputBits + max_gain - 1;
+		long bit_min = numOutputBits + max_gain - min_gain - 1;
+
+		// check for variable decimation 
+		const bool var_dec = maxDecimation != minDecimation;
+
+		// number of bits to prune. If decimation is variable, we 
+		// have to keep enough bits at the output stage to compensate
+		// gain
+		const long bit_trim = var_dec ? bit_max-bit_min: max_gain;
 
 		// calculate total noise from bit removal 
-		double total_std = std::tr1::pow(2.0,bit_rem)/std::tr1::sqrt(12.0);
+		double total_std = std::tr1::pow(2.0,bit_trim)/std::tr1::sqrt(12.0);
 
 		std::cout 
-			<< "bit max     = " << bit_max  << "\n"
-			<< "bit gain    = " << max_gain << "\n"
-			<< "bit discard = " << bit_rem  << "\n"
+			<< "bit max  = " << bit_max  << "\n"
+			<< "bit min  = " << bit_min  << "\n"
+			<< "bit gain = " << max_gain << "\n"
+			<< "bit trim = " << bit_trim << "\n"
+         << "var dec  = " << var_dec  
 			<< std::endl;
 
 		const std::vector<double> mu = GetError( 
 				numStages, 
-				minDecimation, 
+				minDecimation,
 				diffDelay,
 				MEAN
 				);
 
 		const std::vector<double> var = GetError( 
 				numStages, 
-				minDecimation, 
+				minDecimation,
 				diffDelay,
 				VAR
 				);
@@ -157,14 +166,9 @@ class CicErrorAnalysis
 		{
 			discard[i] = static_cast<int>(-0.5*std::tr1::log2(var[i]) + std::tr1::log2(total_std) + 
 					std::tr1::log2(6.0/numStages)/2.0);
-			std::cout 
-				 << "discard[" << i << "] = " << discard[i] << "\n"
-				 << "var["     << i << "] = " << var[i]     << "\n"
-				 << "tstd["    << i << "] = " << total_std
-				<< std::endl;
 		}
 
-		discard[2*numStages] = bit_max - bit_min;
+		discard[2*numStages] = bit_trim;
 
 		for( int i=0; i<discard.size(); ++i)
 		{

@@ -30,7 +30,7 @@ def build(bld):
       # copy over shared library
       bld(rule='cp ${SRC} ${TGT}', source='../../../build/libsdr-yaml.so', target='libsdr-yaml.so'),
 
-      ## build code generator
+      # build code generator
       bld.add_group(
          bld(
             name     = 'code_generator',

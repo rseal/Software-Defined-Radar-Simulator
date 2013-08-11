@@ -39,6 +39,7 @@ class CicGenerator
     FileOutputStream outputStream_;
     BitWidthVector bitWidthVector_;
     yaml::CicYamlPtr cicNode_;
+    bool useVariableDecimation_;
 
 public:
 
@@ -57,14 +58,6 @@ public:
        {
           std::cout << e.what();
        }
-
-
-       //inputWidth_        = boost::lexical_cast<int>( config_map["input_width"] );
-       //outputWidth_       = boost::lexical_cast<int>( config_map["output_width"] );
-       //maxDecimation_     = boost::lexical_cast<int>( config_map["max_decimation"] );
-       //cicNode_->numStages         = boost::lexical_cast<int>( config_map["num_stages"] );
-       //differentialDelay_ = boost::lexical_cast<int>( config_map["differential_delay"] );
-       //useBitPruning_     = config_map["bit_pruning"] == "false" ? false : true;
 
        std::cout
             << "input width    = " << cicNode_->inputWidth    << "\n"
@@ -88,6 +81,8 @@ public:
              cicNode_->inputWidth,
              cicNode_->outputWidth
              );
+
+        useVariableDecimation_ = cicNode_->minDecimation != cicNode_->maxDecimation;
 
        int size = bitWidthVector_.size();
 
@@ -175,26 +170,10 @@ public:
     }
 
     void writeComputeInput() {
-       if(cicNode_->useBitPruning)
-       {
-          const int b = bitWidthVector_[0]-cicNode_->inputWidth+1;
-          const double Rmax = std::tr1::pow(2.0,1.0*b/cicNode_->numStages)/cicNode_->differentialDelay;
-          *outputStream_
-             << "   virtual void Compute(){\n"
-             << "      const double r = " << Rmax << "/decimation.read();\n"
-             << "      const int bit_gain = std::tr1::ceil(" << cicNode_->numStages << "*std::tr1::log2(r));\n"
-             << "      sc_int< " << bitWidthVector_[0] << "> buffer = this->input.read() << bit_gain-1;\n"
-             << "      sig_0_.write( buffer );\n"
-             << "}\n\n";
-       }
-       else
-       {
-          *outputStream_
-             << "   virtual void Compute(){\n"
-             << "      sc_int< " << bitWidthVector_[0] << "> buffer = this->input.read();\n"
-             << "      sig_0_.write( buffer );\n"
-             << "}\n\n";
-       }
+       *outputStream_
+          << "   virtual void Compute(){\n"
+          << "      sig_0_.write( this->input.read() );\n"
+          << "}\n\n";
     }
 
     void writeComputeOutput() {
@@ -207,32 +186,30 @@ public:
        int msb = LAST_STAGE_MSB;
        int lsb = msb - cicNode_->outputWidth + 1;
 
-       if( !cicNode_->useBitPruning )
+       if( !cicNode_->useBitPruning || !useVariableDecimation_)
        {
           *outputStream_
              << " void ComputeOutput(){\n"
-             << " int user_decimation = decimation.read();\n"
-             << " int bit_gain = std::tr1::ceil( "
-             << cicNode_->numStages
-             << "*std::tr1::log2( user_decimation ));\n"
-             << " int msb = " << cicNode_->outputWidth << " + bit_gain -1;\n"
-             << " int lsb = msb - " << cicNode_->outputWidth<< ";\n"
-             << " sc_bv< " << cicNode_->outputWidth << " > output = sc_bv< "
-             << cicNode_->outputWidth << ">( sig_" << LAST_STAGE_NUMBER
-             << "_.read().range( msb , lsb ));\n"
-             << " this->output = output.to_int();\n"
+             << "    int msb = " << LAST_STAGE_MSB << ";\n"
+             << "    int lsb = msb - " << cicNode_->outputWidth << ";\n"
+             << "    this->output = sig_" << LAST_STAGE_NUMBER 
+             << "_.read().range(msb,lsb);\n"
              << "}\n\n";
        }
        else
        {
           *outputStream_
-             << "   void ComputeOutput(){\n"
-             << "      int msb = " << msb << ";\n"
-             << "      int lsb = " << lsb << ";\n"
-             << "      sc_bv< " << cicNode_->outputWidth << " > output = sc_bv< " 
-             << cicNode_->outputWidth << ">( sig_" << LAST_STAGE_NUMBER 
-             << "_.read().range( msb , lsb ));\n"
-             << "      this->output = output.to_int();\n"
+             << " void ComputeOutput(){\n"
+             << " int bit_gain = " 
+             << std::tr1::ceil(cicNode_->numStages*std::tr1::log2(cicNode_->maxDecimation))
+             << ";\n"
+             << " int bit_trim = "
+             << "std::tr1::ceil(" << cicNode_->numStages 
+             << "*std::tr1::log2(1.0*decimation.read()));\n"
+             << " int msb = " << LAST_STAGE_MSB+1 << " - (bit_gain-bit_trim)-1;\n"
+             << " int lsb = msb - " << cicNode_->outputWidth-1<< ";\n"
+             << " this->output = sig_" << LAST_STAGE_NUMBER 
+             << "_.read().range( msb , lsb );\n"
              << "}\n\n";
        }
     }
