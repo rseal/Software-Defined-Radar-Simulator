@@ -27,10 +27,11 @@ class ImpulseGenerator: public SignalGenerator<DATA_TYPE,RESET_TYPE>
 {
    // define constants
    const double AMPLITUDE;
+   const int START_IDX;
 
 	virtual void GenerateSamples()
 	{
-		this->samples_[0] = AMPLITUDE;
+		this->samples_[START_IDX] = AMPLITUDE;
 	}
 	
    public:
@@ -38,8 +39,10 @@ class ImpulseGenerator: public SignalGenerator<DATA_TYPE,RESET_TYPE>
    SC_HAS_PROCESS( ImpulseGenerator );
 
    // CTOR
-   ImpulseGenerator( const sc_module_name& nm, const int numSamples, const double amplitude = 1.0):
-      SignalGenerator< DATA_TYPE,RESET_TYPE>( nm , numSamples), AMPLITUDE( amplitude ) { this->Init(); }
+   ImpulseGenerator( const sc_module_name& nm, const int numSamples, 
+         const int startIdx, const double amplitude = 1.0):
+      SignalGenerator< DATA_TYPE,RESET_TYPE>( nm , numSamples), 
+      START_IDX(startIdx), AMPLITUDE( amplitude ) { this->Init(); }
 };
 
 

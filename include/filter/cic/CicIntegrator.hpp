@@ -32,13 +32,17 @@ class CicIntegrator : public sdr_module::Module< sc_int<INPUT_SIZE>, sc_int<OUTP
       if( !this->reset.read() )
       {
          // untrimmed output y[n] = x[n] + y[n-1]
-         sc_int<INPUT_SIZE> out = this->input.read() + memory_;
+         sc_int<INPUT_SIZE> buffer = this->input.read() + memory_;
 
-         // write trimmed output y[n]
-         this->output.write( out.range(INPUT_SIZE-1, SHIFT).to_double() );
+
+         // trim LSB bits from input side and assign to output
+         sc_int<OUTPUT_SIZE> out = buffer.range(INPUT_SIZE-1,SHIFT);
+
+         // write output y[n]
+         this->output.write( out );
 
 			// store y[n]
-			memory_ = out;
+			memory_ = buffer;
       }
       else
       {

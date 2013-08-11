@@ -27,7 +27,7 @@
 - module_name: cic_filter
   input_width: 16
   output_width: 16
-  min_decimation: 4
+  min_decimation: 8
   max_decimation: 128
   differential_delay: 1
   num_stages: 5

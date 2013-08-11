@@ -86,6 +86,8 @@ namespace usrp_v1
          cordic_->imag_output  ( imag_cordic_output_signal  ) ;
          cordic_->phase_output ( phase_cordic_output_signal ) ;
 
+         cordic_i_out( real_cordic_output_signal );
+         cordic_q_out( imag_cordic_output_signal );
       }
 
       // setup phase accumulator
@@ -137,6 +139,8 @@ namespace usrp_v1
 
       sc_in < filter::DECIMATION_TYPE> decimation;
       sc_export_clk output_clock;
+      sc_export<sc_signal<down_converter::OUTPUT_TYPE> > cordic_i_out;
+      sc_export<sc_signal<down_converter::OUTPUT_TYPE> > cordic_q_out;
       //sc_export_clk cic_output_clock;
 
    };

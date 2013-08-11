@@ -66,16 +66,20 @@ def build(bld):
       )
 
 
+   cic_node = bld.bldnode.find_node('Cic.hpp')
+
    ## build primary program
    bld.add_group(
       bld(
          name     = 'test_bench',
          features = 'cxx cxxprogram',
          cxxflags = ['-std=gnu++0x', '-Wall', '-W'],
-         includes = ['.'],
-         source   = 'test_bench.cpp',
+         includes = [cic_node,'.'],
+         source   = ['test_bench.cpp'],
          target   = 'test_rx_channel',
          lib      = ['yaml-cpp','systemc'],
          )
       )
+
+
 

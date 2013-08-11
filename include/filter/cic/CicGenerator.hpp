@@ -82,6 +82,7 @@ public:
 
        bitWidthVector_ = cicErrorAnalysis.ComputeBitWidths (
              cicNode_->numStages,
+             cicNode_->minDecimation,
              cicNode_->maxDecimation,
              cicNode_->differentialDelay,
              cicNode_->inputWidth,

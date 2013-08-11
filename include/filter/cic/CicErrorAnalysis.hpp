@@ -34,7 +34,6 @@ class CicErrorAnalysis
          const unsigned int numStages, 
          const unsigned int maxDecimation, 
          const unsigned int diffDelay, 
-         const unsigned int numOutputBits, 
          const unsigned int type
          ) 
    {
@@ -112,64 +111,66 @@ class CicErrorAnalysis
 
    const std::vector<int> ComputeBitWidths( 
          const unsigned int numStages,
+			const unsigned int minDecimation,
          const unsigned int maxDecimation, 
          const unsigned int diffDelay, 
          const unsigned int numInputBits,
          const unsigned int numOutputBits 
          ) 
-   {
+	{
 
-      // Maximum gain of the CIC filter
-      double gainMax = std::tr1::pow( maxDecimation*diffDelay, numStages);
+		// Bit growth.
+		double max_gain = numStages * std::tr1::log2( maxDecimation*diffDelay );
+		double min_gain = numStages * std::tr1::log2( minDecimation*diffDelay );
 
-      // Bit growth.
-      long bitGain = std::tr1::ceil( std::tr1::log2( gainMax ) );
+		// MSB of maximum register width size.
+		long bit_max = std::tr1::ceil( numInputBits + max_gain - 1 );
+		long bit_min = std::tr1::ceil( numInputBits + min_gain - 1 );
+		long bit_rem = bit_max - bit_min;
 
-      // MSB of maximum register width size.
-      long bitMax = numInputBits + bitGain - 1;
+		// calculate total noise from bit removal 
+		double total_std = std::tr1::pow(2.0,bit_rem)/std::tr1::sqrt(12.0);
 
-      // Number of bits to discard 
-      long bitDiscard = bitMax - numOutputBits + 1;
+		std::cout 
+			<< "bit max     = " << bit_max  << "\n"
+			<< "bit gain    = " << max_gain << "\n"
+			<< "bit discard = " << bit_rem  << "\n"
+			<< std::endl;
 
-      double total_std = std::tr1::pow(2.0,bitDiscard)/std::tr1::sqrt(12.0);
+		const std::vector<double> mu = GetError( 
+				numStages, 
+				minDecimation, 
+				diffDelay,
+				MEAN
+				);
 
-      std::cout << "gain max    = " << gainMax << std::endl;
-      std::cout << "bit max     = " << bitMax << std::endl;
-      std::cout << "bit gain    = " << bitGain << std::endl;
-      std::cout << "bit discard = " << bitDiscard << std::endl;
-      std::cout << std::endl;
+		const std::vector<double> var = GetError( 
+				numStages, 
+				minDecimation, 
+				diffDelay,
+				VAR
+				);
 
-      const std::vector<double> mu = GetError( 
-            numStages, 
-            maxDecimation, 
-            diffDelay,
-            numOutputBits, 
-            MEAN
-            );
+		std::vector<int> discard(2*numStages+1,0);
 
-      const std::vector<double> var = GetError( 
-            numStages, 
-            maxDecimation, 
-            diffDelay,
-            numOutputBits, 
-            VAR
-            );
+		for( int i=0; i<2*numStages; ++i)
+		{
+			discard[i] = static_cast<int>(-0.5*std::tr1::log2(var[i]) + std::tr1::log2(total_std) + 
+					std::tr1::log2(6.0/numStages)/2.0);
+			std::cout 
+				 << "discard[" << i << "] = " << discard[i] << "\n"
+				 << "var["     << i << "] = " << var[i]     << "\n"
+				 << "tstd["    << i << "] = " << total_std
+				<< std::endl;
+		}
 
-      std::vector<int> discard(2*numStages+1,0);
+		discard[2*numStages] = bit_max - bit_min;
 
-      for( int i=0; i<2*numStages; ++i)
-      {
-         discard[i] = static_cast<int>(-0.5*std::tr1::log2(var[i]) + std::tr1::log2(total_std) + 
-            std::tr1::log2(6.0/numStages)/2.0);
-      }
+		for( int i=0; i<discard.size(); ++i)
+		{
+			discard[i] = bit_max - discard[i] + 1;
+		}
 
-      discard[2*numStages] = bitMax - numOutputBits;
-
-      for( int i=0; i<discard.size(); ++i)
-      {
-         discard[i] = bitMax - discard[i];
-      }
-      return discard;
-
-   };
+		return discard;
+	};
 };

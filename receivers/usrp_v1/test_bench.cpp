@@ -17,8 +17,9 @@
 #include <fstream>
 
 #include <sdr_simulator/sampler/Adc.hpp>
+#include <sdr_simulator/filter/fir/AnalogFirFilter.hpp>
 #include <sdr_simulator/input/Stimulus.hpp>
-#include <sdr_simulator/input/SinusoidGenerator.hpp>
+#include <sdr_simulator/input/AnalogSinusoidGenerator.hpp>
 #include <sdr_simulator/input/GaussianNoiseGenerator.hpp>
 #include <sdr_simulator/output/FileRecorder.hpp>
 #include <sdr_simulator/input/PulseGenerator.hpp>
@@ -59,6 +60,8 @@ int sc_main ( int argc, char* argv[] )
       const double SIGNAL_FREQ      = root["signal_frequency"].as<double>();
       const double AMPLITUDE        = root["amplitude"].as<double>();
       const double DOPPLER          = root["doppler"].as<double>();
+      const double MEAN             = root["mean"].as<double>();
+      const double VAR              = root["variance"].as<double>();
       const double VFS              = root["adc_vfs"].as<double>();
       const double SNR              = root["adc_snr"].as<double>();
       const int    ADC_WIDTH        = root["adc_width"].as<int>();
@@ -96,6 +99,7 @@ int sc_main ( int argc, char* argv[] )
       sc_signal<double> input_signal;
       sc_signal<INPUT_TYPE> null_signal;
       sc_signal<INPUT_TYPE> adc_signal;
+      sc_signal<INPUT_TYPE> fir_signal;
 
       // signals from receive chain output to file recorder
       sc_signal<OUTPUT_TYPE> i_out_signal;
@@ -118,18 +122,12 @@ int sc_main ( int argc, char* argv[] )
       /////////////////////////////////////////////////////////////////////////////
       // STAGE 1 : Analog Signal Generation
       /////////////////////////////////////////////////////////////////////////////
-      PulseGenerator<double,sdr::RESET_TYPE> 
-         signal_generator( 
-               "pulse_gen",
-               PULSE_WIDTH,
-               PRI, 
-               SAMPLE_RATE, 
-               SIGNAL_FREQ + DOPPLER, 
-               AMPLITUDE
-               );
+      AnalogSinusoidGenerator<double,sdr::RESET_TYPE>
+         signal_generator("sin_gen", ( SIGNAL_FREQ + DOPPLER)/SAMPLE_RATE, ADC_WIDTH); 
       signal_generator.output( input_signal );
       signal_generator.reset( stimulus.reset );
       signal_generator.clock( stimulus.clock );
+
 
       /////////////////////////////////////////////////////////////////////////////
       // STAGE 2 : Analog-to-Digital Conversion
@@ -141,13 +139,56 @@ int sc_main ( int argc, char* argv[] )
       sampler.clock( stimulus.clock );
       sampler.output( adc_signal );
 
+      typedef AnalogFirFilter< INPUT_TYPE, OUTPUT_TYPE> Filter;
+
+      Filter filter("filter");
+      Filter::CoeffVector coefficients;
+      coefficients.push_back(2.08295393e-03);
+      coefficients.push_back(3.86002797e-03);
+      coefficients.push_back(4.86941328e-03);
+      coefficients.push_back(3.14234421e-03);
+      coefficients.push_back(-3.23738725e-03);
+      coefficients.push_back(-1.31304870e-02);
+      coefficients.push_back(-2.09128528e-02);
+      coefficients.push_back(-1.89755071e-02);
+      coefficients.push_back(-3.38737483e-03);
+      coefficients.push_back(2.12711783e-02);
+      coefficients.push_back(4.23150498e-02);
+      coefficients.push_back(4.57137146e-02);
+      coefficients.push_back(2.54427033e-02);
+      coefficients.push_back(-1.10212391e-02);
+      coefficients.push_back(-4.55753411e-02);
+      coefficients.push_back(9.35085607e-01);
+      coefficients.push_back(-4.55753411e-02);
+      coefficients.push_back(-1.10212391e-02);
+      coefficients.push_back(2.54427033e-02);
+      coefficients.push_back(4.57137146e-02);
+      coefficients.push_back(4.23150498e-02);
+      coefficients.push_back(2.12711783e-02);
+      coefficients.push_back(-3.38737483e-03);
+      coefficients.push_back(-1.89755071e-02);
+      coefficients.push_back(-2.09128528e-02);
+      coefficients.push_back(-1.31304870e-02);
+      coefficients.push_back(-3.23738725e-03);
+      coefficients.push_back(3.14234421e-03);
+      coefficients.push_back(4.86941328e-03);
+      coefficients.push_back(3.86002797e-03);
+      coefficients.push_back(2.08295393e-03);
+
+      filter.LoadCoefficients( coefficients );
+      filter.input( adc_signal );
+      filter.reset( stimulus.reset );
+      filter.clock( stimulus.clock );
+      filter.output( fir_signal );
+
+
       /////////////////////////////////////////////////////////////////////////////
       // STAGE 3 : Receiver Channel
       /////////////////////////////////////////////////////////////////////////////
       usrp_v1::ReceiveChannel dut ( "receive_channel" );
       dut.reset ( stimulus.reset );
       dut.clock ( stimulus.clock );
-      dut.real_input ( adc_signal );
+      dut.real_input ( fir_signal );
       dut.imag_input ( null_signal );
       dut.real_output ( i_out_signal );
       dut.imag_output ( q_out_signal );
@@ -173,13 +214,31 @@ int sc_main ( int argc, char* argv[] )
       adcRecorder.input ( adc_signal );
 
       /////////////////////////////////////////////////////////////////////////////
+      // RECORDER : Record in-phase input signal
+      /////////////////////////////////////////////////////////////////////////////
+      FileRecorder< OUTPUT_TYPE, sdr::RESET_TYPE >
+         firRecorder ( "fir_output", "fir.dat");
+      firRecorder.clock ( stimulus.clock );
+      firRecorder.reset ( stimulus.reset );
+      firRecorder.input ( fir_signal );
+
+      /////////////////////////////////////////////////////////////////////////////
       // RECORDER : Record CIC in-phase output signal
       /////////////////////////////////////////////////////////////////////////////
-      //FileRecorder< OUTPUT_TYPE, sdr::RESET_TYPE >
-      //cic_i_DebugRecorder ( "debug_cic_i_output", "cic_i_output.dat");
-      //cic_i_DebugRecorder.clock ( dut.cic_output_clock );
-      //cic_i_DebugRecorder.reset ( stimulus.reset );
-      //cic_i_DebugRecorder.input ( dut.debug_cic_i_output );
+      FileRecorder< OUTPUT_TYPE, sdr::RESET_TYPE >
+         cordic_i_recorder ( "cordic_i_output", "cordic_i_output.dat");
+      cordic_i_recorder.clock ( dut.clock );
+      cordic_i_recorder.reset ( stimulus.reset );
+      cordic_i_recorder.input ( dut.cordic_i_out);
+
+      /////////////////////////////////////////////////////////////////////////////
+      // RECORDER : Record CIC in-phase output signal
+      /////////////////////////////////////////////////////////////////////////////
+      FileRecorder< OUTPUT_TYPE, sdr::RESET_TYPE >
+         cordic_q_recorder ( "cordic_q_output", "cordic_q_output.dat");
+      cordic_q_recorder.clock ( dut.clock );
+      cordic_q_recorder.reset ( stimulus.reset );
+      cordic_q_recorder.input ( dut.cordic_q_out);
 
       /////////////////////////////////////////////////////////////////////////////
       // RECORDER : Record CIC quadrature input signal

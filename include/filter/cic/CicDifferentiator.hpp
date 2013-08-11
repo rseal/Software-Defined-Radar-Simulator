@@ -33,16 +33,16 @@ template< int INPUT_SIZE, int OUTPUT_SIZE > class CicDifferentiator:
 		if( !this->reset.read() )
 		{
 			// Read the input signal.
-			sc_int<INPUT_SIZE> buffer = this->input.read();
+			sc_int<INPUT_SIZE> buffer = this->input.read() - memory_;
 
-			// Subtract the memory register from the buffer.
-			sc_int<INPUT_SIZE> out = sc_int<INPUT_SIZE>( buffer - memory_ );
+			// trim LSBs from input side
+			sc_int<OUTPUT_SIZE> out =  buffer.range(INPUT_SIZE-1,SHIFT);
+
+			// Write to the output signal. 
+			this->output.write( out );
 
 			// Update the memory register with the input signal.
-			memory_ = buffer;
-
-			// Write to the output signal. Convert to double to avoid bit-width issues.
-			this->output.write( out.range(INPUT_SIZE-1,SHIFT).to_double() );
+			memory_ = this->input.read();
 		}
 		else
 		{
@@ -57,9 +57,7 @@ template< int INPUT_SIZE, int OUTPUT_SIZE > class CicDifferentiator:
 
 	CicDifferentiator( const sc_module_name& nm ): 
 		sdr_module::Module< sc_int<INPUT_SIZE>, sc_int<OUTPUT_SIZE> > ( nm ),
-		SHIFT( INPUT_SIZE - OUTPUT_SIZE ), memory_(0) 
-	{
-	}
+		SHIFT( INPUT_SIZE - OUTPUT_SIZE ), memory_(0) { }
 };
 
 #endif

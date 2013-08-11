@@ -1,10 +1,18 @@
 stimulus:
    sample_rate      : 64e6
+   signal_frequency : 1e4
+   adc_width        : 12
+
    time_resolution  : 10.0
    simulation_time  : 5.0e5
    reset_time       : 1
+
    mean             : 0.0
    variance         : 1.0
    amplitude        : 1.0
-   decimation       : 8
+
+   min_decimation   : 8
+   max_decimation   : 64
+   decimation       : 64
+   start_index      : 6
    output_base_name : "out"

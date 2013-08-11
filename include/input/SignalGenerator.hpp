@@ -41,7 +41,6 @@ class SignalGenerator : public sdr_module::Module< DATA_TYPE, DATA_TYPE >
 			this->output = samples_[index_];
 			++index_;
 		}
-		std::cout << this->output;
    }
 
    // Optional method for providing a fixed number of random samples
