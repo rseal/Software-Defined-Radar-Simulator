@@ -10,7 +10,7 @@ def configure(cnf):
         cnf.check(
                   features     = 'cxx cxxprogram',
                   libpath      = ['.','/usr/lib/','/usr/local/lib'],
-                  cflags       = ['-std=gnu++0x','-Wall','-W','-02'],
+                  cflags       = ['-std=gnu++14','-Wall','-W','-02'],
                  )
 
 def build(bld):
@@ -29,11 +29,12 @@ def build(bld):
          bld(
             name     = 'code_generator',
             features = 'cxx cxxprogram',
-            cxxflags = ['-std=gnu++0x','-Wall', '-W'],
+            cxxflags = ['-std=gnu++14','-Wall', '-W'],
             source   = 'generate_header.cpp',
             target   = 'code_generator',
             lib      = ['yaml-cpp','sdr-yaml'],
-            libpath  = ['.']
+            libpath  = ['.'],
+            rpath    = ['.']
             )
          )
 
@@ -51,7 +52,7 @@ def build(bld):
          bld(
             name     = 'test_bench',
             features = 'cxx cxxprogram',
-            cxxflags = ['-std=gnu++0x','-Wall', '-W'],
+            cxxflags = ['-std=gnu++14','-Wall', '-W'],
             includes = ['.','src'],
             source   = 'test_bench.cpp',
             target   = 'filter_test',
