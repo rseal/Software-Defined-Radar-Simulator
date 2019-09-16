@@ -1,6 +1,7 @@
 #ifndef CONFIG_NODE
 #define CONFIG_NODE
 
+#include <boost/shared_ptr.hpp>
 #include <yaml-cpp/yaml.h>
 
 

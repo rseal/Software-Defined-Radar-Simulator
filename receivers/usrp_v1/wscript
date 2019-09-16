@@ -11,30 +11,35 @@ def options(ctx):
               help='builds test bench')
 
 def configure(ctx):
-        ctx.load('compiler_c compiler_cxx')
-        ctx.check(
-                  features     = 'cxx cxxprogram',
-                  libpath      = ['/usr/lib/','/usr/local/lib'],
-                  libs         = ['yaml-cpp'],
-                  cflags       = ['-std=gnu++0x','-Wall','-02'],
-                 )
+        ctx.env.LIB_SDR=['yaml-cpp', 'sdr-yaml']
+        ctx.env.LIBPATH_SDR=['/usr/lib', '/usr/local/lib', os.path.join(os.getcwd(), '.')]
+        ctx.env.INCLUDES_SDR=['/usr/include', '/usr/local/include', os.path.join(os.getcwd(), '.')]
 
         ## define config file location
         ctx.env.CONFIG_FILE = ctx.path.abspath() + os.sep + 'config' + os.sep + 'sdr.yml'
 
+        # copy over sdr configuration file
+        ctx.exec_command('cp sdr.yml build/sdr.yml')
+   
+        # copy over the hard-coded configuration file
+        ctx.exec_command('cp configuration.hpp build/configuration.hpp')
+    
+        # copy over sdr configuration file
+        ctx.exec_command('cp stimulus.yml build/stimulus.yml')
+    
+        # copy over shared library
+        ctx.exec_command('cp ../../build/libsdr-yaml.so libsdr-yaml.so')
+        ctx.exec_command('cp ../../build/libsdr-yaml.so build/libsdr-yaml.so')
+
+        ctx.load('compiler_c compiler_cxx')
+        ctx.check(
+                  features     = 'cxx cxxprogram',
+                  use          = ['SDR'],
+                  cflags       = ['-std=gnu++14','-Wall','-02'],
+                 )
+
+
 def build(bld):
-
-   # copy over sdr configuration file
-   bld.exec_command('cp sdr.yml build/sdr.yml')
-
-   # copy over the hard-coded configuration file
-   bld.exec_command('cp configuration.hpp build/configuration.hpp')
-
-   # copy over sdr configuration file
-   bld.exec_command('cp stimulus.yml build/stimulus.yml')
-
-   # copy over shared library
-   bld(rule='cp ${SRC} ${TGT}', source='../../build/libsdr-yaml.so', target='libsdr-yaml.so'),
 
    #bld(rule='cp ${SRC} ${TGT}', source='src/sdr.yml', target='sdr.yml')
 
@@ -47,12 +52,12 @@ def build(bld):
         bld(
            name     = 'cic_generator',
            features = 'cxx cxxprogram',
-           cxxflags = ['-std=gnu++0x','-Wall', '-W'],
-           includes = '/usr/local/include',
+           cxxflags = ['-std=gnu++14','-Wall', '-W'],
+           #includes = '/usr/local/include',
            source   = 'generate_cic.cpp',
            target   = 'cic_generator',
-           lib      = ['yaml-cpp','sdr-yaml'],
-           libpath  = ['.']
+           rpath    = ['.'],
+           use      = ['SDR']
            )
       )
 
@@ -61,6 +66,7 @@ def build(bld):
          bld(
             name     = 'generate_cic',
             rule     = bld.path.abspath() + '/build/cic_generator ${CONFIG_FILE}',
+            use      = ['SDR'],
             source   = ['cic_generator'],
          )
       )
@@ -73,11 +79,12 @@ def build(bld):
       bld(
          name     = 'test_bench',
          features = 'cxx cxxprogram',
-         cxxflags = ['-std=gnu++0x', '-Wall', '-W'],
+         cxxflags = ['-std=gnu++14', '-Wall', '-W'],
          includes = [cic_node,'.'],
          source   = ['test_bench.cpp'],
          target   = 'test_rx_channel',
-         lib      = ['yaml-cpp','systemc'],
+         use      = ['SDR'],
+         lib      = ['yaml-cpp','systemc','sdr-yaml'],
          )
       )
 

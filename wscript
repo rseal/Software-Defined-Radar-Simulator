@@ -7,11 +7,12 @@ def options(ctx):
 
 def configure(ctx):
         ctx.load('compiler_c compiler_cxx')
+        ctx.env.append_value('INCLUDES', ['/usr/include'])
         ctx.check(
                   features     = 'cxx cxxprogram',
                   libpath      = ['/usr/lib/','/usr/local/lib'],
                   lib          = ['yaml-cpp'],
-                  cflags       = ['-std=gnu++0x','-Wall','-W','-02'],
+                  cflags       = ['-std=gnu++14','-Wall','-W','-02'],
                   uselib_store = 'M'
                  )
 

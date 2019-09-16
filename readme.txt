@@ -26,13 +26,21 @@ Dependencies:
 
 Installation Notes:
 
-1. At the root folder, build the sdr library by executing : "waf configure build"
-2. Go to the <project>/receivers/usrp_v1 folder.
+1. From the root folder, cd to scripts and execute: 
+   a. waf distclean
+   b. waf configure
+   c. sudo waf install_headers
+
+2. From the root folder, build the sdr library by executing : 
+   a. waf configure
+   b. waf build
+
+3. Go to the <project>/receivers/usrp_v1 folder.
    a. The CIC filter parameters can be modified in sdr.yml (see cic section).
-   b. Prepare the waf build script with "waf configure"
-   c. Generate the CIC filter with "waf build --gc".
-   d. Build the receiver with "waf build". 
-   e. Go to the build folder and execute "test_rx_channel" to run sample data through the receiver.
+   b. waf configure
+   c. waf build --gc
+   d. waf build 
+   e. Go to the "build" folder and execute "test_rx_channel" to run sample data through the receiver.
    f. Output data will be captured as ASCII data in "*.dat" files. 
    g. Runtime parameters can be edited in stimulus.yml
    h. The input stimulus can be replaced in test_bench.cpp (see include/input/xxx for list of inputs).

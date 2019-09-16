@@ -1,7 +1,9 @@
 #ifndef NODE_FACTORY_HPP
 #define NODE_FACTORY_HPP
 
+#include<iostream>
 #include<boost/function.hpp>
+#include<boost/shared_ptr.hpp>
 #include<sdr_simulator/yaml/ConfigNode.hpp>
 
 
